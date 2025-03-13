@@ -62,34 +62,36 @@ This command installs all the necessary packages specified in the `requirements.
 Set up the database by running the `setup_db.py` script:
 
 ```bash
-python scripts/setup_db.py
+python -m scripts.setup_db
 ```
 
-### Download stock data
-
-1. Get an API key from Financial Modeling Prep and add it to a `.env` file in the root folder of the project:
-
+### Populate data/csv with csv data from [binance](https://data.binance.vision/?prefix=data/futures/um/monthly/klines)
+```md
+data/
+└─ csv/
+   └─ BTCUSDT/
+      ├─ 1d/
+      │  ├─ BTCUSDT-1d-2024-01.csv
+      │  └─ BTCUSDT-1d-2024-02.csv
+      ├─ 1h/
+      │  ├─ BTCUSDT-1h-2024-01.csv
+      │  └─ BTCUSDT-1h-2024-02.csv
+      └─ 15m/
+         ├─ BTCUSDT-15m-2024-01.csv
+         └─ BTCUSDT-15m-2024-02.csv
 ```
-FMP_API_KEY=your_api_key_here
-```
 
-2. Download the stock data by running the `download_stock_data.py` script:
-
+### Load csv data to DB
 ```bash
-python scripts/download_stock_data.py
+python -m scripts.download_timeseries
 ```
 
-_Please note that only the `NASDAQ`, `NYSE`, and `AMEX` exchanges are selected. To target different exchanges, update the `VALID_EXCHANGES` list in the `scripts/download_stock_data.py` file._
 
-3. Download the timeseries data by running the `download_timeseries.py` script:
-
+### Markup data by sessions
 ```bash
-python scripts/download_timeseries.py
+python -m scripts.run_day_markuper
 ```
 
-_Please note the code currently is setup to handle 10 simultaneous downloads. Depending on the Financial Modeling Prep plan you have, you might want to adjust the `max_workers` number in the `scripts/download_timeseries.py` file. With 10 concurrent workers, this step takes ~30 minutes to complete._
-
-The SQLite database `stock_market_research.db` will be created and the `stock_data` table will be populated with stock data and the timeseries data.
 
 ### Run backtest
 

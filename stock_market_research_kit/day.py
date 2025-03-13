@@ -1,5 +1,11 @@
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, asdict
+from datetime import datetime
 from typing import List, Tuple
+
+
+def from_json(json_str):
+    return Day(**json.loads(json_str))
 
 
 @dataclass
@@ -35,6 +41,10 @@ class Day:
     ny_lunch_as_candle: Tuple[float, float, float, float, float, str]
     ny_pm_as_candle: Tuple[float, float, float, float, float, str]
     ny_pm_close_as_candle: Tuple[float, float, float, float, float, str]
+
+    def to_db_format(self, symbol: str):
+        return symbol, datetime.strptime(self.date_readable, "%Y-%m-%d %H:%M").timestamp(), json.dumps(asdict(self),
+                                                                                                       indent=4)
 
 
 def new_day():

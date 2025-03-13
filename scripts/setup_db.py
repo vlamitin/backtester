@@ -26,6 +26,21 @@ def create_stock_data_table(conn: Connection) -> None:
     conn.commit()
 
 
+def create_days_table(conn: Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS days (
+            symbol TEXT NOT NULL,
+            date_ts INTEGER,
+            data BLOB,
+            PRIMARY KEY (symbol, date_ts)
+        );
+        """
+    )
+    conn.commit()
+
+
 def create_trades_table(conn: Connection) -> None:
     cursor = conn.cursor()
     cursor.execute(

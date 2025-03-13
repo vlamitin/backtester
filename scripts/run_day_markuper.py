@@ -11,7 +11,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import sqlite3
 import json
 from alive_progress import alive_bar
-from stock_market_research_kit.sma_breakout_daily_strategy import run_sma_breakout_daily_strategy
 
 DATABASE_PATH = "stock_market_research.db"
 
@@ -20,7 +19,7 @@ conn = sqlite3.connect(DATABASE_PATH)
 c = conn.cursor()
 
 
-def markup_worker(daily_data_str, hourly_data_str, fifteen_minutely_data_str):
+def markup_days(daily_data_str, hourly_data_str, fifteen_minutely_data_str):
     if daily_data_str is None or hourly_data_str is None or fifteen_minutely_data_str is None:
         print("no data")
         return
@@ -33,68 +32,72 @@ def markup_worker(daily_data_str, hourly_data_str, fifteen_minutely_data_str):
     last_i_1h = 0
     last_i_15m = 0
 
-    for i in range(len(candles_1d)):
-        day = new_day()
-        day.day_of_week = datetime.strptime(candles_1d[i][5], "%Y-%m-%d %H:%M").isoweekday()
-        day.date_readable = candles_1d[i][5]
+    with alive_bar(len(candles_1d), title=f"Marking up {len(candles_1d)} day candles ...") as bar:
+        for i in range(len(candles_1d)):
+            day = new_day()
+            day.day_of_week = datetime.strptime(candles_1d[i][5], "%Y-%m-%d %H:%M").isoweekday()
+            day.date_readable = candles_1d[i][5]
 
-        day.candle_1d = candles_1d[i]
+            day.candle_1d = candles_1d[i]
 
-        for i_1h in range(last_i_1h, len(candles_1h)):
-            candle = candles_1h[i_1h]
-            comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
-            if comparison_result == 1:
-                last_i_1h = i_1h
-                break
-            elif comparison_result == -1:
-                continue
+            for i_1h in range(last_i_1h, len(candles_1h)):
+                candle = candles_1h[i_1h]
+                comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
+                if comparison_result == 1:
+                    last_i_1h = i_1h
+                    break
+                elif comparison_result == -1:
+                    continue
 
-            day.candles_1h.append(candle)
+                day.candles_1h.append(candle)
 
-        for i_15m in range(0 if last_i_15m - 8 < 0 else last_i_15m - 8, len(candles_15m)):
-            candle = candles_15m[i_15m]
-            comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
-            if comparison_result == 1:
-                last_i_15m = i_15m
-                break
-            elif comparison_result == -1:
-                if is_prev_day_cme_open_time(candle[5], day.date_readable):
-                    day.cme_open_candles_15m.append(candle)
-                if is_asian_time(candle[5], day.date_readable):
-                    day.asian_candles_15m.append(candle)
-                continue
+            for i_15m in range(0 if last_i_15m - 8 < 0 else last_i_15m - 8, len(candles_15m)):
+                candle = candles_15m[i_15m]
+                comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
+                if comparison_result == 1:
+                    last_i_15m = i_15m
+                    break
+                elif comparison_result == -1:
+                    if is_prev_day_cme_open_time(candle[5], day.date_readable):
+                        day.cme_open_candles_15m.append(candle)
+                    if is_asian_time(candle[5], day.date_readable):
+                        day.asian_candles_15m.append(candle)
+                    continue
 
-            if is_london_time(candle[5], day.date_readable):
-                day.london_candles_15m.append(candle)
-            if is_early_session_time(candle[5], day.date_readable):
-                day.early_session_candles_15m.append(candle)
-            if is_premarket_time(candle[5], day.date_readable):
-                day.premarket_candles_15m.append(candle)
-            if is_ny_am_open_time(candle[5], day.date_readable):
-                day.ny_am_open_candles_15m.append(candle)
-            if is_ny_am_time(candle[5], day.date_readable):
-                day.ny_am_candles_15m.append(candle)
-            if is_ny_lunch_time(candle[5], day.date_readable):
-                day.ny_lunch_candles_15m.append(candle)
-            if is_ny_pm_time(candle[5], day.date_readable):
-                day.ny_pm_candles_15m.append(candle)
-            if is_ny_pm_close_time(candle[5], day.date_readable):
-                day.ny_pm_close_candles_15m.append(candle)
+                if is_london_time(candle[5], day.date_readable):
+                    day.london_candles_15m.append(candle)
+                if is_early_session_time(candle[5], day.date_readable):
+                    day.early_session_candles_15m.append(candle)
+                if is_premarket_time(candle[5], day.date_readable):
+                    day.premarket_candles_15m.append(candle)
+                if is_ny_am_open_time(candle[5], day.date_readable):
+                    day.ny_am_open_candles_15m.append(candle)
+                if is_ny_am_time(candle[5], day.date_readable):
+                    day.ny_am_candles_15m.append(candle)
+                if is_ny_lunch_time(candle[5], day.date_readable):
+                    day.ny_lunch_candles_15m.append(candle)
+                if is_ny_pm_time(candle[5], day.date_readable):
+                    day.ny_pm_candles_15m.append(candle)
+                if is_ny_pm_close_time(candle[5], day.date_readable):
+                    day.ny_pm_close_candles_15m.append(candle)
 
-            day.candles_15m.append(candle)
+                day.candles_15m.append(candle)
 
-        day.cme_as_candle = as_1_candle(day.cme_open_candles_15m)
-        day.asia_as_candle = as_1_candle(day.asian_candles_15m)
-        day.london_as_candle = as_1_candle(day.london_candles_15m)
-        day.early_session_as_candle = as_1_candle(day.early_session_candles_15m)
-        day.premarket_as_candle = as_1_candle(day.premarket_candles_15m)
-        day.ny_am_open_as_candle = as_1_candle(day.ny_am_open_candles_15m)
-        day.ny_am_as_candle = as_1_candle(day.ny_am_candles_15m)
-        day.ny_lunch_as_candle = as_1_candle(day.ny_lunch_candles_15m)
-        day.ny_pm_as_candle = as_1_candle(day.ny_pm_candles_15m)
-        day.ny_pm_close_as_candle = as_1_candle(day.ny_pm_close_candles_15m)
+            day.cme_as_candle = as_1_candle(day.cme_open_candles_15m)
+            day.asia_as_candle = as_1_candle(day.asian_candles_15m)
+            day.london_as_candle = as_1_candle(day.london_candles_15m)
+            day.early_session_as_candle = as_1_candle(day.early_session_candles_15m)
+            day.premarket_as_candle = as_1_candle(day.premarket_candles_15m)
+            day.ny_am_open_as_candle = as_1_candle(day.ny_am_open_candles_15m)
+            day.ny_am_as_candle = as_1_candle(day.ny_am_candles_15m)
+            day.ny_lunch_as_candle = as_1_candle(day.ny_lunch_candles_15m)
+            day.ny_pm_as_candle = as_1_candle(day.ny_pm_candles_15m)
+            day.ny_pm_close_as_candle = as_1_candle(day.ny_pm_close_candles_15m)
 
-        days.append(day)
+            days.append(day)
+            bar()
+
+    return days
 
 
 # returns -1 if checked time is past, 0 if same day and +1 if future
@@ -115,25 +118,46 @@ def is_same_day_or_past_or_future(checked_time_string, current_day_string):
 
 
 def is_prev_day_cme_open_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    prev_day = current_day - timedelta(days=1)
-
-    if prev_day.isoweekday() == 5 or prev_day.isoweekday() == 6:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        prev_day.year, prev_day.month, prev_day.day, 18, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        prev_day.year, prev_day.month, prev_day.day, 19, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
+    return is_some_prev_day_session(checked_time_string, current_day_string, "18:00", "19:00")
 
 
 def is_asian_time(checked_time_string, current_day_string):
+    return is_some_prev_day_session(checked_time_string, current_day_string, "19:00", "22:00")
+
+
+def is_london_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "02:00", "05:00")
+
+
+def is_early_session_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "07:00", "08:00")
+
+
+def is_premarket_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "08:00", "09:30")
+
+
+def is_ny_am_open_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "09:30", "10:00")
+
+
+def is_ny_am_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "10:00", "12:00")
+
+
+def is_ny_lunch_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "12:00", "13:00")
+
+
+def is_ny_pm_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "13:00", "15:00")
+
+
+def is_ny_pm_close_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "15:00", "16:00")
+
+
+def is_some_prev_day_session(checked_time_string, current_day_string, from_str, to_str):
     current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
     prev_day = current_day - timedelta(days=1)
 
@@ -142,147 +166,34 @@ def is_asian_time(checked_time_string, current_day_string):
 
     checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
 
+    from_h, from_m = [int(x) for x in from_str.split(":")]
+    to_h, to_m = [int(x) for x in to_str.split(":")]
+
     range_from = datetime(
-        prev_day.year, prev_day.month, prev_day.day, 19, 0, tzinfo=ZoneInfo("America/New_York")
+        prev_day.year, prev_day.month, prev_day.day, from_h, from_m, tzinfo=ZoneInfo("America/New_York")
     )
     range_to = datetime(
-        prev_day.year, prev_day.month, prev_day.day, 22, 0, tzinfo=ZoneInfo("America/New_York")
+        prev_day.year, prev_day.month, prev_day.day, to_h, to_m, tzinfo=ZoneInfo("America/New_York")
     )
 
     return range_from <= checked_time < range_to
 
 
-def is_london_time(checked_time_string, current_day_string):
+def is_some_same_day_session(checked_time_string, current_day_string, from_str, to_str):
     current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
     if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
         return False
 
     checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
 
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 2, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 5, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_early_session_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
+    from_h, from_m = [int(x) for x in from_str.split(":")]
+    to_h, to_m = [int(x) for x in to_str.split(":")]
 
     range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 7, 0, tzinfo=ZoneInfo("America/New_York")
+        current_day.year, current_day.month, current_day.day, from_h, from_m, tzinfo=ZoneInfo("America/New_York")
     )
     range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 8, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_premarket_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 8, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 9, 30, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_ny_am_open_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 9, 30, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 10, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_ny_am_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 10, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 12, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_ny_lunch_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 12, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 13, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_ny_pm_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 13, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 15, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-
-    return range_from <= checked_time < range_to
-
-
-def is_ny_pm_close_time(checked_time_string, current_day_string):
-    current_day = datetime.strptime(current_day_string, "%Y-%m-%d %H:%M")
-    if current_day.isoweekday() == 6 or current_day.isoweekday() == 7:
-        return False
-
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
-
-    range_from = datetime(
-        current_day.year, current_day.month, current_day.day, 15, 0, tzinfo=ZoneInfo("America/New_York")
-    )
-    range_to = datetime(
-        current_day.year, current_day.month, current_day.day, 16, 0, tzinfo=ZoneInfo("America/New_York")
+        current_day.year, current_day.month, current_day.day, to_h, to_m, tzinfo=ZoneInfo("America/New_York")
     )
 
     return range_from <= checked_time < range_to
@@ -304,22 +215,40 @@ def as_1_candle(candles: List[Tuple[float]]) -> Tuple[float, float, float, float
     return open_, high, low, close, volume, date
 
 
-def main():
-    c.execute("SELECT symbol, daily, hourly, fifteen_minutely FROM stock_data;")
+def insert_to_db(symbol: str, days: List[Day]):
+    rows = [day.to_db_format(symbol) for day in days]
+
+    try:
+        c.executemany("INSERT INTO days (symbol, date_ts, data) VALUES (?, ?, ?)", rows)
+        conn.commit()
+        return True
+    except sqlite3.ProgrammingError as e:
+        print(f"Error inserting days data for symbol {symbol}: {e}")
+        return False
+
+
+def main(symbol):
+    c.execute("SELECT symbol, daily, hourly, fifteen_minutely FROM stock_data WHERE symbol = ?", (symbol,))
     rows = c.fetchall()
 
-    with alive_bar(len(rows), title="Marking up candles as days ...") as bar:
-        for _, daily_data_str, hourly_data_str, fifteen_minutely_data_str in rows:
-            markup_worker(daily_data_str, hourly_data_str, fifteen_minutely_data_str)
-            bar()
+    if len(rows) == 0:
+        print(f"Symbol {symbol} not found in DB")
+        return
 
-    # Close the main database connection
+    symbol, daily_data_str, hourly_data_str, fifteen_minutely_data_str = rows[0]
+    print(f"Marking up {symbol}")
+    days = markup_days(daily_data_str, hourly_data_str, fifteen_minutely_data_str)
+    print(f"Done marking up {len(days)} days. Inserting results to db")
+    result = insert_to_db(symbol, days)
+    if result:
+        print(f"Done with {symbol}")
+
     conn.close()
 
 
 if __name__ == "__main__":
     try:
-        main()
+        main("BTCUSDT")
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
