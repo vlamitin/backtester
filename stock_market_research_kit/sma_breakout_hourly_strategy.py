@@ -10,24 +10,24 @@ from utils.trading_utils import (
 
 # Entry parameters
 min_prior_move = 0.5
-prior_move_days = 50
+prior_move_hours = 50
 min_adr_percent = 0.035
 min_volume = 100000
-min_consolidation_days = 5
-max_consolidation_days = 40
+min_consolidation_hours = 5
+max_consolidation_hours = 40
 consolidation_range_mult = 2
 breakout_percent_mult = 0.75
 
 # Partial sell parameters
-partial_sell_day_start = 3
-partial_sell_day_end = 5
+partial_sell_hour_start = 3
+partial_sell_hour_end = 5
 partial_sell_adr_mult = 1
 
 # Exit parameters
-exit_sma_days = 10
+exit_sma_hours = 10
 
 
-def backtest(daily_candles):
+def run_sma_breakout_hourly_strategy(hourly_candles):
     # Array to store trades
     trades = []
 
@@ -35,17 +35,17 @@ def backtest(daily_candles):
     current_combos = []
     active_trades = []
 
-    for i in range(len(daily_candles)):
-        if i <= exit_sma_days:
+    for i in range(len(hourly_candles)):
+        if i <= exit_sma_hours:
             continue
 
-        new_candle = daily_candles[i - 1]
+        new_candle = hourly_candles[i - 1]
 
         # Check for entry
-        prev_candle = daily_candles[i - 2]
-        prior_range_candles = daily_candles[i - (prior_move_days + 2) : i - 1]
-        possible_consolidation_candles = daily_candles[
-            i - (max_consolidation_days + 2) : i - 1
+        prev_candle = hourly_candles[i - 2]
+        prior_range_candles = hourly_candles[i - (prior_move_hours + 2): i - 1]
+        possible_consolidation_candles = hourly_candles[
+            i - (max_consolidation_hours + 2): i - 1
         ]
         entry = look_for_entry(
             prev_candle,
@@ -76,7 +76,7 @@ def backtest(daily_candles):
                 trade.partial = partial
 
             # Check for exit
-            end_sma = calculate_sma(daily_candles[i - exit_sma_days : i])
+            end_sma = calculate_sma(hourly_candles[i - exit_sma_hours: i])
             exit = look_for_exit(trade, current_combos[idx], end_sma)
 
             if exit:
@@ -101,7 +101,7 @@ def look_for_entry(
     if volume20 < min_volume:
         return None
 
-    prior_range = get_prior_range(prior_range_candles, prior_move_days)
+    prior_range = get_prior_range(prior_range_candles, prior_move_hours)
     if prior_range["range"] <= min_prior_move:
         return None
 
@@ -115,8 +115,8 @@ def look_for_entry(
     consolidation_range_pct = consolidation_range_mult * adr20
     consolidation_candles = get_consolidation_candles(
         possible_consolidation_candles,
-        min_consolidation_days,
-        max_consolidation_days,
+        min_consolidation_hours,
+        max_consolidation_hours,
         consolidation_range_pct,
     )
 
@@ -133,7 +133,7 @@ def look_for_entry(
             "date": new_candle[5],
             "entry_price": new_candle[3],
             "initial_stop": new_candle[2],
-            "consolidation_days": len(consolidation_candles),
+            "consolidation_hours": len(consolidation_candles),
             "adr20": round(adr20, 4),
             "volume20": round(volume20, 0),
         }
@@ -142,12 +142,12 @@ def look_for_entry(
 
 
 def look_for_partial(trade, current_combo):
-    # Make partial sell between partial_sell_day_start and partial_sell_day_end
-    # if sell target is met, sell at that price, otherwise sell at the close of day 5
-    current_day = len(current_combo)
+    # Make partial sell between partial_sell_hour_start and partial_sell_hour_end
+    # if sell target is met, sell at that price, otherwise sell at the close of hour 5
+    current_hour = len(current_combo)
     new_candle = current_combo[-1]
 
-    if partial_sell_day_start <= current_day <= partial_sell_day_end:
+    if partial_sell_hour_start <= current_hour <= partial_sell_hour_end:
         if trade.partial:
             return None
 
@@ -161,7 +161,7 @@ def look_for_partial(trade, current_combo):
                 "sell_price": round(target_price, 4),
                 "target_reached": True,
             }
-        elif current_day == partial_sell_day_end:
+        elif current_hour == partial_sell_hour_end:
             return {
                 "date": new_candle[5],
                 "sell_price": round(new_candle[3], 4),
@@ -208,7 +208,7 @@ def look_for_exit(trade, current_combo, end_sma):
             "date": candle[5],
             "exit_price": exit_price,
             "reason": reason,
-            "days_held": len(current_combo),
+            "hours_held": len(current_combo),
         }
     else:
         return None

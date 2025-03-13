@@ -37,11 +37,12 @@ def get_high_low(
     return high, high_timestamp, low, low_timestamp
 
 
+# average daily range
 def calculate_adr_pct(candles: List[Tuple[float]], x: int = 20) -> float:
     last_x = candles[-x:]
     if len(candles) == 0:
         return 0
-    adr = sum([d[1] / d[2] if d[2] != 0 else 0 for d in last_x]) / len(last_x) - 1
+    adr = sum([(d[1] - d[2]) / d[0] for d in last_x]) / len(last_x)
     return 0 if math.isnan(adr) else adr
 
 
@@ -49,8 +50,8 @@ def get_prior_range(candles, days=20):
     high, high_timestamp, low, low_timestamp = get_high_low(candles, days)
 
     # Convert timestamps to datetime objects
-    high_date = datetime.strptime(high_timestamp, "%Y-%m-%d")
-    low_date = datetime.strptime(low_timestamp, "%Y-%m-%d")
+    high_date = datetime.strptime(high_timestamp, "%Y-%m-%d %H:%M")
+    low_date = datetime.strptime(low_timestamp, "%Y-%m-%d %H:%M")
 
     if high == 0 or low == 0:
         return {"range": 0, "high": 0, "low": 0}
@@ -82,6 +83,7 @@ def get_consolidation_candles(
     return consolidation_candles if len(consolidation_candles) >= min_days else []
 
 
+# Вычисляет медианный наклон (slope) тренда с помощью метода Тейла-Сена
 def calculate_theil_sen_slope(candles: List[Tuple[float]]) -> float:
     n = len(candles)
     slopes = []
@@ -95,6 +97,7 @@ def calculate_theil_sen_slope(candles: List[Tuple[float]]) -> float:
     return slopes[len(slopes) // 2]
 
 
+# Вычисляет медианный y-пересек (intercept), то есть смещение трендовой линии.
 def calculate_theil_sen_intercept(
     candles: List[Tuple[float]], median_slope: float
 ) -> float:
@@ -109,6 +112,7 @@ def calculate_theil_sen_intercept(
     return intercepts[len(intercepts) // 2]
 
 
+# считает "пробитие" цены выше трендовой линии предыдущего закрытия
 def is_breakout(
     new_close: float,
     prev_close: float,
@@ -120,6 +124,7 @@ def is_breakout(
         consolidation_candles, median_slope
     )
     last_idx = len(consolidation_candles) - 1
+    # Вычисляет значение трендовой линии на последней свече консолидации.
     trendline_value = median_slope * last_idx + median_intercept
 
     return new_close > prev_close and new_close > trendline_value * (1 + breakout_pct)

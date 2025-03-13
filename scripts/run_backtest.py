@@ -5,9 +5,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import sqlite3
 import json
-from dataclasses import asdict
 from alive_progress import alive_bar
-from stock_market_research_kit.backtest import backtest
+from stock_market_research_kit.sma_breakout_daily_strategy import run_sma_breakout_daily_strategy
 
 DATABASE_PATH = "stock_market_research.db"
 
@@ -45,7 +44,7 @@ def store_trades(symbol, trades, conn):
 def backtest_worker(symbol, daily_data_str):
     if daily_data_str is not None:
         daily_data = json.loads(daily_data_str)
-        trades = backtest(daily_data)
+        trades = run_sma_breakout_daily_strategy(daily_data)
         with sqlite3.connect(DATABASE_PATH) as conn:
             store_trades(symbol, trades, conn)
 
@@ -66,4 +65,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"KeyboardInterrupt, exiting ...")
+        quit(0)

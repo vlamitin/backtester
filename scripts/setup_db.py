@@ -17,7 +17,9 @@ def create_stock_data_table(conn: Connection) -> None:
             sector TEXT,
             industry TEXT,
             delisted INTEGER,
-            daily BLOB
+            daily BLOB,
+            hourly BLOB,
+            fifteen_minutely BLOB
         );
         """
     )

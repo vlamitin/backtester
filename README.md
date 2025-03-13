@@ -6,6 +6,10 @@ The Stock Market Research Kit is an open-source Python project brought to you by
 
 ## Prerequisites
 
+1. Conda
+- `source /opt/miniconda3/bin/activate`
+
+
 ### Financial Modeling Prep
 
 Currently, the stock data is retrieved from Financial Modeling Prep. As of April 2023, you will need at least the [Professional plan](https://site.financialmodelingprep.com/developer/docs/pricing) to be able to use the bulk endpoint for fetching all profiles.
