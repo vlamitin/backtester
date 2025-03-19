@@ -41,6 +41,22 @@ def create_days_table(conn: Connection) -> None:
     conn.commit()
 
 
+def create_sessions_table(conn: Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sessions (
+            symbol TEXT NOT NULL,
+            date_ts INTEGER,
+            session TEXT NOT NULL,
+            data BLOB,
+            PRIMARY KEY (symbol, date_ts, session)
+        );
+        """
+    )
+    conn.commit()
+
+
 def create_trades_table(conn: Connection) -> None:
     cursor = conn.cursor()
     cursor.execute(
@@ -92,6 +108,8 @@ def main():
     db_name = "stock_market_research.db"
     conn = create_database(db_name)
     create_stock_data_table(conn)
+    create_days_table(conn)
+    create_sessions_table(conn)
     create_trades_table(conn)
     add_cluster_column_to_trades_table(conn)
     add_subcluster_column_to_trades_table(conn)

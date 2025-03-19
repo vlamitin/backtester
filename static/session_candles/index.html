@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>session_candles</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        #container {
+            min-height: calc(100vh - 16px);
+            min-width: 310px;
+        }
+    </style>
+</head>
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/stock/modules/accessibility.js"></script>
+<body>
+<div style="font-size: 12px; display: flex; height: 16px">
+    <span>filters: </span>
+    <input type="checkbox" checked id="all"/> <label for="all">all</label>
+    <input type="checkbox" checked id="c"/> <label for="c">c</label>
+    <input type="checkbox" checked id="a"/> <label for="a">a</label>
+    <input type="checkbox" checked id="l"/> <label for="l">l</label>
+    <input type="checkbox" checked id="e"/> <label for="e">e</label>
+    <input type="checkbox" checked id="p"/> <label for="p">p</label>
+    <input type="checkbox" checked id="O"/> <label for="O">O</label>
+    <input type="checkbox" checked id="A"/> <label for="A">A</label>
+    <input type="checkbox" checked id="L"/> <label for="L">L</label>
+    <input type="checkbox" checked id="P"/> <label for="P">P</label>
+    <input type="checkbox" checked id="C"/> <label for="C">C</label>
+</div>
+<div id="container"></div>
+</body>
+<script src="index.js"></script>
+</html>

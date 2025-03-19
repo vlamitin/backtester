@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Tuple
 
 
-def from_json(json_str):
+def day_from_json(json_str):
     return Day(**json.loads(json_str))
 
 
@@ -17,8 +17,14 @@ class Day:
     candles_1h: List[Tuple[float, float, float, float, float, str]]
     candles_15m: List[Tuple[float, float, float, float, float, str]]
 
-    prev_day_candle_1d: Tuple[float, float, float, float, float, str]
-    prev_day_candles_15m: List[Tuple[float, float, float, float, float, str]]
+    # do: float  # TODO заполнить скриптом и это
+    # true_do: float
+    # wo: float
+    # true_wo: float
+    # mo: float
+    # true_mo: float
+    # yo: float
+    # true_yo: float
 
     cme_open_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 18:00 - 19:00 NY time
     asian_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 19:00 - 22:00 NY time
@@ -54,8 +60,14 @@ def new_day():
         candle_1d=(-1, -1, -1, -1, 0, ""),
         candles_1h=[],
         candles_15m=[],
-        prev_day_candle_1d=(-1, -1, -1, -1, 0, ""),
-        prev_day_candles_15m=[],
+        # do=-1,
+        # true_do=-1,
+        # wo=-1,
+        # true_wo=-1,
+        # mo=-1,
+        # true_mo=-1,
+        # yo=-1,
+        # true_yo=-1,
         cme_open_candles_15m=[],
         asian_candles_15m=[],
         london_candles_15m=[],

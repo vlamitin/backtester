@@ -13,8 +13,6 @@ import json
 from alive_progress import alive_bar
 
 DATABASE_PATH = "stock_market_research.db"
-
-# Connect to the SQLite database
 conn = sqlite3.connect(DATABASE_PATH)
 c = conn.cursor()
 
@@ -60,25 +58,27 @@ def markup_days(daily_data_str, hourly_data_str, fifteen_minutely_data_str):
                 elif comparison_result == -1:
                     if is_prev_day_cme_open_time(candle[5], day.date_readable):
                         day.cme_open_candles_15m.append(candle)
-                    if is_asian_time(candle[5], day.date_readable):
+                    elif is_asian_time(candle[5], day.date_readable):
                         day.asian_candles_15m.append(candle)
                     continue
 
-                if is_london_time(candle[5], day.date_readable):
+                if is_asian_time(candle[5], day.date_readable):  # check 2nd time because of DST
+                    day.asian_candles_15m.append(candle)
+                elif is_london_time(candle[5], day.date_readable):
                     day.london_candles_15m.append(candle)
-                if is_early_session_time(candle[5], day.date_readable):
+                elif is_early_session_time(candle[5], day.date_readable):
                     day.early_session_candles_15m.append(candle)
-                if is_premarket_time(candle[5], day.date_readable):
+                elif is_premarket_time(candle[5], day.date_readable):
                     day.premarket_candles_15m.append(candle)
-                if is_ny_am_open_time(candle[5], day.date_readable):
+                elif is_ny_am_open_time(candle[5], day.date_readable):
                     day.ny_am_open_candles_15m.append(candle)
-                if is_ny_am_time(candle[5], day.date_readable):
+                elif is_ny_am_time(candle[5], day.date_readable):
                     day.ny_am_candles_15m.append(candle)
-                if is_ny_lunch_time(candle[5], day.date_readable):
+                elif is_ny_lunch_time(candle[5], day.date_readable):
                     day.ny_lunch_candles_15m.append(candle)
-                if is_ny_pm_time(candle[5], day.date_readable):
+                elif is_ny_pm_time(candle[5], day.date_readable):
                     day.ny_pm_candles_15m.append(candle)
-                if is_ny_pm_close_time(candle[5], day.date_readable):
+                elif is_ny_pm_close_time(candle[5], day.date_readable):
                     day.ny_pm_close_candles_15m.append(candle)
 
                 day.candles_15m.append(candle)
@@ -164,7 +164,7 @@ def is_some_prev_day_session(checked_time_string, current_day_string, from_str, 
     if prev_day.isoweekday() == 5 or prev_day.isoweekday() == 6:
         return False
 
-    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("UTC"))
+    checked_time = datetime.strptime(checked_time_string, "%Y-%m-%d %H:%M").astimezone(ZoneInfo("America/New_York"))
 
     from_h, from_m = [int(x) for x in from_str.split(":")]
     to_h, to_m = [int(x) for x in to_str.split(":")]
@@ -219,7 +219,8 @@ def insert_to_db(symbol: str, days: List[Day]):
     rows = [day.to_db_format(symbol) for day in days]
 
     try:
-        c.executemany("INSERT INTO days (symbol, date_ts, data) VALUES (?, ?, ?)", rows)
+        c.executemany("""INSERT INTO
+            days (symbol, date_ts, data) VALUES (?, ?, ?) ON CONFLICT (symbol, date_ts) DO UPDATE SET data = excluded.data""", rows)
         conn.commit()
         return True
     except sqlite3.ProgrammingError as e:
@@ -228,7 +229,8 @@ def insert_to_db(symbol: str, days: List[Day]):
 
 
 def main(symbol):
-    c.execute("SELECT symbol, daily, hourly, fifteen_minutely FROM stock_data WHERE symbol = ?", (symbol,))
+    c.execute("""SELECT symbol, daily, hourly, fifteen_minutely
+        FROM stock_data WHERE symbol = ?""", (symbol,))
     rows = c.fetchall()
 
     if len(rows) == 0:
