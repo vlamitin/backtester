@@ -30,6 +30,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.cme_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.cme_as_candle[5],
                     name=SessionName.CME,
                     type=typify_session(day.cme_as_candle, btc_universal_threshold)
                 ))
@@ -37,6 +38,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.asia_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.asia_as_candle[5],
                     name=SessionName.ASIA,
                     type=typify_session(day.asia_as_candle, btc_universal_threshold)
                 ))
@@ -44,6 +46,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.london_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.london_as_candle[5],
                     name=SessionName.LONDON,
                     type=typify_session(day.london_as_candle, btc_universal_threshold)
                 ))
@@ -51,6 +54,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.early_session_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.early_session_as_candle[5],
                     name=SessionName.EARLY,
                     type=typify_session(day.early_session_as_candle, btc_universal_threshold)
                 ))
@@ -58,6 +62,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.premarket_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.premarket_as_candle[5],
                     name=SessionName.PRE,
                     type=typify_session(day.premarket_as_candle, btc_universal_threshold)
                 ))
@@ -65,6 +70,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.ny_am_open_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.ny_am_open_as_candle[5],
                     name=SessionName.NY_OPEN,
                     type=typify_session(day.ny_am_open_as_candle, btc_universal_threshold)
                 ))
@@ -72,6 +78,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.ny_am_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.ny_am_as_candle[5],
                     name=SessionName.NY_AM,
                     type=typify_session(day.ny_am_as_candle, btc_universal_threshold)
                 ))
@@ -79,6 +86,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.ny_lunch_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.ny_lunch_as_candle[5],
                     name=SessionName.NY_LUNCH,
                     type=typify_session(day.ny_lunch_as_candle, btc_universal_threshold)
                 ))
@@ -86,6 +94,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.ny_pm_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.ny_pm_as_candle[5],
                     name=SessionName.NY_PM,
                     type=typify_session(day.ny_pm_as_candle, btc_universal_threshold)
                 ))
@@ -93,6 +102,7 @@ def typify_sessions(days: List[Day], symbol: str):
             if day.ny_pm_close_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
+                    session_date=day.ny_pm_close_as_candle[5],
                     name=SessionName.NY_CLOSE,
                     type=typify_session(day.ny_pm_close_as_candle, btc_universal_threshold)
                 ))
@@ -174,7 +184,7 @@ def insert_to_db(symbol: str, sessions: List[Session]):
 
     try:
         c.executemany("""INSERT INTO
-            sessions (symbol, date_ts, session, data) VALUES (?, ?, ?, ?) ON CONFLICT (symbol, date_ts, session) DO UPDATE SET data = excluded.data""",
+            sessions (symbol, day_ts, session_ts, session, data) VALUES (?, ?, ?, ?, ?) ON CONFLICT (symbol, day_ts, session) DO UPDATE SET data = excluded.data""",
                       rows)
         conn.commit()
         return True

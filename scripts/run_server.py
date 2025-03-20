@@ -39,7 +39,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(sessions_split_parts) == 2 and sessions_split_parts[0] == "":
             symbol = sessions_split_parts[1]
             # sql injections, welcom =)
-            c.execute("""SELECT data FROM sessions WHERE symbol = ?""", (symbol,))
+            c.execute("""SELECT data FROM sessions WHERE symbol = ? ORDER BY session_ts""", (symbol,))
             sessions_rows = c.fetchall()
 
             if len(sessions_rows) == 0:

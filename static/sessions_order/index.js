@@ -1,173 +1,168 @@
-const colors = Highcharts.getOptions().colors
-const data1 = [
-    {
-        name: 'prevDay',
-        type: 'FLAT',
-        times: 130,
-        next: [
-            {
-                name: 'cme',
-                type: 'FLAT',
-                times: 100,
-                next: [
-                    {
-                        name: 'asia',
-                        type: 'FLAT',
-                        times: 75,
-                        next: [
-                            {
-                                name: 'london',
-                                type: 'FLAT',
-                                times: 55,
-                                next: [
-                                    {
-                                        name: 'early',
-                                        type: 'FLAT',
-                                        times: 40,
-                                        next: [
-                                            {
-                                                name: 'premarket',
-                                                type: 'FLAT',
-                                                times: 30,
-                                                next: [
-                                                    {
-                                                        name: 'open',
-                                                        type: 'FLAT',
-                                                        times: 27,
-                                                        next: [
-                                                            {
-                                                                name: 'nyam',
-                                                                type: 'FLAT',
-                                                                times: 20,
-                                                                next: [
-                                                                    {
-                                                                        name: 'lunch',
-                                                                        type: 'FLAT',
-                                                                        times: 14,
-                                                                        next: [
-                                                                            {
-                                                                                name: 'nypm',
-                                                                                type: 'FLAT',
-                                                                                times: 10,
-                                                                                next: [
-                                                                                    {
-                                                                                        name: 'close',
-                                                                                        type: 'FLAT',
-                                                                                        times: 7,
-                                                                                    },
-                                                                                    {
-                                                                                        name: 'close',
-                                                                                        type: 'BULL',
-                                                                                        times: 3
-                                                                                    },
-                                                                                ]
-                                                                            },
-                                                                            {
-                                                                                name: 'nypm',
-                                                                                type: 'BULL',
-                                                                                times: 4
-                                                                            },
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        name: 'lunch',
-                                                                        type: 'BULL',
-                                                                        times: 6
-                                                                    },
-                                                                ]
-                                                            },
-                                                            {
-                                                                name: 'nyam',
-                                                                type: 'BULL',
-                                                                times: 7
-                                                            },
-                                                        ]
-                                                    },
-                                                    {
-                                                        name: 'open',
-                                                        type: 'BULL',
-                                                        times: 13
-                                                    },
-                                                ]
-                                            },
-                                            {
-                                                name: 'premarket',
-                                                type: 'BULL',
-                                                times: 10
-                                            },
-                                        ]
-                                    },
-                                    {
-                                        name: 'early',
-                                        type: 'BULL',
-                                        times: 15
-                                    },
-                                ]
-                            },
-                            {
-                                name: 'london',
-                                type: 'BULL',
-                                times: 20
-                            },
-                        ]
-                    },
-                    {
-                        name: 'asia',
-                        type: 'BULL',
-                        times: 25
-                    },
-                ]
-            },
-            {
-                name: 'cme',
-                type: 'BULL',
-                times: 30
-            },
-        ]
-    },
-    {
-        name: 'prevDay',
-        type: 'BULL',
-        times: 70
-    },
-]
-
-const resultVariants = []
-
-function handleVariants(variants, parent_id) {
-    if (variants.length === 0) return
-
-    variants.forEach((variant, i) => {
-        const id = `${parent_id}_${i + 1}`
-        const name = `${variant.name} ${variant.type}`
-        const value = variant.times
-        let color = colors[0]
-
-        switch (variant.type) {
-            default:
-                break
-            case 'FLAT':
-                color = colors[0]
-                break
-            case 'BULL':
-                color = colors[1]
-                break
-        }
-
-        resultVariants.push({ color, id, name, value, parent: parent_id })
-
-        if (variant.next) {
-            handleVariants(variant.next, id)
-        }
-    })
+class TreeNode {
+    constructor(key, parent, count) {
+        this.key = key
+        this.count = count
+        this.parent = parent
+        this.children = []
+    }
 }
 
-handleVariants(data1, 'id_0')
+class Tree {
+    constructor(key, count) {
+        this.root = new TreeNode(key, null, count)
+    }
 
-console.log('points', JSON.stringify(resultVariants.slice(0, 10), null, 2))
-console.log('resultVariants', resultVariants);
+    // Traverses the tree by recursively traversing each node followed by its children
+    *traverseChildren(node) {
+        yield node
+        if (node.children.length) {
+            for (let child of node.children) {
+                yield* this.traverseChildren(child)
+            }
+        }
+    }
+
+    // Traverses the tree by recursively traversing each node's children followed by the node
+    *traverseParents(node) {
+        yield node
+        if (node.parent) {
+            yield* this.traverseParents(node.parent)
+        }
+    }
+
+    insert(parentNodeKey, key) {
+        for (let parentNode of this.traverseChildren(this.root)) {
+            if (parentNode.key !== parentNodeKey) {
+                continue
+            }
+
+            const sameKeyNode = parentNode.children.find(ch => ch.key === key)
+            if (sameKeyNode) {
+                sameKeyNode.count++
+            } else {
+                parentNode.children.push(new TreeNode(key, parentNode, 1))
+            }
+
+            for (let node of this.traverseParents(parentNode)) {
+                node.count++
+            }
+
+            return true
+        }
+        return false
+    }
+
+    find(key) {
+        for (let node of this.traverseChildren(this.root)) {
+            if (node.key === key) return node
+        }
+        return null
+    }
+}
+
+const symbol = 'BTCUSDT'
+const colors = Highcharts.getOptions().colors
+
+const colorsMap = {
+    'COMPRESSION': colors[0],
+    'DOJI': colors[1],
+    'INDECISION': colors[2],
+    'BULL': colors[3],
+    'TO_THE_MOON': colors[4],
+    'STB': colors[5],
+    'REJECTION_BULL': colors[6],
+    'HAMMER': colors[7],
+    'BEAR': colors[8],
+    'FLASH_CRASH': colors[9],
+    'BTS': colors[10],
+    'REJECTION_BEAR': colors[11],
+    'BEAR_HAMMER': colors[12],
+    'V_SHAPE': colors[13],
+    'PUMP_AND_DUMP': colors[14],
+}
+
+console.log('colorsMap', colorsMap)
+
+function treeToVariants(tree) {
+    if (tree.root.count === 0) {
+        return []
+    }
+
+    const result = []
+
+    for (let node of tree.traverseChildren(tree.root)) {
+        if (node.key === tree.root.key) {
+            continue
+        }
+
+        const [session, candleType] = node.key.split('__')
+        const id = node.key
+        const name = `${session} ${candleType}`
+        const value = node.count
+        let color = colorsMap[candleType]
+
+        result.push({ color, id, name, value, parent: node.parent.key })
+    }
+
+    return result
+
+}
+
+function fillTree(sessions) {
+    if (sessions.length === 0) {
+        return
+    }
+
+    const tree = new Tree('total', 0)
+
+    let dayGroups = []
+    sessions.forEach(session => {
+        if (dayGroups.length === 0 || dayGroups[dayGroups.length - 1][0].day_date !== session.day_date) {
+            dayGroups.push([session])
+            return
+        }
+
+        dayGroups[dayGroups.length - 1].push(session)
+    })
+
+    dayGroups.forEach(dayGroup => {
+        if (dayGroup.length !== 10) {
+            return
+        }
+
+        const [cme, asia, london, early, pre, open, nyam, lunch, nypm, close] = dayGroup
+
+        tree.insert('total', `${asia.name}__${asia.type}`)
+        tree.insert(`${asia.name}__${asia.type}`, `${london.name}__${london.type}`)
+        tree.insert(`${london.name}__${london.type}`, `${pre.name}__${pre.type}`)
+        tree.insert(`${pre.name}__${pre.type}`, `${open.name}__${open.type}`)
+        tree.insert(`${open.name}__${open.type}`, `${nyam.name}__${nyam.type}`)
+
+        // tree.insert('total', `${cme.name}__${cme.type}`)
+        // tree.insert(`${cme.name}__${cme.type}`, `${asia.name}__${asia.type}`)
+        // tree.insert(`${asia.name}__${asia.type}`, `${london.name}__${london.type}`)
+        // tree.insert(`${london.name}__${london.type}`, `${early.name}__${early.type}`)
+        // tree.insert(`${early.name}__${early.type}`, `${pre.name}__${pre.type}`)
+        // tree.insert(`${pre.name}__${pre.type}`, `${open.name}__${open.type}`)
+        // tree.insert(`${open.name}__${open.type}`, `${nyam.name}__${nyam.type}`)
+        // tree.insert(`${nyam.name}__${nyam.type}`, `${lunch.name}__${lunch.type}`)
+        // tree.insert(`${lunch.name}__${lunch.type}`, `${nypm.name}__${nypm.type}`)
+        // tree.insert(`${nypm.name}__${nypm.type}`, `${close.name}__${close.type}`)
+    })
+
+    return tree
+}
 
 (async () => {
+    const sessions = await fetch(
+        `http://localhost:8000/api/sessions/${symbol}`
+    ).then(response => response.json());
+
+    const tree = fillTree(sessions)
+    // window.tree = tree
+
+    const variants = treeToVariants(tree)
+
     Highcharts.chart('container', {
         series: [
             {
@@ -200,7 +195,7 @@ console.log('resultVariants', resultVariants);
                 accessibility: {
                     exposeAsGroupOnly: true
                 },
-                data: resultVariants
+                data: variants
             }
         ],
         title: {

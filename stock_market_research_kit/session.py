@@ -54,6 +54,7 @@ class SessionType(Enum):
 @dataclass
 class Session:
     day_date: str
+    session_date: str
     name: Literal[
         SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY, SessionName.PRE,
         SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
@@ -63,7 +64,10 @@ class Session:
         SessionType.BEAR_HAMMER, SessionType.V_SHAPE, SessionType.PUMP_AND_DUMP]
 
     def to_db_format(self, symbol: str):
-        return (symbol, datetime.strptime(self.day_date, "%Y-%m-%d %H:%M").timestamp(), self.name.value,
+        return (symbol,
+                datetime.strptime(self.day_date, "%Y-%m-%d %H:%M").timestamp(),
+                datetime.strptime(self.session_date, "%Y-%m-%d %H:%M").timestamp(),
+                self.name.value,
                 json.dumps(asdict(self), default=enum_serializer, indent=4))
 
 
@@ -76,6 +80,7 @@ def enum_serializer(obj):
 def new_session():
     return Session(
         day_date="",
+        session_date="",
         name=SessionName.CME,
         type=SessionType.COMPRESSION
     )

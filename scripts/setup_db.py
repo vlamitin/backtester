@@ -47,10 +47,11 @@ def create_sessions_table(conn: Connection) -> None:
         """
         CREATE TABLE IF NOT EXISTS sessions (
             symbol TEXT NOT NULL,
-            date_ts INTEGER,
+            day_ts INTEGER,
+            session_ts INTEGER,
             session TEXT NOT NULL,
             data BLOB,
-            PRIMARY KEY (symbol, date_ts, session)
+            PRIMARY KEY (symbol, day_ts, session)
         );
         """
     )
