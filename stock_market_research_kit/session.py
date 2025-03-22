@@ -30,6 +30,10 @@ class SessionName(Enum):
     NY_CLOSE = 'NY PM Close'
 
 
+sessions = [
+    SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY, SessionName.PRE,
+    SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
+
 class SessionType(Enum):
     COMPRESSION = 'COMPRESSION'  # almost still (e.g -0.2% or + 0.15% price and 0.4% volatility)
     DOJI = 'DOJI'  # medium volatile, but open ~ close
@@ -60,8 +64,9 @@ class Session:
         SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
     type: Literal[
         SessionType.COMPRESSION, SessionType.DOJI, SessionType.INDECISION, SessionType.BULL, SessionType.TO_THE_MOON,
-        SessionType.STB, SessionType.BEAR, SessionType.FLASH_CRASH, SessionType.BTS, SessionType.HAMMER,
-        SessionType.BEAR_HAMMER, SessionType.V_SHAPE, SessionType.PUMP_AND_DUMP]
+        SessionType.STB, SessionType.REJECTION_BULL, SessionType.HAMMER, SessionType.BEAR, SessionType.FLASH_CRASH,
+        SessionType.BTS, SessionType.REJECTION_BEAR, SessionType.BEAR_HAMMER,
+        SessionType.V_SHAPE, SessionType.PUMP_AND_DUMP]
 
     def to_db_format(self, symbol: str):
         return (symbol,

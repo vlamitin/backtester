@@ -12,7 +12,6 @@ class Tree {
         this.root = new TreeNode(key, null, count)
     }
 
-    // Traverses the tree by recursively traversing each node followed by its children
     *traverseChildren(node) {
         yield node
         if (node.children.length) {
@@ -22,7 +21,6 @@ class Tree {
         }
     }
 
-    // Traverses the tree by recursively traversing each node's children followed by the node
     *traverseParents(node) {
         yield node
         if (node.parent) {
@@ -66,11 +64,11 @@ const colors = Highcharts.getOptions().colors
 const colorsMap = {
     'COMPRESSION': colors[0],
     'DOJI': colors[1],
-    'INDECISION': colors[2],
-    'BULL': colors[3],
-    'TO_THE_MOON': colors[4],
+    'INDECISION': colors[3],
+    'BULL': colors[2],
+    'TO_THE_MOON': colors[6],
     'STB': colors[5],
-    'REJECTION_BULL': colors[6],
+    'REJECTION_BULL': colors[4],
     'HAMMER': colors[7],
     'BEAR': colors[8],
     'FLASH_CRASH': colors[9],
@@ -109,10 +107,6 @@ function treeToVariants(tree) {
 }
 
 function fillTree(sessions) {
-    if (sessions.length === 0) {
-        return
-    }
-
     const tree = new Tree('total', 0)
 
     let dayGroups = []
@@ -130,13 +124,24 @@ function fillTree(sessions) {
             return
         }
 
-        const [cme, asia, london, early, pre, open, nyam, lunch, nypm, close] = dayGroup
 
-        tree.insert('total', `${asia.name}__${asia.type}`)
-        tree.insert(`${asia.name}__${asia.type}`, `${london.name}__${london.type}`)
-        tree.insert(`${london.name}__${london.type}`, `${pre.name}__${pre.type}`)
-        tree.insert(`${pre.name}__${pre.type}`, `${open.name}__${open.type}`)
-        tree.insert(`${open.name}__${open.type}`, `${nyam.name}__${nyam.type}`)
+        const [cme, asia, london, early, pre, open, nyam, lunch, nypm, close] = dayGroup
+        if (!['BULL', 'TO_THE_MOON', 'BEAR', 'FLASH_CRASH'].includes(close.type)) {
+            return
+        }
+
+        tree.insert('total', `${close.name}__${close.type}`)
+        tree.insert(`${close.name}__${close.type}`, `${nypm.name}__${nypm.type}`)
+        tree.insert(`${nypm.name}__${nypm.type}`, `${lunch.name}__${lunch.type}`)
+        tree.insert(`${lunch.name}__${lunch.type}`, `${nyam.name}__${nyam.type}`)
+        tree.insert(`${nyam.name}__${nyam.type}`, `${open.name}__${open.type}`)
+        tree.insert(`${open.name}__${open.type}`, `${pre.name}__${pre.type}`)
+
+        // tree.insert('total', `${asia.name}__${asia.type}`)
+        // tree.insert(`${asia.name}__${asia.type}`, `${london.name}__${london.type}`)
+        // tree.insert(`${london.name}__${london.type}`, `${pre.name}__${pre.type}`)
+        // tree.insert(`${pre.name}__${pre.type}`, `${open.name}__${open.type}`)
+        // tree.insert(`${open.name}__${open.type}`, `${nyam.name}__${nyam.type}`)
 
         // tree.insert('total', `${cme.name}__${cme.type}`)
         // tree.insert(`${cme.name}__${cme.type}`, `${asia.name}__${asia.type}`)

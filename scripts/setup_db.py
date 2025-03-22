@@ -58,6 +58,25 @@ def create_sessions_table(conn: Connection) -> None:
     conn.commit()
 
 
+def create_sessions_sequence_table(conn: Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sessions_sequence (
+            symbol TEXT NOT NULL,
+            tree_name TEXT NOT NULL,
+            session TEXT NOT NULL,
+            candle_type TEXT NOT NULL,
+            parent_session TEXT NOT NULL,
+            parent_candle_type TEXT NOT NULL,
+            count INTEGER,
+            PRIMARY KEY (symbol, tree_name, session, candle_type, parent_session, parent_candle_type)
+        );
+        """
+    )
+    conn.commit()
+
+
 def create_trades_table(conn: Connection) -> None:
     cursor = conn.cursor()
     cursor.execute(
@@ -111,6 +130,7 @@ def main():
     create_stock_data_table(conn)
     create_days_table(conn)
     create_sessions_table(conn)
+    create_sessions_sequence_table(conn)
     create_trades_table(conn)
     add_cluster_column_to_trades_table(conn)
     add_subcluster_column_to_trades_table(conn)

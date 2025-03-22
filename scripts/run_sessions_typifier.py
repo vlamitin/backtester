@@ -179,7 +179,7 @@ def typify_session(candle: Tuple[float, float, float, float, float, str], thresh
         return SessionType.V_SHAPE
 
 
-def insert_to_db(symbol: str, sessions: List[Session]):
+def insert_sessions_to_db(symbol: str, sessions: List[Session]):
     rows = [session.to_db_format(symbol) for session in sessions]
 
     try:
@@ -205,7 +205,7 @@ def main(symbol):
     print(f"Typifying sessions of {len(rows)} days of {symbol}")
     sessions = typify_sessions(days, symbol)
     print(f"Done typifying up {len(sessions)} sessions. Inserting results to db")
-    result = insert_to_db(symbol, sessions)
+    result = insert_sessions_to_db(symbol, sessions)
     if result:
         print(f"Done with {symbol}")
 
