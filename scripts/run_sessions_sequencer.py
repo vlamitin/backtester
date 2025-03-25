@@ -285,7 +285,6 @@ def directional_profiles(session_ordered_tree, session_filtered_tree):
 
             ordered_path = ['total']
             ordered_path.extend(reversed([x[0] for x in path][1:]))
-            # TODO делаем дерево деревьев, и передаём сюда в функцию; здесь нужно искать по tree_02_asia_ordered!
             ordered_node = ordered_trees[SessionName.CME.value].find_by_path(ordered_path)
 
             if ordered_node is None:

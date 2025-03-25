@@ -37,7 +37,7 @@ const symbol = 'BTCUSDT';
                         return `${sessionName}__${candleType}`
                     }
 
-                    const session_key = session_keys.find(key => key && key.startsWith(columnName))
+                    const session_key = session_keys.find(key => key && key.startsWith(columnName + '__'))
                     return session_key || '-'
                 }))
             })
@@ -74,15 +74,34 @@ const symbol = 'BTCUSDT';
         try {
             return evaluateQuery(value, data, columns)
         } catch (e) {
-            alert(e)
+            console.error(e)
             return false
         }
     })
 
+    columns.forEach(column => {
+        const button = document.createElement("button")
+        button.textContent = column
+        button.addEventListener("click", () => {
+            document.querySelector('#search').value += column
+            document.querySelector('#search').focus()
+        })
+        document.getElementById("btn-container").appendChild(button)
+    });
+
     document.querySelector('#search').addEventListener('keyup', (event) => {
         if (event.keyCode === 13) {
-            $("#dt-search-0").val("").trigger("change");
-            table.draw()
+            try {
+                const value = document.querySelector('#search').value
+                if (value) {
+                    evaluateQuery(value, table.row(1).data(), columns)
+                }
+                $("#dt-search-0").val("").trigger("change");
+                table.draw()
+            } catch (e) {
+                console.error(e)
+                alert(e)
+            }
         }
     })
 })()
@@ -97,7 +116,7 @@ function parseCondition(condition) {
             return { key, op, value: isNaN(value) ? value.replace(/['"]+/g, '') : Number(value) }
         }
     }
-    throw new Error(`Invalid condition: ${condition}`)
+    throw new Error(`Invalid condition: ${condition}, valid operators: ${operators.join(',')}`)
 }
 
 function evaluateCondition(data, columns, { key, op, value }) {
