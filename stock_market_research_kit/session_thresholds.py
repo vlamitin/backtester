@@ -1,8 +1,6 @@
-import json
-from dataclasses import dataclass, asdict
-from datetime import datetime
+from dataclasses import dataclass
 from enum import Enum
-from typing import List, Tuple, Literal
+from typing import Tuple, Literal
 
 from stock_market_research_kit.session import SessionName
 
@@ -25,10 +23,7 @@ class ThresholdsCalcMethod(Enum):
 
 @dataclass
 class SessionThresholds:
-    name: Literal[
-        None,
-        SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY, SessionName.PRE,
-        SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
+    name: SessionName
 
     method: Literal[ThresholdsCalcMethod.EXPERT]
 
@@ -45,7 +40,7 @@ class SessionThresholds:
 
 
 btc_universal_threshold = SessionThresholds(
-    name=None,
+    name=SessionName.UNSPECIFIED,
     method=ThresholdsCalcMethod.EXPERT,
     slow_range=(0.6, 1),
     fast_range=(1.8, 3),

@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
-from typing import Literal
 
 
 def session_decoder(dct):
@@ -18,6 +17,7 @@ def session_from_json(json_str):
 
 
 class SessionName(Enum):
+    UNSPECIFIED = 'UNSPECIFIED'
     CME = 'CME Open'
     ASIA = 'Asia Open'
     LONDON = 'London Open'
@@ -35,6 +35,8 @@ sessions = [
     SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
 
 class SessionType(Enum):
+    UNSPECIFIED = 'UNSPECIFIED'
+
     COMPRESSION = 'COMPRESSION'  # almost still (e.g -0.2% or + 0.15% price and 0.4% volatility)
     DOJI = 'DOJI'  # medium volatile, but open ~ close
     INDECISION = 'INDECISION'  # long (or extreme) wicks but open not ~ to close (some bull or bear performance)
@@ -59,14 +61,8 @@ class SessionType(Enum):
 class Session:
     day_date: str
     session_date: str
-    name: Literal[
-        SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY, SessionName.PRE,
-        SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
-    type: Literal[
-        SessionType.COMPRESSION, SessionType.DOJI, SessionType.INDECISION, SessionType.BULL, SessionType.TO_THE_MOON,
-        SessionType.STB, SessionType.REJECTION_BULL, SessionType.HAMMER, SessionType.BEAR, SessionType.FLASH_CRASH,
-        SessionType.BTS, SessionType.REJECTION_BEAR, SessionType.BEAR_HAMMER,
-        SessionType.V_SHAPE, SessionType.PUMP_AND_DUMP]
+    name: SessionName
+    type: SessionType
 
     def to_db_format(self, symbol: str):
         return (symbol,

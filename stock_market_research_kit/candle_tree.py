@@ -11,24 +11,53 @@ class TreeNode:
         self.parent = parent
         self.children = []
 
+    def traverse_children(self):
+        yield self
+        for child in self.children:
+            yield from child.traverse_children()
+
+    def traverse_parents(self):
+        yield self
+        if self.parent:
+            yield from self.parent.traverse_parents()
+
+    # def get_paths(self):
+    #     def dfs(node, path, res):
+    #         path.append((node.key, node.count))
+    #         if not node.children:
+    #             res.append(path[:])
+    #         else:
+    #             for child in node.children:
+    #                 dfs(child, path, res)
+    #         path.pop()
+    #
+    #     result = []
+    #     dfs(self, [], result)
+    #     return result
+
+    def get_paths(self):
+        def dfs(node, path, res, seen):
+            path.append((node.key, node.count))
+            path_tuple = tuple(path)
+            if path_tuple not in seen:
+                res.append(path[:])
+                seen.add(path_tuple)
+            for child in node.children:
+                dfs(child, path, res, seen)
+            path.pop()
+
+        result = []
+        dfs(self, [], result, set())
+        return result
+
 
 class Tree:
     def __init__(self, name, key, count):
         self.name = name
         self.root = TreeNode(key, None, count)
 
-    def traverse_children(self, node):
-        yield node
-        for child in node.children:
-            yield from self.traverse_children(child)
-
-    def traverse_parents(self, node):
-        yield node
-        if node.parent:
-            yield from self.traverse_parents(node.parent)
-
     def insert(self, parent_node_key, key):
-        for parent_node in self.traverse_children(self.root):
+        for parent_node in self.root.traverse_children():
             if parent_node.key != parent_node_key:
                 continue
 
@@ -38,17 +67,57 @@ class Tree:
             else:
                 parent_node.children.append(TreeNode(key, parent_node, 1))
 
-            for node in self.traverse_parents(parent_node):
-                node.count += 1
+            # for node in parent_node.traverse_parents():
+            #     node.count += 1
+            self.root.count += 1
 
             return True
         return False
 
-    def find(self, key):
-        for node in self.traverse_children(self.root):
+    def insert_subtree(self, parent_node_key, subtree):
+        parent_node = self.find_by_key(parent_node_key)
+        if not parent_node:
+            return False
+
+        current_parent = parent_node
+
+        for subtree_node in subtree.traverse_children():
+            subtree_node.parent = current_parent
+
+            same_key_node = next((ch for ch in current_parent.children if ch.key == subtree_node.key), None)
+            if same_key_node:
+                same_key_node.count += 1
+                current_parent = same_key_node
+            else:
+                new_node = TreeNode(
+                    subtree_node.key,
+                    current_parent,
+                    1
+                )
+                current_parent.children.append(new_node)
+                current_parent = new_node
+
+            self.root.count += 1
+        return True
+
+    # WARN! keys by design could be not unique in tree
+    def find_by_key(self, key):
+        for node in self.root.traverse_children():
             if node.key == key:
                 return node
         return None
+
+    def find_by_path(self, path):
+        if len(path) == 0:
+            return None
+        if path[0] != self.root.key:
+            return None
+        node = self.root
+        for key in path[1:]:
+            node = next((child for child in node.children if child.key == key), None)
+            if node is None:
+                return None
+        return node
 
 
 def flatten_candle_tree(tree: Tree):
@@ -57,7 +126,7 @@ def flatten_candle_tree(tree: Tree):
 
     result = []
 
-    for node in tree.traverse_children(tree.root):
+    for node in tree.root.traverse_children():
         if node.key == tree.root.key:
             continue
 
@@ -98,14 +167,18 @@ def tree_from_sessions(name: str, all_sessions: List[Session], sessions_in_order
         if len(ordered) < len(sessions_in_order):
             continue
 
-        for i in range(len(ordered)):
+        if ordered[0].type not in first_session_candle_types:
+            continue
+
+        subtree = None
+        for i in range(len(ordered) - 1, -1, -1):
             s = ordered[i]
-            if i == 0:
-                if s.type not in first_session_candle_types:
-                    break
-                tree.insert('total', f"{s.name}__{s.type}")
-            else:
-                tree.insert(f"{ordered[i - 1].name}__{ordered[i - 1].type}", f"{s.name}__{s.type}")
+            new_subtree = TreeNode(f"{s.name.value}__{s.type.value}", None, 1)
+            if subtree:
+                subtree.parent = new_subtree
+                new_subtree.children = [subtree]
+            subtree = new_subtree
+        tree.insert_subtree('total', subtree)
 
     return tree
 
@@ -116,15 +189,23 @@ def tree_from_sequences(name: str, sequences: List[SessionsSequence]):
 
 if __name__ == "__main__":
     try:
-        test_tree = Tree('total', 0)
+        test_tree = Tree('test_tree', 'total', 0)
         test_tree.insert('total', 'CME__BULL')
         test_tree.insert('total', 'CME__BEAR')
         test_tree.insert('CME__BEAR', 'ASIA__BULL')
         test_tree.insert('CME__BEAR', 'ASIA__BULL')
 
-        print([(x.key, x.count) for x in test_tree.traverse_children(test_tree.find('total'))])
-        print([(x.key, x.count) for x in test_tree.traverse_parents(test_tree.find('ASIA__BULL'))])
+        test_subtree = TreeNode('CME__BEAR', None, 1)
+        test_subtree.children = [TreeNode('ASIA__BULL', test_subtree, 1)]
+
+        test_tree.insert_subtree('total', test_subtree)
+
+        print([(x.key, x.count) for x in test_tree.find_by_key('total').traverse_children()])
+        print([(x.key, x.count) for x in test_tree.find_by_key('ASIA__BULL').traverse_parents()])
         print(flatten_candle_tree(test_tree))
+        test_tree.root.get_paths()
+        print(flatten_candle_tree(test_tree))
+        print('find_by_path', test_tree.find_by_path(['total', 'CME__BEAR', 'ASIA__BULL']))
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

@@ -2,6 +2,7 @@ import json
 import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+from scripts.run_sessions_sequencer import fill_profiles, profiles
 from stock_market_research_kit.day import day_from_json
 from stock_market_research_kit.session import session_from_json
 
@@ -57,6 +58,17 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(sessions, indent=4).encode())
             return
 
+        profiles_split_parts = self.path.split("/api/profiles/")
+        if len(profiles_split_parts) == 2 and profiles_split_parts[0] == "":
+            symbol = profiles_split_parts[1]
+
+            self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(profiles, indent=4).encode())
+            return
+
         self.send_response(400)
         self.end_headers()
         print(f"Bad request to {self.path}")
@@ -65,6 +77,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
+        fill_profiles("BTCUSDT")
         server = HTTPServer(('localhost', 8000), RequestHandler)
         print('Starting server at http://localhost:8000')
         server.serve_forever()
