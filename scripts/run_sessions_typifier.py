@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple
 
@@ -31,85 +32,142 @@ def typify_sessions(days: List[Day], symbol: str):
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.cme_as_candle[5],
+                    session_end_date=session_end_time(day.cme_as_candle, day.cme_open_candles_15m),
                     name=SessionName.CME,
-                    type=typify_session(day.cme_as_candle, btc_universal_threshold)
+                    type=typify_session(day.cme_as_candle, btc_universal_threshold),
+                    open=day.cme_as_candle[0],
+                    high=day.cme_as_candle[1],
+                    low=day.cme_as_candle[2],
+                    close=day.cme_as_candle[3]
                 ))
 
             if day.asia_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.asia_as_candle[5],
+                    session_end_date=session_end_time(day.asia_as_candle, day.asian_candles_15m),
                     name=SessionName.ASIA,
-                    type=typify_session(day.asia_as_candle, btc_universal_threshold)
+                    type=typify_session(day.asia_as_candle, btc_universal_threshold),
+                    open=day.asia_as_candle[0],
+                    high=day.asia_as_candle[1],
+                    low=day.asia_as_candle[2],
+                    close=day.asia_as_candle[3]
                 ))
 
             if day.london_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.london_as_candle[5],
+                    session_end_date=session_end_time(day.london_as_candle, day.london_candles_15m),
                     name=SessionName.LONDON,
-                    type=typify_session(day.london_as_candle, btc_universal_threshold)
+                    type=typify_session(day.london_as_candle, btc_universal_threshold),
+                    open=day.london_as_candle[0],
+                    high=day.london_as_candle[1],
+                    low=day.london_as_candle[2],
+                    close=day.london_as_candle[3]
                 ))
 
             if day.early_session_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.early_session_as_candle[5],
+                    session_end_date=session_end_time(day.early_session_as_candle, day.early_session_candles_15m),
                     name=SessionName.EARLY,
-                    type=typify_session(day.early_session_as_candle, btc_universal_threshold)
+                    type=typify_session(day.early_session_as_candle, btc_universal_threshold),
+                    open=day.early_session_as_candle[0],
+                    high=day.early_session_as_candle[1],
+                    low=day.early_session_as_candle[2],
+                    close=day.early_session_as_candle[3]
                 ))
 
             if day.premarket_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.premarket_as_candle[5],
+                    session_end_date=session_end_time(day.premarket_as_candle, day.premarket_candles_15m),
                     name=SessionName.PRE,
-                    type=typify_session(day.premarket_as_candle, btc_universal_threshold)
+                    type=typify_session(day.premarket_as_candle, btc_universal_threshold),
+                    open=day.premarket_as_candle[0],
+                    high=day.premarket_as_candle[1],
+                    low=day.premarket_as_candle[2],
+                    close=day.premarket_as_candle[3]
                 ))
 
             if day.ny_am_open_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.ny_am_open_as_candle[5],
+                    session_end_date=session_end_time(day.ny_am_open_as_candle, day.ny_am_open_candles_15m),
                     name=SessionName.NY_OPEN,
-                    type=typify_session(day.ny_am_open_as_candle, btc_universal_threshold)
+                    type=typify_session(day.ny_am_open_as_candle, btc_universal_threshold),
+                    open=day.ny_am_open_as_candle[0],
+                    high=day.ny_am_open_as_candle[1],
+                    low=day.ny_am_open_as_candle[2],
+                    close=day.ny_am_open_as_candle[3]
                 ))
 
             if day.ny_am_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.ny_am_as_candle[5],
+                    session_end_date=session_end_time(day.ny_am_as_candle, day.ny_am_candles_15m),
                     name=SessionName.NY_AM,
-                    type=typify_session(day.ny_am_as_candle, btc_universal_threshold)
+                    type=typify_session(day.ny_am_as_candle, btc_universal_threshold),
+                    open=day.ny_am_as_candle[0],
+                    high=day.ny_am_as_candle[1],
+                    low=day.ny_am_as_candle[2],
+                    close=day.ny_am_as_candle[3]
                 ))
 
             if day.ny_lunch_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.ny_lunch_as_candle[5],
+                    session_end_date=session_end_time(day.ny_lunch_as_candle, day.ny_lunch_candles_15m),
                     name=SessionName.NY_LUNCH,
-                    type=typify_session(day.ny_lunch_as_candle, btc_universal_threshold)
+                    type=typify_session(day.ny_lunch_as_candle, btc_universal_threshold),
+                    open=day.ny_lunch_as_candle[0],
+                    high=day.ny_lunch_as_candle[1],
+                    low=day.ny_lunch_as_candle[2],
+                    close=day.ny_lunch_as_candle[3]
                 ))
 
             if day.ny_pm_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.ny_pm_as_candle[5],
+                    session_end_date=session_end_time(day.ny_pm_as_candle, day.ny_pm_candles_15m),
                     name=SessionName.NY_PM,
-                    type=typify_session(day.ny_pm_as_candle, btc_universal_threshold)
+                    type=typify_session(day.ny_pm_as_candle, btc_universal_threshold),
+                    open=day.ny_pm_as_candle[0],
+                    high=day.ny_pm_as_candle[1],
+                    low=day.ny_pm_as_candle[2],
+                    close=day.ny_pm_as_candle[3]
                 ))
 
             if day.ny_pm_close_as_candle[5] != "":
                 sessions.append(Session(
                     day_date=day.date_readable,
                     session_date=day.ny_pm_close_as_candle[5],
+                    session_end_date=session_end_time(day.ny_pm_close_as_candle, day.ny_pm_close_candles_15m),
                     name=SessionName.NY_CLOSE,
-                    type=typify_session(day.ny_pm_close_as_candle, btc_universal_threshold)
+                    type=typify_session(day.ny_pm_close_as_candle, btc_universal_threshold),
+                    open=day.ny_pm_close_as_candle[0],
+                    high=day.ny_pm_close_as_candle[1],
+                    low=day.ny_pm_close_as_candle[2],
+                    close=day.ny_pm_close_as_candle[3]
                 ))
 
             bar()
 
     return sessions
+
+
+def session_end_time(as_candle, candles_15m):
+    return (
+            datetime.strptime(as_candle[5], "%Y-%m-%d %H:%M")
+            + timedelta(minutes=15 * len(candles_15m)) - timedelta(seconds=1)
+    ).strftime("%Y-%m-%d %H:%M")
 
 
 def typify_session(candle: Tuple[float, float, float, float, float, str], thresholds: SessionThresholds):

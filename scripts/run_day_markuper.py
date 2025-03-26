@@ -1,13 +1,8 @@
-import sys
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
 from stock_market_research_kit.day import Day, new_day
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 import sqlite3
 import json
 from alive_progress import alive_bar
@@ -220,7 +215,8 @@ def insert_to_db(symbol: str, days: List[Day]):
 
     try:
         c.executemany("""INSERT INTO
-            days (symbol, date_ts, data) VALUES (?, ?, ?) ON CONFLICT (symbol, date_ts) DO UPDATE SET data = excluded.data""", rows)
+            days (symbol, date_ts, data) VALUES (?, ?, ?) ON CONFLICT (symbol, date_ts) DO UPDATE SET data = excluded.data""",
+                      rows)
         conn.commit()
         return True
     except sqlite3.ProgrammingError as e:

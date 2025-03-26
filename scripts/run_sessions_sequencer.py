@@ -45,6 +45,7 @@ profiles = {
     SessionName.NY_CLOSE.value: {},
 }
 
+
 def fill_trees(sessions: List[Session]):
     global tree_02_asia_directional
     global tree_03_london_directional
@@ -320,22 +321,56 @@ def fill_profiles(symbol):
     elapsed_time = end_time - start_time
     print(f"built trees for {elapsed_time:.6f} seconds")
 
-    profiles[SessionName.ASIA.value] = directional_profiles(ordered_trees[SessionName.ASIA.value], tree_02_asia_directional)
-    profiles[SessionName.LONDON.value] = directional_profiles(ordered_trees[SessionName.LONDON.value], tree_03_london_directional)
-    profiles[SessionName.EARLY.value] = directional_profiles(ordered_trees[SessionName.EARLY.value], tree_04_early_directional)
-    profiles[SessionName.PRE.value] = directional_profiles(ordered_trees[SessionName.PRE.value], tree_05_pre_directional)
-    profiles[SessionName.NY_OPEN.value] = directional_profiles(ordered_trees[SessionName.NY_OPEN.value], tree_06_open_directional)
-    profiles[SessionName.NY_AM.value] = directional_profiles(ordered_trees[SessionName.NY_AM.value], tree_07_nyam_directional)
-    profiles[SessionName.NY_LUNCH.value] = directional_profiles(ordered_trees[SessionName.NY_LUNCH.value], tree_08_lunch_directional)
-    profiles[SessionName.NY_PM.value] = directional_profiles(ordered_trees[SessionName.NY_PM.value], tree_09_nypm_directional)
-    profiles[SessionName.NY_CLOSE.value] = directional_profiles(ordered_trees[SessionName.NY_CLOSE.value], tree_10_close_directional)
+    profiles[SessionName.ASIA.value] = directional_profiles(ordered_trees[SessionName.ASIA.value],
+                                                            tree_02_asia_directional)
+    profiles[SessionName.LONDON.value] = directional_profiles(ordered_trees[SessionName.LONDON.value],
+                                                              tree_03_london_directional)
+    profiles[SessionName.EARLY.value] = directional_profiles(ordered_trees[SessionName.EARLY.value],
+                                                             tree_04_early_directional)
+    profiles[SessionName.PRE.value] = directional_profiles(ordered_trees[SessionName.PRE.value],
+                                                           tree_05_pre_directional)
+    profiles[SessionName.NY_OPEN.value] = directional_profiles(ordered_trees[SessionName.NY_OPEN.value],
+                                                               tree_06_open_directional)
+    profiles[SessionName.NY_AM.value] = directional_profiles(ordered_trees[SessionName.NY_AM.value],
+                                                             tree_07_nyam_directional)
+    profiles[SessionName.NY_LUNCH.value] = directional_profiles(ordered_trees[SessionName.NY_LUNCH.value],
+                                                                tree_08_lunch_directional)
+    profiles[SessionName.NY_PM.value] = directional_profiles(ordered_trees[SessionName.NY_PM.value],
+                                                             tree_09_nypm_directional)
+    profiles[SessionName.NY_CLOSE.value] = directional_profiles(ordered_trees[SessionName.NY_CLOSE.value],
+                                                                tree_10_close_directional)
 
     conn.close()
+
+
+def get_successful_profiles(sessions, min_times, min_chance):
+    result = {}
+    for session in profiles:
+        if session not in sessions:
+            continue
+        for candle_type in profiles[session]:
+            for profile in profiles[session][candle_type]:
+                if profile[-1][0] < min_times or float(profile[-1][2].split('%')[0]) < min_chance:
+                    continue
+                if session not in result:
+                    result[session] = {}
+                if candle_type not in result[session]:
+                    result[session][candle_type] = []
+                result[session][candle_type].append(profile)
+
+    return result
 
 
 if __name__ == "__main__":
     try:
         fill_profiles("BTCUSDT")
+        successful_profiles = get_successful_profiles(
+            [x.value for x in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
+             SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]],
+            2,
+            40
+        )
+        print('successful_profiles', successful_profiles)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

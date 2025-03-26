@@ -61,8 +61,13 @@ class SessionType(Enum):
 class Session:
     day_date: str
     session_date: str
+    session_end_date: str
     name: SessionName
     type: SessionType
+    open: float
+    high: float
+    low: float
+    close: float
 
     def to_db_format(self, symbol: str):
         return (symbol,
@@ -76,12 +81,3 @@ def enum_serializer(obj):
     if isinstance(obj, Enum):
         return obj.value
     raise TypeError(f"Type {type(obj)} not serializable")
-
-
-def new_session():
-    return Session(
-        day_date="",
-        session_date="",
-        name=SessionName.CME,
-        type=SessionType.COMPRESSION
-    )
