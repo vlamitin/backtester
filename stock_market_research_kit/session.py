@@ -30,7 +30,7 @@ class SessionName(Enum):
     NY_CLOSE = 'NY PM Close'
 
 
-sessions = [
+sessions_in_order = [
     SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY, SessionName.PRE,
     SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
 

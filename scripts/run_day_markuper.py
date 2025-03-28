@@ -1,96 +1,71 @@
+import json
+import sqlite3
 from datetime import datetime, timedelta
 from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
+from scripts.setup_db import connect_to_db
 from stock_market_research_kit.day import Day, new_day
-import sqlite3
-import json
-from alive_progress import alive_bar
-
-DATABASE_PATH = "stock_market_research.db"
-conn = sqlite3.connect(DATABASE_PATH)
-c = conn.cursor()
 
 
-def markup_days(daily_data_str, hourly_data_str, fifteen_minutely_data_str):
-    if daily_data_str is None or hourly_data_str is None or fifteen_minutely_data_str is None:
-        print("no data")
-        return
-
-    candles_15m = json.loads(fifteen_minutely_data_str)
-    candles_1h = json.loads(hourly_data_str)
-    candles_1d = json.loads(daily_data_str)
+def markup_days(candles_1d, candles_15m):
     days: List[Day] = []
 
-    last_i_1h = 0
     last_i_15m = 0
 
-    with alive_bar(len(candles_1d), title=f"Marking up {len(candles_1d)} day candles ...") as bar:
-        for i in range(len(candles_1d)):
-            day = new_day()
-            day.day_of_week = datetime.strptime(candles_1d[i][5], "%Y-%m-%d %H:%M").isoweekday()
-            day.date_readable = candles_1d[i][5]
+    for i in range(len(candles_1d)):
+        day = new_day()
+        day.day_of_week = datetime.strptime(candles_1d[i][5], "%Y-%m-%d %H:%M").isoweekday()
+        day.date_readable = candles_1d[i][5]
 
-            day.candle_1d = candles_1d[i]
+        day.candle_1d = candles_1d[i]
 
-            for i_1h in range(last_i_1h, len(candles_1h)):
-                candle = candles_1h[i_1h]
-                comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
-                if comparison_result == 1:
-                    last_i_1h = i_1h
-                    break
-                elif comparison_result == -1:
-                    continue
-
-                day.candles_1h.append(candle)
-
-            for i_15m in range(0 if last_i_15m - 8 < 0 else last_i_15m - 8, len(candles_15m)):
-                candle = candles_15m[i_15m]
-                comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
-                if comparison_result == 1:
-                    last_i_15m = i_15m
-                    break
-                elif comparison_result == -1:
-                    if is_prev_day_cme_open_time(candle[5], day.date_readable):
-                        day.cme_open_candles_15m.append(candle)
-                    elif is_asian_time(candle[5], day.date_readable):
-                        day.asian_candles_15m.append(candle)
-                    continue
-
-                if is_asian_time(candle[5], day.date_readable):  # check 2nd time because of DST
+        for i_15m in range(0 if last_i_15m - 8 < 0 else last_i_15m - 8, len(candles_15m)):
+            candle = candles_15m[i_15m]
+            comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
+            if comparison_result == 1:
+                last_i_15m = i_15m
+                break
+            elif comparison_result == -1:
+                if is_prev_day_cme_open_time(candle[5], day.date_readable):
+                    day.cme_open_candles_15m.append(candle)
+                elif is_asian_time(candle[5], day.date_readable):
                     day.asian_candles_15m.append(candle)
-                elif is_london_time(candle[5], day.date_readable):
-                    day.london_candles_15m.append(candle)
-                elif is_early_session_time(candle[5], day.date_readable):
-                    day.early_session_candles_15m.append(candle)
-                elif is_premarket_time(candle[5], day.date_readable):
-                    day.premarket_candles_15m.append(candle)
-                elif is_ny_am_open_time(candle[5], day.date_readable):
-                    day.ny_am_open_candles_15m.append(candle)
-                elif is_ny_am_time(candle[5], day.date_readable):
-                    day.ny_am_candles_15m.append(candle)
-                elif is_ny_lunch_time(candle[5], day.date_readable):
-                    day.ny_lunch_candles_15m.append(candle)
-                elif is_ny_pm_time(candle[5], day.date_readable):
-                    day.ny_pm_candles_15m.append(candle)
-                elif is_ny_pm_close_time(candle[5], day.date_readable):
-                    day.ny_pm_close_candles_15m.append(candle)
+                continue
 
-                day.candles_15m.append(candle)
+            if is_asian_time(candle[5], day.date_readable):  # check 2nd time because of DST
+                day.asian_candles_15m.append(candle)
+            elif is_london_time(candle[5], day.date_readable):
+                day.london_candles_15m.append(candle)
+            elif is_early_session_time(candle[5], day.date_readable):
+                day.early_session_candles_15m.append(candle)
+            elif is_premarket_time(candle[5], day.date_readable):
+                day.premarket_candles_15m.append(candle)
+            elif is_ny_am_open_time(candle[5], day.date_readable):
+                day.ny_am_open_candles_15m.append(candle)
+            elif is_ny_am_time(candle[5], day.date_readable):
+                day.ny_am_candles_15m.append(candle)
+            elif is_ny_lunch_time(candle[5], day.date_readable):
+                day.ny_lunch_candles_15m.append(candle)
+            elif is_ny_pm_time(candle[5], day.date_readable):
+                day.ny_pm_candles_15m.append(candle)
+            elif is_ny_pm_close_time(candle[5], day.date_readable):
+                day.ny_pm_close_candles_15m.append(candle)
 
-            day.cme_as_candle = as_1_candle(day.cme_open_candles_15m)
-            day.asia_as_candle = as_1_candle(day.asian_candles_15m)
-            day.london_as_candle = as_1_candle(day.london_candles_15m)
-            day.early_session_as_candle = as_1_candle(day.early_session_candles_15m)
-            day.premarket_as_candle = as_1_candle(day.premarket_candles_15m)
-            day.ny_am_open_as_candle = as_1_candle(day.ny_am_open_candles_15m)
-            day.ny_am_as_candle = as_1_candle(day.ny_am_candles_15m)
-            day.ny_lunch_as_candle = as_1_candle(day.ny_lunch_candles_15m)
-            day.ny_pm_as_candle = as_1_candle(day.ny_pm_candles_15m)
-            day.ny_pm_close_as_candle = as_1_candle(day.ny_pm_close_candles_15m)
+            day.candles_15m.append(candle)
 
-            days.append(day)
-            bar()
+        day.cme_as_candle = as_1_candle(day.cme_open_candles_15m)
+        day.asia_as_candle = as_1_candle(day.asian_candles_15m)
+        day.london_as_candle = as_1_candle(day.london_candles_15m)
+        day.early_session_as_candle = as_1_candle(day.early_session_candles_15m)
+        day.premarket_as_candle = as_1_candle(day.premarket_candles_15m)
+        day.ny_am_open_as_candle = as_1_candle(day.ny_am_open_candles_15m)
+        day.ny_am_as_candle = as_1_candle(day.ny_am_candles_15m)
+        day.ny_lunch_as_candle = as_1_candle(day.ny_lunch_candles_15m)
+        day.ny_pm_as_candle = as_1_candle(day.ny_pm_candles_15m)
+        day.ny_pm_close_as_candle = as_1_candle(day.ny_pm_close_candles_15m)
+
+        days.append(day)
 
     return days
 
@@ -110,6 +85,52 @@ def is_same_day_or_past_or_future(checked_time_string, current_day_string):
         return 1
     else:
         return 0
+
+
+def to_timestamp(date_str):
+    if date_str == "":
+        return -1
+
+    return int(datetime.strptime(date_str, "%Y-%m-%d %H:%M").timestamp() * 1000)
+
+
+def get_previous_candle_15m_close():
+    now = datetime.now()
+    rounded = now.replace(minute=(now.minute // 15) * 15, second=0, microsecond=0)
+    previous_close = rounded - timedelta(milliseconds=1)
+    return int(previous_close.timestamp() * 1000)
+
+
+def now_ts():
+    return int(datetime.now().timestamp() * 1000)
+
+
+def get_actual_cme_open_time():
+    now_time = datetime.now(ZoneInfo("America/New_York"))
+
+    if now_time.hour >= 18:
+        if now_time.isoweekday() in [5, 6]:
+            return ""
+        res_time = datetime(
+            now_time.year, now_time.month, now_time.day, 18, 0, tzinfo=ZoneInfo("America/New_York")
+        ).astimezone(ZoneInfo("UTC"))
+
+        return res_time.strftime("%Y-%m-%d %H:%M")
+
+    prev_day = now_time - timedelta(days=1)
+    if prev_day.isoweekday() in [5, 6]:
+        return ""
+    res_time = datetime(
+        prev_day.year, prev_day.month, prev_day.day, 18, 0, tzinfo=ZoneInfo("America/New_York")
+    ).astimezone(ZoneInfo("UTC"))
+
+    return res_time.strftime("%Y-%m-%d %H:%M")
+
+
+def today_candle_from_15m_candles(candles_15m):
+    today_candles = [x for x in candles_15m
+                     if datetime.strptime(x[5], "%Y-%m-%d %H:%M").date() == datetime.today().date()]
+    return as_1_candle(today_candles)
 
 
 def is_prev_day_cme_open_time(checked_time_string, current_day_string):
@@ -210,10 +231,11 @@ def as_1_candle(candles: List[Tuple[float]]) -> Tuple[float, float, float, float
     return open_, high, low, close, volume, date
 
 
-def insert_to_db(symbol: str, days: List[Day]):
+def insert_to_db(symbol: str, days: List[Day], conn):
     rows = [day.to_db_format(symbol) for day in days]
 
     try:
+        c = conn.cursor()
         c.executemany("""INSERT INTO
             days (symbol, date_ts, data) VALUES (?, ?, ?) ON CONFLICT (symbol, date_ts) DO UPDATE SET data = excluded.data""",
                       rows)
@@ -224,8 +246,11 @@ def insert_to_db(symbol: str, days: List[Day]):
         return False
 
 
-def main(symbol):
-    c.execute("""SELECT symbol, daily, hourly, fifteen_minutely
+def main(symbol, year):
+    conn = connect_to_db(year)
+    c = conn.cursor()
+
+    c.execute("""SELECT symbol, daily, fifteen_minutely
         FROM stock_data WHERE symbol = ?""", (symbol,))
     rows = c.fetchall()
 
@@ -233,11 +258,19 @@ def main(symbol):
         print(f"Symbol {symbol} not found in DB")
         return
 
-    symbol, daily_data_str, hourly_data_str, fifteen_minutely_data_str = rows[0]
+    symbol, daily_data_str, fifteen_minutely_data_str = rows[0]
     print(f"Marking up {symbol}")
-    days = markup_days(daily_data_str, hourly_data_str, fifteen_minutely_data_str)
+
+    if daily_data_str is None or fifteen_minutely_data_str is None:
+        print("no data")
+        return
+
+    candles_15m = json.loads(fifteen_minutely_data_str)
+    candles_1d = json.loads(daily_data_str)
+
+    days = markup_days(candles_1d, candles_15m)
     print(f"Done marking up {len(days)} days. Inserting results to db")
-    result = insert_to_db(symbol, days)
+    result = insert_to_db(symbol, days, conn)
     if result:
         print(f"Done with {symbol}")
 
@@ -246,7 +279,8 @@ def main(symbol):
 
 if __name__ == "__main__":
     try:
-        main("BTCUSDT")
+        cmet = get_actual_cme_open_time()
+        main("AAVEUSDT", 2024)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

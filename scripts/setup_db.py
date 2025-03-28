@@ -124,8 +124,14 @@ def add_subcluster_column_to_trades_table(conn: Connection) -> None:
     conn.commit()
 
 
-def main():
-    db_name = "stock_market_research.db"
+def connect_to_db(year):
+    conn = sqlite3.connect(f"stock_market_research_{year}.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def setup_db(year):
+    db_name = f"stock_market_research_{year}.db"
     conn = create_database(db_name)
     create_stock_data_table(conn)
     create_days_table(conn)
@@ -134,9 +140,9 @@ def main():
     create_trades_table(conn)
     add_cluster_column_to_trades_table(conn)
     add_subcluster_column_to_trades_table(conn)
-    print("Database created successfully")
+    print(f"Database {db_name} created successfully")
     conn.close()
 
 
 if __name__ == "__main__":
-    main()
+    setup_db(2021)

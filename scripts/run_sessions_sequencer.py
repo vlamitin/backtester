@@ -1,13 +1,9 @@
-import sqlite3
 import time
 from typing import List
 
+from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle_tree import tree_from_sessions, Tree
 from stock_market_research_kit.session import SessionType, SessionName, session_from_json, Session
-
-DATABASE_PATH = "stock_market_research.db"
-conn = sqlite3.connect(DATABASE_PATH)
-c = conn.cursor()
 
 ordered_trees = {
     SessionName.CME.value: Tree('tree_01_cme_ordered', 'total', 0),
@@ -304,7 +300,9 @@ def directional_profiles(session_ordered_tree, session_filtered_tree):
     return result
 
 
-def fill_profiles(symbol):
+def fill_profiles(symbol, year):
+    conn = connect_to_db(year)
+    c = conn.cursor()
     c.execute("""SELECT data FROM sessions WHERE symbol = ? ORDER BY session_ts""", (symbol,))
     sessions_rows = c.fetchall()
 
@@ -343,10 +341,10 @@ def fill_profiles(symbol):
     conn.close()
 
 
-def get_successful_profiles(sessions, min_times, min_chance):
+def get_successful_profiles(session_names, min_times, min_chance):
     result = {}
     for session in profiles:
-        if session not in sessions:
+        if session not in session_names:
             continue
         for candle_type in profiles[session]:
             for profile in profiles[session][candle_type]:
@@ -363,7 +361,7 @@ def get_successful_profiles(sessions, min_times, min_chance):
 
 if __name__ == "__main__":
     try:
-        fill_profiles("BTCUSDT")
+        fill_profiles("BTCUSDT", 2022)
         successful_profiles = get_successful_profiles(
             [x.value for x in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
              SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]],

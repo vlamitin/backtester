@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from stock_market_research_kit.session import SessionName
+from stock_market_research_kit.session import SessionName, SessionType
 
 
 @dataclass
@@ -12,6 +12,7 @@ class SessionTrade:
     position_usd: float  # actual position in coins
 
     hunting_session: SessionName
+    hunting_type: SessionType
     predict_direction: str  # UP or DOWN
     entry_strategy: str  # in free format, e.g. 'NY Lunch__BULL  NY PM__BULL NY PM Close__BULL'
 
@@ -23,4 +24,5 @@ class SessionTrade:
 
     closes: List[Tuple[float, float, str, str]]  # list of closes in (position_percent, price, time, reason) format
 
+    result_type: SessionType
     pnl_usd: float

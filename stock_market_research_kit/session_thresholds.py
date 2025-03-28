@@ -12,13 +12,13 @@ class ThresholdsCalcMethod(Enum):
     SESSION_SMA_10 = 'SESSION_SMA_10'
     SESSION_SMA_20 = 'SESSION_SMA_20'
     # перф сессии = перф дня * доля сессии в часах от 24ч
-    HOURS_WEIGHTED_ALL = 'HOURS_WEIGHTED_ALL'
-    HOURS_WEIGHTED_SMA_10 = 'HOURS_WEIGHTED_SMA_10'
-    HOURS_WEIGHTED_SMA_20 = 'HOURS_WEIGHTED_SMA_20'
+    # HOURS_WEIGHTED_ALL = 'HOURS_WEIGHTED_ALL'
+    # HOURS_WEIGHTED_SMA_10 = 'HOURS_WEIGHTED_SMA_10'
+    # HOURS_WEIGHTED_SMA_20 = 'HOURS_WEIGHTED_SMA_20'
     # сравниваем сессии друг с другом, по ним считаем удельные веса и далее перф сессии = перф дня * удельный вес
-    PERF_WEIGHTED_ALL = 'PERF_WEIGHTED_ALL'
-    PERF_WEIGHTED_SMA_10 = 'PERF_WEIGHTED_SMA_10'
-    PERF_WEIGHTED_SMA_20 = 'PERF_WEIGHTED_SMA_20'
+    # PERF_WEIGHTED_ALL = 'PERF_WEIGHTED_ALL'
+    # PERF_WEIGHTED_SMA_10 = 'PERF_WEIGHTED_SMA_10'
+    # PERF_WEIGHTED_SMA_20 = 'PERF_WEIGHTED_SMA_20'
 
 
 @dataclass

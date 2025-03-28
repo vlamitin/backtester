@@ -1,0 +1,22 @@
+{
+  "name": "stock_market_research_kit",
+  "version": "1.0.0",
+  "description": "Please note that this is currently very much a work in progress.",
+  "main": "index.js",
+  "scripts": {
+    "serve": "http-server ./static -p 3000 --cors -c-1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/base-report/stock_market_research_kit.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/base-report/stock_market_research_kit/issues"
+  },
+  "homepage": "https://github.com/base-report/stock_market_research_kit#readme",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}

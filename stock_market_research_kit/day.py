@@ -1,11 +1,11 @@
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 
 def day_from_json(json_str):
-    return Day(**json.loads(json_str))
+    return Day.from_json(json.loads(json_str))
 
 
 @dataclass
@@ -14,7 +14,6 @@ class Day:
     date_readable: str
 
     candle_1d: Tuple[float, float, float, float, float, str]
-    candles_1h: List[Tuple[float, float, float, float, float, str]]
     candles_15m: List[Tuple[float, float, float, float, float, str]]
 
     # do: float  # TODO заполнить скриптом и это
@@ -48,6 +47,12 @@ class Day:
     ny_pm_as_candle: Tuple[float, float, float, float, float, str]
     ny_pm_close_as_candle: Tuple[float, float, float, float, float, str]
 
+    @classmethod
+    def from_json(cls, data: dict):
+        known_fields = set(cls.__dataclass_fields__.keys())  # Get dataclass fields
+        filtered_data = {k: v for k, v in data.items() if k in known_fields}
+        return cls(**filtered_data)
+
     def to_db_format(self, symbol: str):
         return symbol, datetime.strptime(self.date_readable, "%Y-%m-%d %H:%M").timestamp(), json.dumps(asdict(self),
                                                                                                        indent=4)
@@ -58,7 +63,6 @@ def new_day():
         day_of_week=-1,
         date_readable="",
         candle_1d=(-1, -1, -1, -1, 0, ""),
-        candles_1h=[],
         candles_15m=[],
         # do=-1,
         # true_do=-1,
