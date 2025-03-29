@@ -9,8 +9,8 @@ class ThresholdsCalcMethod(Enum):
     EXPERT = 'EXPERT'
     # сравниваем с этими же сессиями других дней
     SESSION_ALL = 'SESSION_ALL'
+    SESSION_SMA_05 = 'SESSION_SMA_05'
     SESSION_SMA_10 = 'SESSION_SMA_10'
-    SESSION_SMA_20 = 'SESSION_SMA_20'
     # перф сессии = перф дня * доля сессии в часах от 24ч
     # HOURS_WEIGHTED_ALL = 'HOURS_WEIGHTED_ALL'
     # HOURS_WEIGHTED_SMA_10 = 'HOURS_WEIGHTED_SMA_10'

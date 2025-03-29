@@ -7,19 +7,20 @@ def create_database(database_name: str) -> Connection:
     return conn
 
 
-def create_stock_data_table(conn: Connection) -> None:
+def create_raw_candles_table(conn: Connection) -> None:
     cursor = conn.cursor()
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS stock_data (
-            symbol TEXT NOT NULL PRIMARY KEY,
-            exchange TEXT,
-            sector TEXT,
-            industry TEXT,
-            delisted INTEGER,
-            daily BLOB,
-            hourly BLOB,
-            fifteen_minutely BLOB
+        CREATE TABLE IF NOT EXISTS raw_candles (
+            symbol TEXT NOT NULL,
+            date_ts INTEGER,
+            period TEXT,
+            open REAL,
+            high REAL,
+            low REAL,
+            close REAL,
+            volume REAL,
+            PRIMARY KEY (symbol, date_ts, period)
         );
         """
     )
@@ -35,42 +36,6 @@ def create_days_table(conn: Connection) -> None:
             date_ts INTEGER,
             data BLOB,
             PRIMARY KEY (symbol, date_ts)
-        );
-        """
-    )
-    conn.commit()
-
-
-def create_sessions_table(conn: Connection) -> None:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS sessions (
-            symbol TEXT NOT NULL,
-            day_ts INTEGER,
-            session_ts INTEGER,
-            session TEXT NOT NULL,
-            data BLOB,
-            PRIMARY KEY (symbol, day_ts, session)
-        );
-        """
-    )
-    conn.commit()
-
-
-def create_sessions_sequence_table(conn: Connection) -> None:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS sessions_sequence (
-            symbol TEXT NOT NULL,
-            tree_name TEXT NOT NULL,
-            session TEXT NOT NULL,
-            candle_type TEXT NOT NULL,
-            parent_session TEXT NOT NULL,
-            parent_candle_type TEXT NOT NULL,
-            count INTEGER,
-            PRIMARY KEY (symbol, tree_name, session, candle_type, parent_session, parent_candle_type)
         );
         """
     )
@@ -133,16 +98,21 @@ def connect_to_db(year):
 def setup_db(year):
     db_name = f"stock_market_research_{year}.db"
     conn = create_database(db_name)
-    create_stock_data_table(conn)
+    create_raw_candles_table(conn)
     create_days_table(conn)
-    create_sessions_table(conn)
-    create_sessions_sequence_table(conn)
-    create_trades_table(conn)
-    add_cluster_column_to_trades_table(conn)
-    add_subcluster_column_to_trades_table(conn)
+    # create_trades_table(conn)
+    # add_cluster_column_to_trades_table(conn)
+    # add_subcluster_column_to_trades_table(conn)
     print(f"Database {db_name} created successfully")
     conn.close()
 
 
 if __name__ == "__main__":
-    setup_db(2021)
+    for db_year in [
+        2021,
+        2022,
+        2023,
+        2024,
+        2025
+    ]:
+        setup_db(db_year)

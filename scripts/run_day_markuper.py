@@ -14,6 +14,8 @@ def markup_days(candles_1d, candles_15m):
     last_i_15m = 0
 
     for i in range(len(candles_1d)):
+        if i % 100 == 0:
+            print(f"marking up {i}/{len(candles_1d)}")
         day = new_day()
         day.day_of_week = datetime.strptime(candles_1d[i][5], "%Y-%m-%d %H:%M").isoweekday()
         day.date_readable = candles_1d[i][5]
@@ -250,37 +252,52 @@ def main(symbol, year):
     conn = connect_to_db(year)
     c = conn.cursor()
 
-    c.execute("""SELECT symbol, daily, fifteen_minutely
-        FROM stock_data WHERE symbol = ?""", (symbol,))
-    rows = c.fetchall()
+    c.execute("""SELECT open, high, low, close, volume, date_ts
+        FROM raw_candles WHERE symbol = ? AND period = ?""", (symbol, "1d"))
+    rows_1d = c.fetchall()
 
-    if len(rows) == 0:
-        print(f"Symbol {symbol} not found in DB")
+    if len(rows_1d) == 0:
+        print(f"Symbol {symbol} {year} year 1d not found in DB")
         return
 
-    symbol, daily_data_str, fifteen_minutely_data_str = rows[0]
-    print(f"Marking up {symbol}")
+    c.execute("""SELECT open, high, low, close, volume, date_ts
+        FROM raw_candles WHERE symbol = ? AND period = ?""", (symbol, "15m"))
+    rows_15m = c.fetchall()
 
-    if daily_data_str is None or fifteen_minutely_data_str is None:
-        print("no data")
+    if len(rows_15m) == 0:
+        print(f"Symbol {symbol} 15m not found in DB")
         return
 
-    candles_15m = json.loads(fifteen_minutely_data_str)
-    candles_1d = json.loads(daily_data_str)
+    candles_1d = [[x[0], x[1], x[2], x[3], x[4], datetime.fromtimestamp(x[5]).strftime("%Y-%m-%d %H:%M")] for x in
+                  rows_1d]
+    candles_15m = [[x[0], x[1], x[2], x[3], x[4], datetime.fromtimestamp(x[5]).strftime("%Y-%m-%d %H:%M")] for x in
+                   rows_15m]
 
     days = markup_days(candles_1d, candles_15m)
-    print(f"Done marking up {len(days)} days. Inserting results to db")
+    print(f"Done marking up {symbol} {len(days)} days. Inserting results to db")
     result = insert_to_db(symbol, days, conn)
     if result:
-        print(f"Done with {symbol}")
-
+        print(f"Done with {year} year {symbol}")
     conn.close()
+
+    return days
 
 
 if __name__ == "__main__":
     try:
-        cmet = get_actual_cme_open_time()
-        main("AAVEUSDT", 2024)
+        # cmet = get_actual_cme_open_time()
+        for smb in [
+            "BTCUSDT",
+            "AAVEUSDT"
+        ]:
+            for series_year in [
+                2021,
+                2022,
+                2023,
+                2024,
+                2025
+            ]:
+                main(smb, series_year)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

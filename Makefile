@@ -13,3 +13,10 @@ notify_test:
       	 -H 'Content-Type: application/json' \
          -d '{"chat_id": "$(SESSIONS_STAT_CHANNEL_ID)", "text": "test message", "disable_notification": true}' \
          https://api.telegram.org/bot$(TG_BOT_TOKEN)/sendMessage
+
+.PHONY: recalculate_db
+.SILENT: recalculate_db
+recalculate_db:
+	python -m scripts.setup_db \
+		&& python -m scripts.run_series_raw_loader \
+		&& python -m scripts.run_day_markuper

@@ -3,8 +3,9 @@ import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from scripts.run_sessions_sequencer import fill_profiles, profiles
+from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.day import day_from_json
-from stock_market_research_kit.session import session_from_json
+from stock_market_research_kit.session import session_from_json, json_from_sessions
 
 DATABASE_PATH = "stock_market_research_2024.db"
 conn = sqlite3.connect(DATABASE_PATH)
@@ -40,22 +41,22 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(sessions_split_parts) == 2 and sessions_split_parts[0] == "":
             symbol = sessions_split_parts[1]
             # sql injections, welcom =)
-            c.execute("""SELECT data FROM sessions WHERE symbol = ? ORDER BY session_ts""", (symbol,))
-            sessions_rows = c.fetchall()
+            c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
+            days_rows = c.fetchall()
 
-            if len(sessions_rows) == 0:
+            if len(days_rows) == 0:
                 self.send_response(404)
                 self.end_headers()
-                print(f"Symbol {symbol} not found in sessions table")
+                print(f"Symbol {symbol} not found in days table")
                 return
 
-            sessions = [json.loads(x[0]) for x in sessions_rows]
+            sessions = typify_sessions([day_from_json(x[0]) for x in days_rows])
 
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps(sessions, indent=4).encode())
+            self.wfile.write(json_from_sessions(sessions).encode())
             return
 
         profiles_split_parts = self.path.split("/api/profiles/")

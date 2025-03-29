@@ -148,7 +148,6 @@ def typify_sessions(days: List[Day]):
                 close=day.ny_pm_close_as_candle[3]
             ))
 
-
     return sessions
 
 
@@ -226,46 +225,26 @@ def typify_session(candle: Tuple[float, float, float, float, float, str], thresh
         return SessionType.V_SHAPE
 
 
-def insert_sessions_to_db(symbol: str, sessions: List[Session], conn):
-    rows = [session.to_db_format(symbol) for session in sessions]
-
-    try:
-        c = conn.cursor()
-        c.executemany("""INSERT INTO
-            sessions (symbol, day_ts, session_ts, session, data) VALUES (?, ?, ?, ?, ?) ON CONFLICT (symbol, day_ts, session) DO UPDATE SET data = excluded.data""",
-                      rows)
-        conn.commit()
-        return True
-    except sqlite3.ProgrammingError as e:
-        print(f"Error inserting sessions data for symbol {symbol}: {e}")
-        return False
-
-
-def main(symbol, year):
-    conn = connect_to_db(year)
-    c = conn.cursor()
-
-    c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
-    rows = c.fetchall()
-
-    if len(rows) == 0:
-        print(f"Symbol {symbol} not found in DB")
-        return
-
-    days = [day_from_json(x[0]) for x in rows]
-    print(f"Typifying sessions of {len(rows)} days of {symbol}")
-    sessions = typify_sessions(days)
-    print(f"Done typifying up {len(sessions)} sessions. Inserting results to db")
-    result = insert_sessions_to_db(symbol, sessions, conn)
-    if result:
-        print(f"Done with {symbol}")
-
-    conn.close()
-
-
+YEAR = 2022
+SYMBOL = "BTCUSDT"
 if __name__ == "__main__":
     try:
-        main("AAVEUSDT", 2024)
+        conn = connect_to_db(YEAR)
+        c = conn.cursor()
+
+        c.execute("""SELECT data FROM days WHERE symbol = ?""", (SYMBOL,))
+        rows = c.fetchall()
+
+        if len(rows) == 0:
+            print(f"Symbol {SYMBOL} not found in DB")
+            quit(0)
+
+        days = [day_from_json(x[0]) for x in rows]
+        print(f"Typifying sessions of {len(rows)} {YEAR} days of {SYMBOL}")
+        sessions = typify_sessions(days)
+        print(f"Done typifying up {len(sessions)} sessions")
+
+        conn.close()
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

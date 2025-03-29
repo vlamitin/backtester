@@ -1,8 +1,10 @@
 import time
 from typing import List
 
+from scripts.run_sessions_typifier import typify_sessions
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle_tree import tree_from_sessions, Tree
+from stock_market_research_kit.day import day_from_json
 from stock_market_research_kit.session import SessionType, SessionName, session_from_json, Session
 
 ordered_trees = {
@@ -303,21 +305,24 @@ def directional_profiles(session_ordered_tree, session_filtered_tree):
 def fill_profiles(symbol, year):
     conn = connect_to_db(year)
     c = conn.cursor()
-    c.execute("""SELECT data FROM sessions WHERE symbol = ? ORDER BY session_ts""", (symbol,))
-    sessions_rows = c.fetchall()
 
-    if len(sessions_rows) == 0:
-        print(f"Symbol {symbol} not found in sessions table")
+    c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
+    days_rows = c.fetchall()
+
+    if len(days_rows) == 0:
+        print(f"Symbol {symbol} not found in days table")
         return
 
-    sessions = [session_from_json(x[0]) for x in sessions_rows]
-    print(f"Found {len(sessions)} {symbol} rows")
+    sessions = typify_sessions([day_from_json(x[0]) for x in days_rows])
+    print(f"Found {len(sessions)} {symbol} sessions")
 
     start_time = time.perf_counter()
     fill_trees(sessions)
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     print(f"built trees for {elapsed_time:.6f} seconds")
+
+    start_time1 = time.perf_counter()
 
     profiles[SessionName.ASIA.value] = directional_profiles(ordered_trees[SessionName.ASIA.value],
                                                             tree_02_asia_directional)
@@ -337,6 +342,10 @@ def fill_profiles(symbol, year):
                                                              tree_09_nypm_directional)
     profiles[SessionName.NY_CLOSE.value] = directional_profiles(ordered_trees[SessionName.NY_CLOSE.value],
                                                                 tree_10_close_directional)
+
+    end_time1 = time.perf_counter()
+    elapsed_time1 = end_time1 - start_time1
+    print(f"built directional_profiles for {elapsed_time1:.6f} seconds")
 
     conn.close()
 
@@ -361,14 +370,14 @@ def get_successful_profiles(session_names, min_times, min_chance):
 
 if __name__ == "__main__":
     try:
-        fill_profiles("BTCUSDT", 2022)
+        fill_profiles("BTCUSDT", 2024)
         successful_profiles = get_successful_profiles(
             [x.value for x in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
-             SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]],
+                               SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]],
             2,
             40
         )
-        print('successful_profiles', successful_profiles)
+        print('len(successful_profiles)', len(successful_profiles))
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

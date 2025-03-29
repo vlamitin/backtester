@@ -1,6 +1,6 @@
 import csv
 import os
-import json
+import sqlite3
 from datetime import datetime
 
 from scripts.setup_db import connect_to_db
@@ -43,29 +43,33 @@ def to_inner_candle(binance_candle):
     return [open_price, high, low, close, volume, date]
 
 
-def update_stock_data(timeseries_data, symbol, period, conn):
-    c = conn.cursor()
-    c.execute(
-        "INSERT OR IGNORE INTO stock_data (symbol, exchange, sector, industry, delisted) VALUES (?, ?, ?, ?, ?)",
-        (
-            symbol,
-            "BINANCE",
-            "CRYPTO",
-            "CRYPTO",
-            False,
-        ),
-    )
-    if period == "1d":
-        c.execute(
-            "UPDATE stock_data SET daily = ? WHERE symbol = ?",
-            (json.dumps(timeseries_data), symbol),
+def to_db_format(symbol, period, inner_candle):
+    return (symbol, datetime.strptime(inner_candle[5], "%Y-%m-%d %H:%M").timestamp(), period,
+            inner_candle[0], inner_candle[1], inner_candle[2], inner_candle[3], inner_candle[4])
+
+
+def update_stock_data(inner_candles, symbol, period, conn):
+    rows = [to_db_format(symbol, period, candle) for candle in inner_candles]
+
+    try:
+        c = conn.cursor()
+        c.executemany(
+            """INSERT INTO raw_candles (symbol, date_ts, period, open, high, low, close, volume) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
+                ON CONFLICT (symbol, date_ts, period) DO UPDATE
+                SET open = excluded.open, 
+                    high = excluded.high, 
+                    low = excluded.low, 
+                    close = excluded.close,
+                    volume = excluded.volume""",
+            rows
         )
-    elif period == "15m":
-        c.execute(
-            "UPDATE stock_data SET fifteen_minutely = ? WHERE symbol = ?",
-            (json.dumps(timeseries_data), symbol),
-        )
-    conn.commit()
+        conn.commit()
+        print(f"Success inserting {len(rows)} raw_candles {period} data for symbol {symbol}")
+        return True
+    except sqlite3.ProgrammingError as e:
+        print(f"Error inserting raw_candles {period} data for symbol {symbol}: {e}")
+        return False
 
 
 def load_series(year, symbol):
@@ -77,12 +81,25 @@ def load_series(year, symbol):
     series_15m = load_timeseries_data(symbol, "15m", year)
     update_stock_data(series_15m, symbol, "15m", connection)
 
+    print(f"done loading {year} year for {symbol}")
+
     connection.close()
 
 
 if __name__ == "__main__":
     try:
-        load_series(2024, "AAVEUSDT")
+        for smb in [
+            "BTCUSDT",
+            "AAVEUSDT"
+        ]:
+            for series_year in [
+                2021,
+                2022,
+                2023,
+                2024,
+                2025
+            ]:
+                load_series(series_year, smb)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

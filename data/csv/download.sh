@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PERIOD="1h"
-YEAR="2024"
+PERIOD="15m"
+YEAR="2025"
 SYMBOL="AAVEUSDT"
 BASE_URL="https://data.binance.vision/data/futures/um/monthly/klines/${SYMBOL}/${PERIOD}"
 

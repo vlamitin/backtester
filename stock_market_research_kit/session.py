@@ -16,6 +16,20 @@ def session_from_json(json_str):
     return json.loads(json_str, object_hook=session_decoder)
 
 
+def enum_serializer(obj):
+    if isinstance(obj, Enum):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+def json_from_session(session):
+    return json.dumps(asdict(session), default=enum_serializer, indent=4)
+
+
+def json_from_sessions(sessions):
+    return json.dumps([session.__dict__ for session in sessions], default=enum_serializer, indent=4)
+
+
 class SessionName(Enum):
     UNSPECIFIED = 'UNSPECIFIED'
     CME = 'CME Open'
@@ -33,6 +47,7 @@ class SessionName(Enum):
 sessions_in_order = [
     SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY, SessionName.PRE,
     SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]
+
 
 class SessionType(Enum):
     UNSPECIFIED = 'UNSPECIFIED'
@@ -74,10 +89,4 @@ class Session:
                 datetime.strptime(self.day_date, "%Y-%m-%d %H:%M").timestamp(),
                 datetime.strptime(self.session_date, "%Y-%m-%d %H:%M").timestamp(),
                 self.name.value,
-                json.dumps(asdict(self), default=enum_serializer, indent=4))
-
-
-def enum_serializer(obj):
-    if isinstance(obj, Enum):
-        return obj.value
-    raise TypeError(f"Type {type(obj)} not serializable")
+                json_from_session(self))
