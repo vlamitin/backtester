@@ -42,6 +42,26 @@ def create_days_table(conn: Connection) -> None:
     conn.commit()
 
 
+def create_profiles_table(conn: Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS backtested_profiles (
+            profile_key TEXT NOT NULL,
+            thresholds BLOB NOT NULL,
+            profile_symbol TEXT NOT NULL,
+            profile_year TEXT NOT NULL,
+            win INTEGER NOT NULL,
+            lose INTEGER NOT NULL,
+            pnl REAL NOT NULL,
+            trades BLOB NOT NULL,
+            PRIMARY KEY (profile_key, thresholds, profile_symbol)
+        );
+        """
+    )
+    conn.commit()
+
+
 def create_trades_table(conn: Connection) -> None:
     cursor = conn.cursor()
     cursor.execute(
@@ -100,6 +120,7 @@ def setup_db(year):
     conn = create_database(db_name)
     create_raw_candles_table(conn)
     create_days_table(conn)
+    create_profiles_table(conn)
     # create_trades_table(conn)
     # add_cluster_column_to_trades_table(conn)
     # add_subcluster_column_to_trades_table(conn)

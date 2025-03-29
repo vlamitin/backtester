@@ -142,9 +142,9 @@ def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: 
     c = conn.cursor()
 
     c.execute("""SELECT data FROM days WHERE symbol = ?""", (test_symbol,))
-    rows = c.fetchall()
+    days_rows = c.fetchall()
 
-    if len(rows) == 0:
+    if len(days_rows) == 0:
         print(f"Symbol {test_symbol} not found in days table")
         quit(0)
 
@@ -175,7 +175,7 @@ def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: 
     )
 
     conn.close()
-    res = backtest([day_from_json(x[0]) for x in rows], successful_profiles, bt)
+    res = backtest([day_from_json(x[0]) for x in days_rows], successful_profiles, bt)
 
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
@@ -190,18 +190,21 @@ def get_backtested_profiles(profiles_symbol, test_symbol):
         2022: {},
         2023: {},
         2024: {},
+        2025: {},
     }
     for profile_year in [
         2021,
         2022,
         2023,
-        2024
+        2024,
+        2025,
     ]:
         for test_year in [
             2021,
             2022,
             2023,
-            2024
+            2024,
+            2025
         ]:
             if test_year == profile_year:
                 continue
@@ -216,15 +219,22 @@ def get_backtested_profiles(profiles_symbol, test_symbol):
                 profiles[profile_year][profile][test_year] = test.trades_by_strategy[profile]
 
     unsorted_profiles = []
-    for profile_year in [2021, 2022, 2023, 2024]:
+    for profile_year in [2021, 2022, 2023, 2024, 2025]:
         for profile in profiles[profile_year]:
-            unsorted_profiles.append({
+            unsorted_profile = {
                 'year': profile_year,
                 'profile': profile,
                 'win': profiles[profile_year][profile]['win'],
                 'lose': profiles[profile_year][profile]['lose'],
                 'pnl': profiles[profile_year][profile]['pnl'],
-            })
+                'trades': []
+            }
+
+            for test_year in [2021, 2022, 2023, 2024, 2025]:
+                if test_year in profiles[profile_year][profile]:
+                    unsorted_profile['trades'].extend(profiles[profile_year][profile][test_year].trades)
+
+            unsorted_profiles.append(unsorted_profile)
 
     def custom_sort(value):
         return value['pnl']
@@ -245,7 +255,5 @@ if __name__ == "__main__":
         quit(0)
 
     #  TODO:
-    #   - выделить это в отдельную функцию
     #   - сохранять топ профили (по какому-то трешхолду) в БД
     #   - по каждому из профилей прогнать разбивку по месяцам - с каким win rate и pnl они бы работали
-    #   - прикрутить ТГ бота с сигналами по топ профилям
