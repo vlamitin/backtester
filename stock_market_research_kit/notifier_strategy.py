@@ -43,8 +43,8 @@ btc_naive_strategy = NotifierStrategy(
         2024,
         2025
     ],
-    backtest_min_pnl_per_trade=-5.5,
-    # backtest_min_pnl_per_trade=3.5,
-    # backtest_min_win_rate=0.5,
-    backtest_min_win_rate=0.1,
+    # backtest_min_pnl_per_trade=-5.5,
+    backtest_min_pnl_per_trade=0.5,
+    backtest_min_win_rate=0.5,
+    # backtest_min_win_rate=0.1,
 )

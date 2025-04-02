@@ -1,11 +1,12 @@
 import sqlite3
 from datetime import datetime, timedelta
+from time import sleep
 from typing import List
 from zoneinfo import ZoneInfo
 
 from scripts.run_day_markuper import markup_days, as_1_candle
 from scripts.run_series_raw_loader import update_candle_from_binance
-from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest
+from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest, get_backtested_profiles
 from scripts.run_sessions_typifier import typify_sessions, typify_session
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy
@@ -22,8 +23,7 @@ def get_last_day_candles(symbol):
     connection = connect_to_db(now_year)
     c = connection.cursor()
 
-    # time_from = to_date_str(start_of_day(now_utc_datetime()) - timedelta(hours=2)) # TODO не забыть поправить!
-    time_from = to_date_str(start_of_day(now_utc_datetime()) - timedelta(days=1, hours=2))
+    time_from = to_date_str(start_of_day(now_utc_datetime()) - timedelta(hours=2))
     time_to = to_date_str(now_utc_datetime())
 
     c.execute("""SELECT open, high, low, close, volume, date_ts FROM raw_candles
@@ -320,45 +320,44 @@ def update_candles(symbols):
 def run_notifier(symbols_with_strategy):
     symbols = [x[0] for x in symbols_with_strategy]
     strategies = [x[1] for x in symbols_with_strategy]
-    # profiles = [get_backtested_profiles(x[0], x[0], x[1]) for x in symbols_with_strategy]
+    profiles = [get_backtested_profiles(x[0], x[0], x[1]) for x in symbols_with_strategy]
 
     prev_time = now_ny_datetime()
 
-    # maybe_open_new_trades(profiles, symbols, strategies)
-    handle_open_trades(strategies)
-    prev_time = datetime(prev_time.year, prev_time.month, prev_time.day, 11, 58, tzinfo=ZoneInfo("America/New_York"))
-    # while True:
-    #     sleep(60 - now_ny_datetime().second)
-    #
-    #     now_time = now_ny_datetime()
-    #     print('now_time', now_time)
-    #
-    #     if now_time.isoweekday() in [6, 7]:
-    #         prev_time = now_time
-    #         continue
-    #
-    #     end_london = datetime(now_time.year, now_time.month, now_time.day, 5, 0, tzinfo=ZoneInfo("America/New_York"))
-    #     end_early = datetime(now_time.year, now_time.month, now_time.day, 8, 0, tzinfo=ZoneInfo("America/New_York"))
-    #     end_pre = datetime(now_time.year, now_time.month, now_time.day, 9, 30, tzinfo=ZoneInfo("America/New_York"))
-    #     end_open = datetime(now_time.year, now_time.month, now_time.day, 10, 0, tzinfo=ZoneInfo("America/New_York"))
-    #     end_nyam = datetime(now_time.year, now_time.month, now_time.day, 12, 0, tzinfo=ZoneInfo("America/New_York"))
-    #     end_lunch = datetime(now_time.year, now_time.month, now_time.day, 13, 0, tzinfo=ZoneInfo("America/New_York"))
-    #     end_nypm = datetime(now_time.year, now_time.month, now_time.day, 15, 0, tzinfo=ZoneInfo("America/New_York"))
-    #     end_close = datetime(now_time.year, now_time.month, now_time.day, 16, 0, tzinfo=ZoneInfo("America/New_York"))
-    #
-    #     if (prev_time < end_london <= now_time
-    #             or prev_time < end_early <= now_time
-    #             or prev_time < end_pre <= now_time
-    #             or prev_time < end_open <= now_time
-    #             or prev_time < end_nyam <= now_time
-    #             or prev_time < end_lunch <= now_time
-    #             or prev_time < end_nypm <= now_time
-    #             or prev_time < end_close <= now_time):
-    #         update_candles(symbols)
-    #         handle_open_trades([])
-    #         maybe_open_new_trades(profiles, symbols)
-    #
-    #     prev_time = now_time
+    # prev_time = datetime(prev_time.year, prev_time.month, prev_time.day, 11, 58, tzinfo=ZoneInfo("America/New_York"))
+    while True:
+        sleep(60 - now_ny_datetime().second)
+
+        now_time = now_ny_datetime()
+        if now_time.minute % 15 == 0:
+            print('now_time', now_time)
+
+        if now_time.isoweekday() in [6, 7]:
+            prev_time = now_time
+            continue
+
+        end_london = datetime(now_time.year, now_time.month, now_time.day, 5, 0, tzinfo=ZoneInfo("America/New_York"))
+        end_early = datetime(now_time.year, now_time.month, now_time.day, 8, 0, tzinfo=ZoneInfo("America/New_York"))
+        end_pre = datetime(now_time.year, now_time.month, now_time.day, 9, 30, tzinfo=ZoneInfo("America/New_York"))
+        end_open = datetime(now_time.year, now_time.month, now_time.day, 10, 0, tzinfo=ZoneInfo("America/New_York"))
+        end_nyam = datetime(now_time.year, now_time.month, now_time.day, 12, 0, tzinfo=ZoneInfo("America/New_York"))
+        end_lunch = datetime(now_time.year, now_time.month, now_time.day, 13, 0, tzinfo=ZoneInfo("America/New_York"))
+        end_nypm = datetime(now_time.year, now_time.month, now_time.day, 15, 0, tzinfo=ZoneInfo("America/New_York"))
+        end_close = datetime(now_time.year, now_time.month, now_time.day, 16, 0, tzinfo=ZoneInfo("America/New_York"))
+
+        if (prev_time < end_london <= now_time
+                or prev_time < end_early <= now_time
+                or prev_time < end_pre <= now_time
+                or prev_time < end_open <= now_time
+                or prev_time < end_nyam <= now_time
+                or prev_time < end_lunch <= now_time
+                or prev_time < end_nypm <= now_time
+                or prev_time < end_close <= now_time):
+            update_candles(symbols)
+            handle_open_trades(strategies)
+            maybe_open_new_trades(profiles, symbols, strategies)
+
+        prev_time = now_time
 
 
 if __name__ == "__main__":
@@ -370,10 +369,10 @@ if __name__ == "__main__":
         # look_for_new_trade([], None, "BTCUSDT")
         # print("done")
         run_notifier([
-            # ("BTCUSDT", btc_naive_strategy),
+            ("BTCUSDT", btc_naive_strategy),
             ("AAVEUSDT", btc_naive_strategy),
-            # ("AVAXUSDT", btc_naive_strategy),
-            # ("CRVUSDT", btc_naive_strategy),
+            ("AVAXUSDT", btc_naive_strategy),
+            ("CRVUSDT", btc_naive_strategy),
         ])
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
