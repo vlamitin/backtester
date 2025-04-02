@@ -1,14 +1,16 @@
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from scripts.run_sessions_sequencer import fill_profiles, get_successful_profiles
 from scripts.run_sessions_typifier import typify_sessions
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.backtest import Backtest, StrategyTrades
 from stock_market_research_kit.day import Day, day_from_json
+from stock_market_research_kit.notifier_strategy import NotifierStrategy, btc_naive_strategy
 from stock_market_research_kit.session import SessionName, SessionType, Session
 from stock_market_research_kit.session_trade import SessionTrade
+from utils.date_utils import to_utc_datetime
 
 
 def backtest(days: List[Day], profiles, bt: Backtest):
@@ -18,21 +20,23 @@ def backtest(days: List[Day], profiles, bt: Backtest):
     active_trades = []
     for day in days:
         day_sessions = typify_sessions([day])
-        active_trades.extend(look_for_entry(day_sessions, profiles, bt.sl_percent, bt.tp_percent))
+        if len(day_sessions) == 0:
+            continue
+        active_trades.extend(look_for_entry_backtest(day_sessions, profiles, bt.sl_percent, bt.tp_percent))
         for trade in active_trades:
-            closed_trade = look_for_close(day, trade)
+            closed_trade = look_for_close_backtest(day.candles_15m, trade)
             if closed_trade:
                 closed_trade.result_type = [x.type for x in day_sessions if x.name == closed_trade.hunting_session][0]
                 closed_trades.append(closed_trade)
-                active_trades = [x for x in active_trades if x.entry_strategy != closed_trade.entry_strategy]
+                active_trades = [x for x in active_trades if x.entry_profile_key != closed_trade.entry_profile_key]
 
     result.trades = len(closed_trades)
     result.win = len([x.pnl_usd for x in closed_trades if x.pnl_usd > 0])
     result.lose = result.trades - result.win
-    result.win_rate = result.win / result.trades
+    result.win_rate = 0 if result.trades == 0 else result.win / result.trades
     result.sessions_guessed = len([x for x in closed_trades if x.hunting_type == x.result_type])
     result.sessions_missed = result.trades - result.sessions_guessed
-    result.guess_rate = result.sessions_guessed / result.trades
+    result.guess_rate = 0 if result.trades == 0 else result.sessions_guessed / result.trades
     result.pnl_all = sum([x.pnl_usd for x in closed_trades])
     result.pnl_prof = sum([x.pnl_usd for x in closed_trades if x.pnl_usd > 0])
     result.pnl_loss = sum([x.pnl_usd for x in closed_trades if x.pnl_usd < 0])
@@ -40,69 +44,71 @@ def backtest(days: List[Day], profiles, bt: Backtest):
     result.all_trades = closed_trades
 
     for trade in closed_trades:
-        if trade.entry_strategy not in result.trades_by_strategy:
-            result.trades_by_strategy[trade.entry_strategy] = StrategyTrades(win=0, lose=0, pnl=0, trades=[])
-        result.trades_by_strategy[trade.entry_strategy].trades.append(trade)
-        result.trades_by_strategy[trade.entry_strategy].pnl += trade.pnl_usd
+        if trade.entry_profile_key not in result.trades_by_strategy:
+            result.trades_by_strategy[trade.entry_profile_key] = StrategyTrades(win=0, lose=0, pnl=0, trades=[])
+        result.trades_by_strategy[trade.entry_profile_key].trades.append(trade)
+        result.trades_by_strategy[trade.entry_profile_key].pnl += trade.pnl_usd
         if trade.pnl_usd > 0:
-            result.trades_by_strategy[trade.entry_strategy].win = result.trades_by_strategy[
-                                                                      trade.entry_strategy].win + 1
+            result.trades_by_strategy[trade.entry_profile_key].win = result.trades_by_strategy[
+                                                                      trade.entry_profile_key].win + 1
         else:
-            result.trades_by_strategy[trade.entry_strategy].lose = result.trades_by_strategy[
-                                                                       trade.entry_strategy].lose + 1
+            result.trades_by_strategy[trade.entry_profile_key].lose = result.trades_by_strategy[
+                                                                       trade.entry_profile_key].lose + 1
 
     return result
 
 
-def look_for_close(day: Day, trade: SessionTrade):
-    for candle in day.candles_15m:
-        if datetime.strptime(candle[5], "%Y-%m-%d %H:%M") < datetime.strptime(trade.entry_time, "%Y-%m-%d %H:%M"):
+def look_for_close_backtest(candles_15m, trade: SessionTrade) -> Optional[SessionTrade]:
+    for candle in candles_15m:
+        if to_utc_datetime(candle[5]) < to_utc_datetime(trade.entry_time):
             continue
-        if datetime.strptime(candle[5], "%Y-%m-%d %H:%M") >= datetime.strptime(trade.deadline_close, "%Y-%m-%d %H:%M"):
-            return close_trade(trade, candle[0], trade.deadline_close, "deadline")
+        if to_utc_datetime(candle[5]) >= to_utc_datetime(trade.deadline_close):
+            return close_trade_backtest(trade, candle[0], trade.deadline_close, "deadline")
         if trade.predict_direction == 'UP':
             if candle[2] < trade.stop:
-                return close_trade(trade, trade.stop, candle[5], "stop")
+                return close_trade_backtest(trade, trade.stop, candle[5], "stop")
             if candle[1] > trade.take_profit:
-                return close_trade(trade, trade.take_profit, candle[5], "take_profit")
+                return close_trade_backtest(trade, trade.take_profit, candle[5], "take_profit")
         if trade.predict_direction == 'DOWN':
             if candle[1] > trade.stop:
-                return close_trade(trade, trade.stop, candle[5], "stop")
+                return close_trade_backtest(trade, trade.stop, candle[5], "stop")
             if candle[2] < trade.take_profit:
-                return close_trade(trade, trade.take_profit, candle[5], "take_profit")
+                return close_trade_backtest(trade, trade.take_profit, candle[5], "take_profit")
 
     return None
 
 
-def close_trade(trade: SessionTrade, close_price: float, time: str, reason: str):
-    pnl = 0
+def close_trade_backtest(trade: SessionTrade, close_price: float, time_str: str, reason: str):
     if trade.predict_direction == 'UP':
         pnl = trade.entry_position_usd / trade.entry_price * (close_price - trade.entry_price)
     else:
         pnl = trade.entry_position_usd / trade.entry_price * (trade.entry_price - close_price)
 
     trade.pnl_usd = pnl
-    trade.closes.append((100, close_price, time, reason))
+    trade.closes.append((100, close_price, time_str, reason))
 
     return trade
 
 
-def look_for_entry(day_sessions: List[Session], profiles, sl, tp):
+def look_for_entry_backtest(day_sessions: List[Session], profiles, sl, tp) -> List[SessionTrade]:
     trades: List[SessionTrade] = []
 
     for session in profiles:
         for candle_type in profiles[session]:
             for profile in profiles[session][candle_type]:
+                for x in day_sessions:
+                    if not x.type:
+                        print("hello there")
                 if is_sublist(list(profile[0:-1]), [f"{x.name.value}__{x.type.value}" for x in day_sessions]):
                     hunting_session = [x for x in day_sessions if x.name.value == session][0]
                     predict_direction = 'UP'
-                    stop = hunting_session.open - hunting_session.open * sl / 100
-                    take_profit = hunting_session.open + hunting_session.open * tp / 100
+                    stop = round(hunting_session.open - hunting_session.open * sl / 100, 4)
+                    take_profit = round(hunting_session.open + hunting_session.open * tp / 100, 4)
 
                     if candle_type in [SessionType.BEAR.value, SessionType.FLASH_CRASH.value]:
                         predict_direction = 'DOWN'
-                        stop = hunting_session.open + hunting_session.open * sl / 100
-                        take_profit = hunting_session.open - hunting_session.open * tp / 100
+                        stop = round(hunting_session.open + hunting_session.open * sl / 100, 4)
+                        take_profit = round(hunting_session.open - hunting_session.open * tp / 100, 4)
 
                     trades.append(SessionTrade(
                         entry_time=hunting_session.session_date,
@@ -112,7 +118,7 @@ def look_for_entry(day_sessions: List[Session], profiles, sl, tp):
                         hunting_session=SessionName(session),
                         hunting_type=SessionType(candle_type),
                         predict_direction=predict_direction,
-                        entry_strategy=f"{' -> '.join(profile[0:-1])} -> {session}__{candle_type}: {profile[-1][0]}/{profile[-1][1]} {profile[-1][2]}",
+                        entry_profile_key=f"{' -> '.join(profile[0:-1])} -> {session}__{candle_type}: {profile[-1][0]}/{profile[-1][1]} {profile[-1][2]}",
                         initial_stop=stop,
                         stop=stop,
                         deadline_close=hunting_session.session_end_date,
@@ -184,7 +190,7 @@ def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: 
     return res
 
 
-def get_backtested_profiles(profiles_symbol, test_symbol):
+def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: NotifierStrategy):
     profiles = {
         2021: {},
         2022: {},
@@ -192,24 +198,15 @@ def get_backtested_profiles(profiles_symbol, test_symbol):
         2024: {},
         2025: {},
     }
-    for profile_year in [
-        2021,
-        2022,
-        2023,
-        2024,
-        2025,
-    ]:
-        for test_year in [
-            2021,
-            2022,
-            2023,
-            2024,
-            2025
-        ]:
-            if test_year == profile_year:
+    for profile_year in strategy.profile_years:
+        for test_year in strategy.backtest_years:
+            if not strategy.include_profile_year_to_backtest and test_year == profile_year:
                 continue
 
-            test = run_backtest(profiles_symbol, profile_year, 40, 2, test_symbol, test_year, 0.5, 3)
+            test = run_backtest(
+                profiles_symbol, profile_year, strategy.profiles_min_chance, strategy.profiles_min_times,
+                test_symbol, test_year, strategy.sl_percent, strategy.tp_percent
+            )
             for profile in test.trades_by_strategy:
                 if profile not in profiles[profile_year]:
                     profiles[profile_year][profile] = {'win': 0, 'lose': 0, 'pnl': 0}
@@ -219,7 +216,7 @@ def get_backtested_profiles(profiles_symbol, test_symbol):
                 profiles[profile_year][profile][test_year] = test.trades_by_strategy[profile]
 
     unsorted_profiles = []
-    for profile_year in [2021, 2022, 2023, 2024, 2025]:
+    for profile_year in strategy.profile_years:
         for profile in profiles[profile_year]:
             unsorted_profile = {
                 'year': profile_year,
@@ -230,23 +227,20 @@ def get_backtested_profiles(profiles_symbol, test_symbol):
                 'trades': []
             }
 
-            for test_year in [2021, 2022, 2023, 2024, 2025]:
+            for test_year in strategy.backtest_years:
                 if test_year in profiles[profile_year][profile]:
                     unsorted_profile['trades'].extend(profiles[profile_year][profile][test_year].trades)
 
             unsorted_profiles.append(unsorted_profile)
 
-    def custom_sort(value):
-        return value['pnl']
-
-    sorted_profiles = sorted(unsorted_profiles, key=custom_sort, reverse=True)
+    sorted_profiles = sorted(unsorted_profiles, key=lambda x: x['pnl'], reverse=True)
 
     return sorted_profiles, profiles
 
 
 if __name__ == "__main__":
     try:
-        get_backtested_profiles("BTCUSDT", "BTCUSDT")
+        get_backtested_profiles("BTCUSDT", "BTCUSDT", btc_naive_strategy)
 
         print("done!")
 

@@ -1,14 +1,14 @@
-import sqlite3
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Tuple
 
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.day import Day, day_from_json
 from stock_market_research_kit.session import Session, SessionType, SessionName
 from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold
+from utils.date_utils import to_utc_datetime, to_date_str
 
 
-def typify_sessions(days: List[Day]):
+def typify_sessions(days: List[Day]) -> List[Session]:
     if len(days) == 0:
         print("no data")
         return
@@ -151,14 +151,11 @@ def typify_sessions(days: List[Day]):
     return sessions
 
 
-def session_end_time(as_candle, candles_15m):
-    return (
-            datetime.strptime(as_candle[5], "%Y-%m-%d %H:%M")
-            + timedelta(minutes=15 * len(candles_15m)) - timedelta(seconds=1)
-    ).strftime("%Y-%m-%d %H:%M")
+def session_end_time(as_candle, candles_15m) -> str:
+    return to_date_str(to_utc_datetime(as_candle[5]) + timedelta(minutes=15 * len(candles_15m)) - timedelta(seconds=1))
 
 
-def typify_session(candle: Tuple[float, float, float, float, float, str], thresholds: SessionThresholds):
+def typify_session(candle: Tuple[float, float, float, float, float, str], thresholds: SessionThresholds) -> SessionType:
     perf = (candle[3] - candle[0]) / candle[0] * 100
     volat = (candle[1] - candle[2]) / candle[0] * 100
 
@@ -203,7 +200,7 @@ def typify_session(candle: Tuple[float, float, float, float, float, str], thresh
             if wicks_fractions[1] > wicks_fractions[0]:
                 return SessionType.STB
             return SessionType.REJECTION_BULL
-        if body_fraction > thresholds.directional_body_min_fraction:
+        if body_fraction >= thresholds.directional_body_min_fraction:
             if perf < 0:
                 return SessionType.BEAR
             return SessionType.BULL
@@ -226,13 +223,13 @@ def typify_session(candle: Tuple[float, float, float, float, float, str], thresh
 
 
 YEAR = 2022
-SYMBOL = "BTCUSDT"
+SYMBOL = "CRVUSDT"
 if __name__ == "__main__":
     try:
         conn = connect_to_db(YEAR)
         c = conn.cursor()
 
-        c.execute("""SELECT data FROM days WHERE symbol = ?""", (SYMBOL,))
+        c.execute("""SELECT data FROM days WHERE symbol = ? AND date_ts = ?""", (SYMBOL, "2022-10-10 00:00"))
         rows = c.fetchall()
 
         if len(rows) == 0:

@@ -314,13 +314,13 @@ def fill_profiles(symbol, year):
         return
 
     sessions = typify_sessions([day_from_json(x[0]) for x in days_rows])
-    print(f"Found {len(sessions)} {symbol} sessions")
+    print(f"Filling profiles from {len(sessions)} {year} {symbol} sessions")
 
     start_time = time.perf_counter()
     fill_trees(sessions)
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
-    print(f"built trees for {elapsed_time:.6f} seconds")
+    print(f"built {year} {symbol} trees for {elapsed_time:.6f} seconds")
 
     start_time1 = time.perf_counter()
 
@@ -345,25 +345,26 @@ def fill_profiles(symbol, year):
 
     end_time1 = time.perf_counter()
     elapsed_time1 = end_time1 - start_time1
-    print(f"built directional_profiles for {elapsed_time1:.6f} seconds")
+    print(f"built {year} {symbol} directional_profiles for {elapsed_time1:.6f} seconds")
 
     conn.close()
 
 
-def get_successful_profiles(session_names, min_times, min_chance):
+#  returns {str (session_name.value): {str (session_type.value): tuple(session_name, ..., (win,all,pnl))[]}}
+def get_successful_profiles(session_names: List[str], min_times: int, min_chance: float):
     result = {}
-    for session in profiles:
-        if session not in session_names:
+    for session_name in profiles:
+        if session_name not in session_names:
             continue
-        for candle_type in profiles[session]:
-            for profile in profiles[session][candle_type]:
+        for candle_type in profiles[session_name]:
+            for profile in profiles[session_name][candle_type]:
                 if profile[-1][0] < min_times or float(profile[-1][2].split('%')[0]) < min_chance:
                     continue
-                if session not in result:
-                    result[session] = {}
-                if candle_type not in result[session]:
-                    result[session][candle_type] = []
-                result[session][candle_type].append(profile)
+                if session_name not in result:
+                    result[session_name] = {}
+                if candle_type not in result[session_name]:
+                    result[session_name][candle_type] = []
+                result[session_name][candle_type].append(profile)
 
     return result
 

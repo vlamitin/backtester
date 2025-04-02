@@ -1,33 +1,10 @@
 import json
 from dataclasses import dataclass, asdict
-from datetime import datetime
 from enum import Enum
+from typing import Optional
 
-
-def session_decoder(dct):
-    if "name" in dct:
-        dct["name"] = SessionName(dct["name"])
-    if "type" in dct:
-        dct["type"] = SessionType(dct["type"])
-    return Session(**dct)
-
-
-def session_from_json(json_str):
-    return json.loads(json_str, object_hook=session_decoder)
-
-
-def enum_serializer(obj):
-    if isinstance(obj, Enum):
-        return obj.value
-    raise TypeError(f"Type {type(obj)} not serializable")
-
-
-def json_from_session(session):
-    return json.dumps(asdict(session), default=enum_serializer, indent=4)
-
-
-def json_from_sessions(sessions):
-    return json.dumps([session.__dict__ for session in sessions], default=enum_serializer, indent=4)
+from scripts.run_day_markuper import cme_open_from_to, asia_from_to, london_from_to, early_from_to, pre_from_to, \
+    open_from_to, nyam_from_to, lunch_from_to, nypm_from_to, close_from_to
 
 
 class SessionName(Enum):
@@ -84,9 +61,74 @@ class Session:
     low: float
     close: float
 
-    def to_db_format(self, symbol: str):
-        return (symbol,
-                datetime.strptime(self.day_date, "%Y-%m-%d %H:%M").timestamp(),
-                datetime.strptime(self.session_date, "%Y-%m-%d %H:%M").timestamp(),
-                self.name.value,
-                json_from_session(self))
+
+def session_decoder(dct):
+    if "name" in dct:
+        dct["name"] = SessionName(dct["name"])
+    if "type" in dct:
+        dct["type"] = SessionType(dct["type"])
+    return Session(**dct)
+
+
+def session_from_json(json_str):
+    return json.loads(json_str, object_hook=session_decoder)
+
+
+def enum_serializer(obj):
+    if isinstance(obj, Enum):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+def json_from_session(session):
+    return json.dumps(asdict(session), default=enum_serializer, indent=4)
+
+
+def json_from_sessions(sessions):
+    return json.dumps([session.__dict__ for session in sessions], default=enum_serializer, indent=4)
+
+
+def get_next_session_mock(session_name: SessionName, date_str) -> Optional[Session]:
+    new_session_name = SessionName.UNSPECIFIED
+    from_to = ("", "")
+
+    for i, s in enumerate(sessions_in_order):
+        if i == len(sessions_in_order) - 1:
+            return None
+        if s == session_name:
+            new_session_name = sessions_in_order[i + 1]
+            break
+
+    match new_session_name:
+        case SessionName.CME:
+            from_to = cme_open_from_to(date_str)
+        case SessionName.ASIA:
+            from_to = asia_from_to(date_str)
+        case SessionName.LONDON:
+            from_to = london_from_to(date_str)
+        case SessionName.EARLY:
+            from_to = early_from_to(date_str)
+        case SessionName.PRE:
+            from_to = pre_from_to(date_str)
+        case SessionName.NY_OPEN:
+            from_to = open_from_to(date_str)
+        case SessionName.NY_AM:
+            from_to = nyam_from_to(date_str)
+        case SessionName.NY_LUNCH:
+            from_to = lunch_from_to(date_str)
+        case SessionName.NY_PM:
+            from_to = nypm_from_to(date_str)
+        case SessionName.NY_CLOSE:
+            from_to = close_from_to(date_str)
+
+    return Session(
+        day_date=date_str,
+        session_date=from_to[0],
+        session_end_date=from_to[1],
+        name=new_session_name,
+        type=SessionType.UNSPECIFIED,
+        open=0,
+        high=0,
+        low=0,
+        close=0
+    )

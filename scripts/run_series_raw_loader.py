@@ -1,12 +1,16 @@
 import csv
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from scripts.setup_db import connect_to_db
+from stock_market_research_kit.binance_fetcher import fetch_15m_candles
+from utils.date_utils import to_utc_datetime, to_date_str, to_timestamp, get_previous_candle_15m_close, start_of_day, \
+    get_all_days_between, end_of_day
 
 
-def load_timeseries_data(symbol, period, year):
+def load_from_csv(symbol, period, year):
     # Folder path
     folder_path = f"./data/csv/{symbol}/{period}"
 
@@ -33,7 +37,7 @@ def load_timeseries_data(symbol, period, year):
 
 
 def to_inner_candle(binance_candle):
-    date = datetime.fromtimestamp(int(str(binance_candle[0])[:10])).strftime("%Y-%m-%d %H:%M")
+    date = to_date_str(datetime.fromtimestamp(int(str(binance_candle[0])[:10]), tz=ZoneInfo("UTC")))
     open_price = float(binance_candle[1])
     high = float(binance_candle[2])
     low = float(binance_candle[3])
@@ -44,7 +48,7 @@ def to_inner_candle(binance_candle):
 
 
 def to_db_format(symbol, period, inner_candle):
-    return (symbol, datetime.strptime(inner_candle[5], "%Y-%m-%d %H:%M").timestamp(), period,
+    return (symbol, inner_candle[5], period,
             inner_candle[0], inner_candle[1], inner_candle[2], inner_candle[3], inner_candle[4])
 
 
@@ -72,13 +76,10 @@ def update_stock_data(inner_candles, symbol, period, conn):
         return False
 
 
-def load_series(year, symbol):
+def fill_year_from_csv(year, symbol):
     connection = connect_to_db(year)
 
-    series_1d = load_timeseries_data(symbol, "1d", year)
-    update_stock_data(series_1d, symbol, "1d", connection)
-
-    series_15m = load_timeseries_data(symbol, "15m", year)
+    series_15m = load_from_csv(symbol, "15m", year)
     update_stock_data(series_15m, symbol, "15m", connection)
 
     print(f"done loading {year} year for {symbol}")
@@ -86,11 +87,53 @@ def load_series(year, symbol):
     connection.close()
 
 
+def update_candle_from_binance(symbol):
+    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
+
+    connection = connect_to_db(now_year)
+    c = connection.cursor()
+
+    c.execute("""SELECT open, high, low, close, volume, date_ts
+            FROM raw_candles WHERE symbol = ? AND period = ? ORDER BY date_ts DESC LIMIT 1""", (symbol, "15m"))
+    rows_15m = c.fetchall()
+
+    if len(rows_15m) != 1:
+        print(f"Symbol {symbol} {now_year} year 15m not found in DB")
+        return
+
+    last_15m_candle = [rows_15m[0][0], rows_15m[0][1], rows_15m[0][2], rows_15m[0][3], rows_15m[0][4], rows_15m[0][5]]
+
+    iteration_days = get_all_days_between(
+        to_utc_datetime(last_15m_candle[5]) + timedelta(minutes=15),
+        get_previous_candle_15m_close()
+    )
+
+    if len(iteration_days) > 32:
+        raise ValueError("More than a month passed! Download a CSV!")
+
+    for i, date in enumerate(iteration_days):
+        if i == len(iteration_days) - 1:
+            start_time = to_timestamp(to_date_str(start_of_day(date)))
+            end_time = to_timestamp(to_date_str(date))
+        else:
+            start_time = to_timestamp(to_date_str(date))
+            end_time = int(end_of_day(date).timestamp() * 1000)
+
+        candles_15m = [to_inner_candle(x) for x in fetch_15m_candles(symbol, start_time, end_time)]
+        update_stock_data(candles_15m, symbol, "15m", connection)
+
+    connection.close()
+
+
 if __name__ == "__main__":
     try:
+        # update_candle_from_binance("BTCUSDT")
+
         for smb in [
             "BTCUSDT",
-            "AAVEUSDT"
+            "AAVEUSDT",
+            "CRVUSDT",
+            "AVAXUSDT",
         ]:
             for series_year in [
                 2021,
@@ -99,7 +142,7 @@ if __name__ == "__main__":
                 2024,
                 2025
             ]:
-                load_series(series_year, smb)
+                fill_year_from_csv(series_year, smb)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

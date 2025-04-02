@@ -2,30 +2,28 @@
 
 PERIOD="15m"
 YEAR="2025"
-SYMBOL="AAVEUSDT"
-BASE_URL="https://data.binance.vision/data/futures/um/monthly/klines/${SYMBOL}/${PERIOD}"
+SYMBOLS=("BTCUSDT" "AAVEUSDT" "CRVUSDT" "AVAXUSDT")
 
-TARGET_DIR="./${SYMBOL}/${PERIOD}"
-mkdir -p "$TARGET_DIR"
+#https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2025-02.zip
 
-# download
-for MONTH in {01..12}; do
-    FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
-    URL="${BASE_URL}/${FILE_NAME}"
-    echo "Downloading ${URL}..."
-    curl -o "$TARGET_DIR/$FILE_NAME" "$URL"
-done
+for SYMBOL in "${SYMBOLS[@]}"; do
+  BASE_URL="https://data.binance.vision/data/futures/um/monthly/klines/${SYMBOL}/${PERIOD}"
+  TARGET_DIR="./${SYMBOL}/${PERIOD}"
+  mkdir -p "$TARGET_DIR"
 
-echo "Download complete."
+  for MONTH in {03..03}; do
+      FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
+      URL="${BASE_URL}/${FILE_NAME}"
+      echo "Downloading ${URL}..."
+      curl -o "$TARGET_DIR/$FILE_NAME" "$URL"
 
-# unzip
-for MONTH in {01..12}; do
-    FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
-    unzip -o "$TARGET_DIR/$FILE_NAME" -d $TARGET_DIR
-done
+      FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
+      unzip -o "$TARGET_DIR/$FILE_NAME" -d $TARGET_DIR
 
-# rm zip
-for MONTH in {01..12}; do
-    FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
-    rm "$TARGET_DIR/$FILE_NAME"
+      FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
+      rm "$TARGET_DIR/$FILE_NAME"
+  done
+
+  file_count=$(find "$SYMBOL" -type f | wc -l)
+  echo "Total files in '$SYMBOL': $file_count"
 done

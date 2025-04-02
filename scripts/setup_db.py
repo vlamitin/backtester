@@ -13,13 +13,13 @@ def create_raw_candles_table(conn: Connection) -> None:
         """
         CREATE TABLE IF NOT EXISTS raw_candles (
             symbol TEXT NOT NULL,
-            date_ts INTEGER,
-            period TEXT,
-            open REAL,
-            high REAL,
-            low REAL,
-            close REAL,
-            volume REAL,
+            date_ts TEXT NOT NULL,
+            period TEXT NOT NULL,
+            open REAL NOT NULL,
+            high REAL NOT NULL,
+            low REAL NOT NULL,
+            close REAL NOT NULL,
+            volume REAL NOT NULL,
             PRIMARY KEY (symbol, date_ts, period)
         );
         """
@@ -33,8 +33,8 @@ def create_days_table(conn: Connection) -> None:
         """
         CREATE TABLE IF NOT EXISTS days (
             symbol TEXT NOT NULL,
-            date_ts INTEGER,
-            data BLOB,
+            date_ts TEXT NOT NULL,
+            data BLOB NOT NULL,
             PRIMARY KEY (symbol, date_ts)
         );
         """
@@ -56,6 +56,25 @@ def create_profiles_table(conn: Connection) -> None:
             pnl REAL NOT NULL,
             trades BLOB NOT NULL,
             PRIMARY KEY (profile_key, thresholds, profile_symbol)
+        );
+        """
+    )
+    conn.commit()
+
+
+def create_notifier_trades_table(conn: Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS notifier_trades (
+            strategy_name TEXT NOT NULL,
+            open_date_utc TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            pnl REAL NOT NULL,
+            deadline_close TEXT NOT NULL,
+            session_trade BLOB NOT NULL,
+            full_close_date_utc TEXT,
+            PRIMARY KEY (strategy_name, open_date_utc, symbol)
         );
         """
     )
@@ -109,6 +128,11 @@ def add_subcluster_column_to_trades_table(conn: Connection) -> None:
     conn.commit()
 
 
+# def get_last_full_days_15m_rows(conn: Connection):
+#     c = conn.cursor()
+
+
+
 def connect_to_db(year):
     conn = sqlite3.connect(f"stock_market_research_{year}.db")
     conn.row_factory = sqlite3.Row
@@ -121,6 +145,7 @@ def setup_db(year):
     create_raw_candles_table(conn)
     create_days_table(conn)
     create_profiles_table(conn)
+    create_notifier_trades_table(conn)
     # create_trades_table(conn)
     # add_cluster_column_to_trades_table(conn)
     # add_subcluster_column_to_trades_table(conn)

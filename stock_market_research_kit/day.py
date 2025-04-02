@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from typing import List, Tuple, Dict
+from zoneinfo import ZoneInfo
 
 
 def day_from_json(json_str):
@@ -54,8 +55,7 @@ class Day:
         return cls(**filtered_data)
 
     def to_db_format(self, symbol: str):
-        return symbol, datetime.strptime(self.date_readable, "%Y-%m-%d %H:%M").timestamp(), json.dumps(asdict(self),
-                                                                                                       indent=4)
+        return symbol, self.date_readable, json.dumps(asdict(self), indent=4)
 
 
 def new_day():
