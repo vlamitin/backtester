@@ -33,8 +33,8 @@ def markup_days(candles_15m):
     grouped_candles_15m = group_15m_by_days(candles_15m)
 
     for i, day_group in enumerate(grouped_candles_15m):
-        if i % 50 == 0 or i == len(candles_15m) - 1:
-            print(f"marking up {i}/{len(grouped_candles_15m)} days")
+        if len(grouped_candles_15m) > 50 and (i % 50 == 0 or i == len(grouped_candles_15m) - 1):
+            print(f"marking up {i + 1}/{len(grouped_candles_15m)} days")
         day = new_day()
 
         utc_start_of_day = start_of_day(to_utc_datetime(day_group[0][5]))
@@ -335,9 +335,10 @@ def insert_to_db(symbol: str, days: List[Day], conn):
             days (symbol, date_ts, data) VALUES (?, ?, ?) ON CONFLICT (symbol, date_ts) DO UPDATE SET data = excluded.data""",
                       rows)
         conn.commit()
+        print(f"Success inserting {len(rows)} days for symbol {symbol}")
         return True
     except sqlite3.ProgrammingError as e:
-        print(f"Error inserting days data for symbol {symbol}: {e}")
+        print(f"Error inserting days {len(days)} symbol {symbol}: {e}")
         return False
 
 
@@ -385,10 +386,10 @@ if __name__ == "__main__":
             "AVAXUSDT",
         ]:
             for series_year in [
-                2021,
-                2022,
-                2023,
-                2024,
+                # 2021,
+                # 2022,
+                # 2023,
+                # 2024,
                 2025
             ]:
                 main(smb, series_year)

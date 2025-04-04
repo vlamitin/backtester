@@ -1,11 +1,12 @@
 import time
+from itertools import pairwise
 from typing import List
 
 from scripts.run_sessions_typifier import typify_sessions
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle_tree import tree_from_sessions, Tree
 from stock_market_research_kit.day import day_from_json
-from stock_market_research_kit.session import SessionType, SessionName, session_from_json, Session
+from stock_market_research_kit.session import SessionType, SessionName, session_from_json, Session, sessions_in_order
 
 ordered_trees = {
     SessionName.CME.value: Tree('tree_01_cme_ordered', 'total', 0),
@@ -303,6 +304,7 @@ def directional_profiles(session_ordered_tree, session_filtered_tree):
 
 
 def fill_profiles(symbol, year):
+    start_time = time.perf_counter()
     conn = connect_to_db(year)
     c = conn.cursor()
 
@@ -314,15 +316,8 @@ def fill_profiles(symbol, year):
         return
 
     sessions = typify_sessions([day_from_json(x[0]) for x in days_rows])
-    print(f"Filling profiles from {len(sessions)} {year} {symbol} sessions")
 
-    start_time = time.perf_counter()
     fill_trees(sessions)
-    end_time = time.perf_counter()
-    elapsed_time = end_time - start_time
-    print(f"built {year} {symbol} trees for {elapsed_time:.6f} seconds")
-
-    start_time1 = time.perf_counter()
 
     profiles[SessionName.ASIA.value] = directional_profiles(ordered_trees[SessionName.ASIA.value],
                                                             tree_02_asia_directional)
@@ -343,10 +338,7 @@ def fill_profiles(symbol, year):
     profiles[SessionName.NY_CLOSE.value] = directional_profiles(ordered_trees[SessionName.NY_CLOSE.value],
                                                                 tree_10_close_directional)
 
-    end_time1 = time.perf_counter()
-    elapsed_time1 = end_time1 - start_time1
-    print(f"built {year} {symbol} directional_profiles for {elapsed_time1:.6f} seconds")
-
+    print(f"Filling profiles from {len(sessions)} {year} {symbol} sessions took {(time.perf_counter() - start_time):.6f} seconds")
     conn.close()
 
 
@@ -369,16 +361,50 @@ def get_successful_profiles(session_names: List[str], min_times: int, min_chance
     return result
 
 
+def get_next_session_chances(typed_sessions: List[str]):
+    result = {
+        'next_session': '',
+        'variants': []
+    }
+    if len(typed_sessions) == 0 or SessionName(typed_sessions[-1].split('__')[0]) == SessionName.NY_CLOSE:
+        return result
+    result['next_session'] = dict(pairwise(sessions_in_order)).get(SessionName(typed_sessions[-1].split('__')[0])).value
+
+    for sequence in [typed_sessions[i:] for i in range(len(typed_sessions))]:
+        sequence_node = ordered_trees[sequence[0].split('__')[0]].find_by_path(['total', *sequence])
+        if not sequence_node:
+            continue
+        next_session_top = sorted(
+            sequence_node.children,
+            key=lambda x: x.count, reverse=True
+        )
+        next_session_sum = sum([x.count for x in next_session_top])
+        for node in next_session_top:
+            result['variants'].append((
+                f"{' -> '.join(sequence)} -> {node.key}: {node.count}/{next_session_sum} {round(node.count / next_session_sum * 100, 2)}%"
+            ))
+
+    next_session_top = sorted(
+        ordered_trees[result['next_session']].root.children, key=lambda x: x.count, reverse=True)
+    next_session_sum = sum([x.count for x in ordered_trees[result['next_session']].root.children])
+    for node in next_session_top:
+        result['variants'].append((
+            f"{node.key}: {node.count}/{next_session_sum} {round(node.count / next_session_sum * 100, 2)}%"
+        ))
+    return result
+
+
 if __name__ == "__main__":
     try:
         fill_profiles("BTCUSDT", 2024)
-        successful_profiles = get_successful_profiles(
-            [x.value for x in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
-                               SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]],
-            2,
-            40
-        )
-        print('len(successful_profiles)', len(successful_profiles))
+        get_next_session_chances(['CME Open__COMPRESSION', 'Asia Open__INDECISION', 'London Open__BEAR'])
+        # successful_profiles = get_successful_profiles(
+        #     [x.value for x in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
+        #                        SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]],
+        #     2,
+        #     40
+        # )
+        # print('len(successful_profiles)', len(successful_profiles))
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

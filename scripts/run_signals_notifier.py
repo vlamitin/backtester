@@ -1,10 +1,11 @@
 import sqlite3
+import time
 from datetime import datetime, timedelta
 from time import sleep
 from typing import List
 from zoneinfo import ZoneInfo
 
-from scripts.run_day_markuper import markup_days, as_1_candle
+from scripts.run_day_markuper import markup_days, as_1_candle, london_from_to
 from scripts.run_series_raw_loader import update_candle_from_binance
 from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest, get_backtested_profiles
 from scripts.run_sessions_typifier import typify_sessions, typify_session
@@ -14,7 +15,7 @@ from stock_market_research_kit.session import get_next_session_mock
 from stock_market_research_kit.session_trade import SessionTrade, session_trade_from_json, json_from_session_trade
 from stock_market_research_kit.tg_notifier import post_signal_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
-    start_of_day, to_date_str, log_warn, to_utc_datetime
+    start_of_day, to_date_str, log_warn, to_utc_datetime, log_info_ny
 
 
 def get_last_day_candles(symbol):
@@ -23,14 +24,24 @@ def get_last_day_candles(symbol):
     connection = connect_to_db(now_year)
     c = connection.cursor()
 
-    time_from = to_date_str(start_of_day(now_utc_datetime()) - timedelta(hours=2))
-    time_to = to_date_str(now_utc_datetime())
+    # time_from = to_date_str(start_of_day(now_utc_datetime()) - timedelta(hours=2))
+    # time_to = to_date_str(now_utc_datetime())
 
-    c.execute("""SELECT open, high, low, close, volume, date_ts FROM raw_candles
-            WHERE symbol = ? AND period = ? AND strftime('%s', date_ts)
-                BETWEEN strftime('%s', ?)
-                AND strftime('%s', ?)
-            ORDER BY strftime('%s', date_ts)""", (symbol, "15m", time_from, time_to))
+    c.execute("""WITH last_row_date_ts AS (
+    SELECT date_ts last_row_date FROM raw_candles
+    WHERE symbol = ? AND period = ?
+    ORDER BY strftime('%s', date_ts) DESC
+    LIMIT 1
+),
+     time_range AS (
+         SELECT
+             (strftime('%s', last_row_date) - 86400) / 86400 * 86400 + 22 * 3600 AS start_time_sec,
+             strftime('%s', last_row_date) AS end_time_sec
+         FROM last_row_date_ts
+     )
+SELECT open, high, low, close, volume, date_ts FROM raw_candles
+WHERE strftime('%s', date_ts) + 0 BETWEEN (SELECT start_time_sec FROM time_range) AND (SELECT end_time_sec FROM time_range)
+    AND symbol = ? AND period = ?""", (symbol, "15m", symbol, "15m"))
     rows_15m = c.fetchall()
     connection.close()
     if len(rows_15m) == 0:
@@ -52,20 +63,23 @@ def to_trade_profile(backtest_profile_key):
     return predict_session, predict_type, tuple([*typed_sessions[:-1], (win, trades_count, win_rate_rel)])
 
 
-def look_for_new_trade(sorted_profiles, profiles, symbol, strategy: NotifierStrategy) -> str:
+def look_for_new_trade(sorted_profiles, profiles, symbol, strategy: NotifierStrategy):
     candles_15m = get_last_day_candles(symbol)
     if len(candles_15m) == 0:
         log_warn("0 candles 15m in look_for_new_trade")
+        return
 
     days = markup_days(candles_15m)
 
     day_sessions = typify_sessions([days[-1]])
     if len(day_sessions) == 0:
-        return ""
+        log_warn("len(day_sessions) == 0!")
+        return
 
     predicted_session_mock = get_next_session_mock(day_sessions[-1].name, days[-1].date_readable)
     if not predicted_session_mock:
-        return ""
+        log_warn("no predicted_session_mock!")
+        return
 
     predicted_session_mock.open = candles_15m[-1][3]  # TODO не будет норм раб, если вызывается в конце сессии в while
 
@@ -86,6 +100,10 @@ def look_for_new_trade(sorted_profiles, profiles, symbol, strategy: NotifierStra
 
     new_trades = look_for_entry_backtest([*day_sessions, predicted_session_mock], profiles_map, strategy.sl_percent,
                                          strategy.tp_percent)
+
+    if len(new_trades) == 0:
+        log_info_ny(f"no new trades for {symbol}")
+        return
 
     row_ids = upsert_to_db(strategy.name, symbol, new_trades)
 
@@ -297,11 +315,12 @@ RETURNING ROWID""",
             rows
         )
         conn.commit()
+        print(f"Success inserting {len(session_trades)} notifier_trades for symbol {symbol}")
         c.execute("""SELECT ROWID FROM notifier_trades ORDER BY ROWID DESC LIMIT ?""", (len(session_trades),))
         result = c.fetchall()
         return [x[0] for x in result]
     except sqlite3.ProgrammingError as e:
-        print(f"Error inserting session_trades data for symbol {symbol}: {e}")
+        print(f"Error inserting {len(session_trades)} notifier_trades for symbol {symbol}: {e}")
         return []
     finally:
         conn.close()
@@ -318,25 +337,34 @@ def update_candles(symbols):
 
 
 def run_notifier(symbols_with_strategy):
+    log_info_ny("Starting Notifier")
+    start_time = time.perf_counter()
+
     symbols = [x[0] for x in symbols_with_strategy]
     strategies = [x[1] for x in symbols_with_strategy]
     profiles = [get_backtested_profiles(x[0], x[0], x[1]) for x in symbols_with_strategy]
 
+    log_info_ny(f"Notifier preparation took {(time.perf_counter() - start_time):.6f} seconds")
+
     prev_time = now_ny_datetime()
 
-    # prev_time = datetime(prev_time.year, prev_time.month, prev_time.day, 11, 58, tzinfo=ZoneInfo("America/New_York"))
-    while True:
-        sleep(60 - now_ny_datetime().second)
+    first_iteration = True
 
+    prev_time = datetime(prev_time.year, prev_time.month, prev_time.day, 9, 30, tzinfo=ZoneInfo("America/New_York"))
+    while True:
+        if not first_iteration:
+            sleep(60 - now_ny_datetime().second)
+
+        first_iteration = False
         now_time = now_ny_datetime()
         if now_time.minute % 15 == 0:
-            print('now_time', now_time)
+            log_info_ny(f"heartbeat at {now_time}")
 
         if now_time.isoweekday() in [6, 7]:
             prev_time = now_time
             continue
 
-        end_london = datetime(now_time.year, now_time.month, now_time.day, 5, 0, tzinfo=ZoneInfo("America/New_York"))
+        start_early = datetime(now_time.year, now_time.month, now_time.day, 7, 0, tzinfo=ZoneInfo("America/New_York"))
         end_early = datetime(now_time.year, now_time.month, now_time.day, 8, 0, tzinfo=ZoneInfo("America/New_York"))
         end_pre = datetime(now_time.year, now_time.month, now_time.day, 9, 30, tzinfo=ZoneInfo("America/New_York"))
         end_open = datetime(now_time.year, now_time.month, now_time.day, 10, 0, tzinfo=ZoneInfo("America/New_York"))
@@ -345,7 +373,7 @@ def run_notifier(symbols_with_strategy):
         end_nypm = datetime(now_time.year, now_time.month, now_time.day, 15, 0, tzinfo=ZoneInfo("America/New_York"))
         end_close = datetime(now_time.year, now_time.month, now_time.day, 16, 0, tzinfo=ZoneInfo("America/New_York"))
 
-        if (prev_time < end_london <= now_time
+        if (prev_time < start_early <= now_time
                 or prev_time < end_early <= now_time
                 or prev_time < end_pre <= now_time
                 or prev_time < end_open <= now_time
@@ -353,19 +381,21 @@ def run_notifier(symbols_with_strategy):
                 or prev_time < end_lunch <= now_time
                 or prev_time < end_nypm <= now_time
                 or prev_time < end_close <= now_time):
+            start_time = time.perf_counter()
             update_candles(symbols)
             handle_open_trades(strategies)
             maybe_open_new_trades(profiles, symbols, strategies)
+            log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - start_time):.6f} seconds")
 
         prev_time = now_time
 
 
 if __name__ == "__main__":
     try:
-        # update_candles(["BTCUSDT"])
-        # update_candles(["AAVEUSDT"])
-        # update_candles(["AVAXUSDT"])
-        # update_candles(["CRVUSDT"])
+        update_candles(["BTCUSDT"])
+        update_candles(["AAVEUSDT"])
+        update_candles(["AVAXUSDT"])
+        update_candles(["CRVUSDT"])
         # look_for_new_trade([], None, "BTCUSDT")
         # print("done")
         run_notifier([

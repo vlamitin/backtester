@@ -159,8 +159,11 @@ def typify_session(candle: Tuple[float, float, float, float, float, str], thresh
     perf = (candle[3] - candle[0]) / candle[0] * 100
     volat = (candle[1] - candle[2]) / candle[0] * 100
 
-    wicks_fractions = ((candle[1] - max(candle[0], candle[3])) / (candle[1] - candle[2]),
-                       (min(candle[0], candle[3]) - candle[2]) / (candle[1] - candle[2]))
+    wicks_fractions = (0, 0) if candle[1] - candle[2] == 0 \
+        else (
+        (candle[1] - max(candle[0], candle[3])) / (candle[1] - candle[2]),
+        (min(candle[0], candle[3]) - candle[2]) / (candle[1] - candle[2])
+    )
     body_fraction = 1 - wicks_fractions[0] - wicks_fractions[1]
 
     if volat < thresholds.slow_range[0]:  # COMPRESSION, DOJI

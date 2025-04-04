@@ -120,6 +120,14 @@ def log_warn(message: str):
     print(f"WARN at {to_date_str(now_utc_datetime())} utc: {message}")
 
 
+def log_warn_ny(message: str):
+    print(f"WARN at {to_date_str(now_ny_datetime())} ny: {message}")
+
+
+def log_info_ny(message: str):
+    print(f"INFO at {to_date_str(now_ny_datetime())} ny: {message}")
+
+
 if __name__ == "__main__":
     try:
         log_warn("test")

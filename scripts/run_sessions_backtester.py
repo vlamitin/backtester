@@ -7,8 +7,8 @@ from scripts.run_sessions_typifier import typify_sessions
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.backtest import Backtest, StrategyTrades
 from stock_market_research_kit.day import Day, day_from_json
-from stock_market_research_kit.notifier_strategy import NotifierStrategy, btc_naive_strategy
-from stock_market_research_kit.session import SessionName, SessionType, Session
+from stock_market_research_kit.notifier_strategy import NotifierStrategy, btc_naive_strategy, btc_naive_strategy_copy
+from stock_market_research_kit.session import SessionName, SessionType, Session, sessions_in_order
 from stock_market_research_kit.session_trade import SessionTrade
 from utils.date_utils import to_utc_datetime
 
@@ -97,10 +97,15 @@ def look_for_entry_backtest(day_sessions: List[Session], profiles, sl, tp) -> Li
         for candle_type in profiles[session]:
             for profile in profiles[session][candle_type]:
                 for x in day_sessions:
-                    if not x.type:
+                    if not x.type or not x.name:
                         print("hello there")
                 if is_sublist(list(profile[0:-1]), [f"{x.name.value}__{x.type.value}" for x in day_sessions]):
-                    hunting_session = [x for x in day_sessions if x.name.value == session][0]
+                    hunting_sessions = [x for x in day_sessions if x.name.value == session]
+                    if len(hunting_sessions) == 0:
+                        # this triggers if fn called from backtest with current not-closed day
+                        print("hello there1")
+                        continue
+                    hunting_session = hunting_sessions[0]
                     predict_direction = 'UP'
                     stop = round(hunting_session.open - hunting_session.open * sl / 100, 4)
                     take_profit = round(hunting_session.open + hunting_session.open * tp / 100, 4)
@@ -240,7 +245,27 @@ def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: No
 
 if __name__ == "__main__":
     try:
-        get_backtested_profiles("BTCUSDT", "BTCUSDT", btc_naive_strategy)
+        results = []
+        for x in [
+            ("BTCUSDT", btc_naive_strategy),
+            ("AAVEUSDT", btc_naive_strategy),
+            ("AVAXUSDT", btc_naive_strategy),
+            ("CRVUSDT", btc_naive_strategy),
+        ]:
+            # [(x[0], [[trade.entry_time for trade in profile['trades']] for profile in x[1][0]]) for x in results]
+            # [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]
+            results.append((x[0], get_backtested_profiles(x[0], x[0], x[1])))
+        pnls = [(x[0], sum([profile['pnl'] for profile in x[1][0]])) for x in results]
+        april_dates = [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]
+
+        strategy_profiles = [
+            (x[0], [profile for profile in x[1][0]
+                    if profile['win'] / len(profile['trades']) > btc_naive_strategy.backtest_min_win_rate
+                    and profile['pnl'] / len(profile['trades']) > btc_naive_strategy.backtest_min_pnl_per_trade
+                    ])
+            for x in results]
+        strategy_pnls = [(x[0], sum([profile['pnl'] for profile in x[1]])) for x in strategy_profiles]
+        strategy_april_dates = [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1]]) for x in strategy_profiles]
 
         print("done!")
 
