@@ -8,13 +8,14 @@ from zoneinfo import ZoneInfo
 from scripts.run_day_markuper import markup_days, london_from_to
 from scripts.run_series_raw_loader import update_candle_from_binance
 from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest, get_backtested_profiles
+from scripts.run_sessions_sequencer import fill_profiles, get_next_session_chances
 from scripts.run_sessions_typifier import typify_sessions, typify_session
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy
 from stock_market_research_kit.session import get_next_session_mock
 from stock_market_research_kit.session_trade import SessionTrade, session_trade_from_json, json_from_session_trade
-from stock_market_research_kit.tg_notifier import post_signal_notification
+from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
     start_of_day, to_date_str, log_warn, to_utc_datetime, log_info_ny
 
@@ -64,7 +65,7 @@ def to_trade_profile(backtest_profile_key):
     return predict_session, predict_type, tuple([*typed_sessions[:-1], (win, trades_count, win_rate_rel)])
 
 
-def look_for_new_trade(sorted_profiles, profiles, symbol, strategy: NotifierStrategy):
+def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: NotifierStrategy):
     candles_15m = get_last_day_candles(symbol)
     if len(candles_15m) == 0:
         log_warn("0 candles 15m in look_for_new_trade")
@@ -266,29 +267,8 @@ def handle_open_trades(strategies: List[NotifierStrategy]):
     
     Strategy: {strategy.name}.
 """)
-        print('hello')
 
     connection.close()
-
-    # 'trade_win': False,
-    # 'trade_pnl': 0,
-    # 'trade_guessed': False,
-    # 'total_trades': 0,
-    # 'total_win_trades': 0,
-    # 'total_pnl': 0,
-    # 'total_guessed': 0,
-    # 'strategy_trades': 0,
-    # 'strategy_win_trades': 0,
-    # 'strategy_pnl': 0,
-    # 'strategy_guessed': 0,
-    # 'symbol_trades': 0,
-    # 'symbol_win_trades': 0,
-    # 'symbol_pnl': 0,
-    # 'symbol_guessed': 0,
-    # 'symbol_strategy_trades': 0,
-    # 'symbol_strategy_win_trades': 0,
-    # 'symbol_strategy_pnl': 0,
-    # 'symbol_strategy_guessed': 0,
 
 
 def to_db_format(strategy_name: str, symbol: str, session_trade: SessionTrade):
@@ -327,9 +307,37 @@ RETURNING ROWID""",
         conn.close()
 
 
-def maybe_open_new_trades(profiles, symbols, strategies: List[NotifierStrategy]):
+def maybe_open_new_trades(backtested_profiles, symbols, strategies: List[NotifierStrategy]):
     for i, x in enumerate(symbols):
-        look_for_new_trade(profiles[i][0], profiles[i][1], x, strategies[i])
+        look_for_new_trade(backtested_profiles[i][0], backtested_profiles[i][1], x, strategies[i])
+
+
+def maybe_post_session_stat(symbols, symbol_year_profiles):
+    for symbol in symbols:
+        candles_15m = get_last_day_candles(symbol)
+        if len(candles_15m) == 0:
+            log_warn("0 candles 15m in look_for_new_trade")
+            return
+
+        days = markup_days(candles_15m)
+
+        day_sessions = typify_sessions([days[-1]])
+        if len(day_sessions) == 0:
+            log_warn("len(day_sessions) == 0!")
+            continue
+
+        chances = get_next_session_chances(
+            [f"{x.name.value}__{x.type.value}" for x in day_sessions],
+            symbol_year_profiles[f"{symbol}__2024"][0]
+        )
+        if len(chances['variants']) == 0:
+            continue
+
+        variants = "\n".join(chances['variants'])
+        post_stat_notification(f"""Next <b>{symbol}</b> session is <b>{chances['next_session']}</b>, chances based on 2024:
+
+{variants}
+""")
 
 
 def update_candles(symbols):
@@ -343,15 +351,22 @@ def run_notifier(symbols_with_strategy):
 
     symbols = [x[0] for x in symbols_with_strategy]
     strategies = [x[1] for x in symbols_with_strategy]
-    profiles = [get_backtested_profiles(x[0], x[0], x[1]) for x in symbols_with_strategy]
+    symbol_year_profiles = {}
+    for symbol, strategy in symbols_with_strategy:
+        for year in strategy.profile_years:
+            key = f"{symbol}__{year}"
+            if key not in symbol_year_profiles:
+                symbol_year_profiles[key] = fill_profiles(symbol, year)
+
+    backtested_profiles = [
+        get_backtested_profiles(x[0], x[0], x[1], symbol_year_profiles) for x in symbols_with_strategy]
 
     log_info_ny(f"Notifier preparation took {(time.perf_counter() - start_time):.6f} seconds")
 
     prev_time = now_ny_datetime()
-
     first_iteration = True
 
-    prev_time = datetime(prev_time.year, prev_time.month, prev_time.day, 9, 30, tzinfo=ZoneInfo("America/New_York"))
+    # prev_time = datetime(prev_time.year, prev_time.month, 5, 9, 30, tzinfo=ZoneInfo("America/New_York"))
     while True:
         if not first_iteration:
             sleep(60 - now_ny_datetime().second)
@@ -385,7 +400,8 @@ def run_notifier(symbols_with_strategy):
             start_time = time.perf_counter()
             update_candles(symbols)
             handle_open_trades(strategies)
-            maybe_open_new_trades(profiles, symbols, strategies)
+            maybe_open_new_trades(backtested_profiles, symbols, strategies)
+            maybe_post_session_stat(symbols, symbol_year_profiles)
             log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - start_time):.6f} seconds")
 
         prev_time = now_time

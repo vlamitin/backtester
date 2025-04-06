@@ -1,15 +1,23 @@
-from typing import List, Set
+from typing import List, Set, Optional
 
 from stock_market_research_kit.session import SessionName, Session, SessionType
 from stock_market_research_kit.sessions_sequence import SessionsSequence
 
 
 class TreeNode:
-    def __init__(self, key, parent, count):
+    def __init__(self, key, parent, initial_count, distribution_dict):
         self.key = key
-        self.count = count
+        self.count = initial_count
+        self.distribution = distribution_dict
         self.parent = parent
         self.children = []
+
+    def add_node_count(self, count, distribution_dict):
+        self.count = self.count + count
+        for distr_key in distribution_dict:
+            if distr_key not in self.distribution:
+                self.distribution[distr_key] = 0
+            self.distribution[distr_key] = self.distribution[distr_key] + distribution_dict[distr_key]
 
     def traverse_children(self):
         yield self
@@ -37,8 +45,8 @@ class TreeNode:
 
     def get_paths(self):
         def dfs(node, path, res, seen):
-            path.append((node.key, node.count))
-            path_tuple = tuple(path)
+            path.append((node.key, node.count, node.distribution))
+            path_tuple = tuple(x[0:2] for x in path)
             if path_tuple not in seen:
                 res.append(path[:])
                 seen.add(path_tuple)
@@ -54,18 +62,18 @@ class TreeNode:
 class Tree:
     def __init__(self, name, key, count):
         self.name = name
-        self.root = TreeNode(key, None, count)
+        self.root = TreeNode(key, None, count, {})
 
-    def insert(self, parent_node_key, key):
+    def insert(self, parent_node_key, key, distribution_dict):
         for parent_node in self.root.traverse_children():
             if parent_node.key != parent_node_key:
                 continue
 
-            same_key_node = next((ch for ch in parent_node.children if ch.key == key), None)
+            same_key_node: Optional[TreeNode] = next((ch for ch in parent_node.children if ch.key == key), None)
             if same_key_node:
-                same_key_node.count += 1
+                same_key_node.add_node_count(1, distribution_dict)
             else:
-                parent_node.children.append(TreeNode(key, parent_node, 1))
+                parent_node.children.append(TreeNode(key, parent_node, 1, distribution_dict))
 
             # for node in parent_node.traverse_parents():
             #     node.count += 1
@@ -84,15 +92,17 @@ class Tree:
         for subtree_node in subtree.traverse_children():
             subtree_node.parent = current_parent
 
-            same_key_node = next((ch for ch in current_parent.children if ch.key == subtree_node.key), None)
+            same_key_node: Optional[TreeNode] = next(
+                (ch for ch in current_parent.children if ch.key == subtree_node.key), None)
             if same_key_node:
-                same_key_node.count += 1
+                same_key_node.add_node_count(1, subtree_node.distribution)
                 current_parent = same_key_node
             else:
                 new_node = TreeNode(
                     subtree_node.key,
                     current_parent,
-                    1
+                    1,
+                    subtree_node.distribution
                 )
                 current_parent.children.append(new_node)
                 current_parent = new_node
@@ -172,8 +182,10 @@ def tree_from_sessions(name: str, all_sessions: List[Session], sessions_in_order
 
         subtree = None
         for i in range(len(ordered) - 1, -1, -1):
-            s = ordered[i]
-            new_subtree = TreeNode(f"{s.name.value}__{s.type.value}", None, 1)
+            s: Session = ordered[i]
+            new_subtree = TreeNode(
+                f"{s.name.value}__{s.type.value}", None, 1, {s.impact.value: 1}
+            )
             if subtree:
                 subtree.parent = new_subtree
                 new_subtree.children = [subtree]

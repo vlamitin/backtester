@@ -99,7 +99,7 @@ def look_for_entry_backtest(day_sessions: List[Session], profiles, sl, tp) -> Li
                 for x in day_sessions:
                     if not x.type or not x.name:
                         print("hello there")
-                if is_sublist(list(profile[0:-1]), [f"{x.name.value}__{x.type.value}" for x in day_sessions]):
+                if is_sublist(list(profile[0]), [f"{x.name.value}__{x.type.value}" for x in day_sessions]):
                     hunting_sessions = [x for x in day_sessions if x.name.value == session]
                     if len(hunting_sessions) == 0:
                         # this triggers if fn called from backtest with current not-closed day
@@ -123,7 +123,7 @@ def look_for_entry_backtest(day_sessions: List[Session], profiles, sl, tp) -> Li
                         hunting_session=SessionName(session),
                         hunting_type=SessionType(candle_type),
                         predict_direction=predict_direction,
-                        entry_profile_key=f"{' -> '.join(profile[0:-1])} -> {session}__{candle_type}: {profile[-1][0]}/{profile[-1][1]} {profile[-1][2]}",
+                        entry_profile_key=f"{' -> '.join(profile[0])} -> {session}__{candle_type}: {profile[1][0]}/{profile[1][1]} {profile[1][2]}",
                         initial_stop=stop,
                         stop=stop,
                         deadline_close=hunting_session.session_end_date,
@@ -146,7 +146,7 @@ PREDICT_PROFILES = [x.value for x in [SessionName.EARLY, SessionName.PRE, Sessio
 
 
 def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: int, profiles_min_times: int,
-                 test_symbol: str, test_year: int, sl_percent: float, tp_percent: float):
+                 test_symbol: str, test_year: int, sl_percent: float, tp_percent: float, profiles):
     start_time = time.perf_counter()
 
     conn = connect_to_db(test_year)
@@ -159,8 +159,7 @@ def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: 
         print(f"Symbol {test_symbol} not found in days table")
         quit(0)
 
-    fill_profiles(profiles_symbol, profiles_year)
-    successful_profiles = get_successful_profiles(PREDICT_PROFILES, profiles_min_times, profiles_min_chance)
+    successful_profiles = get_successful_profiles(PREDICT_PROFILES, profiles_min_times, profiles_min_chance, profiles)
 
     bt = Backtest(
         profiles_symbol=profiles_symbol,
@@ -195,8 +194,8 @@ def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: 
     return res
 
 
-def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: NotifierStrategy):
-    profiles = {
+def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: NotifierStrategy, symbol_year_profiles):
+    profiles_by_year = {
         2021: {},
         2022: {},
         2023: {},
@@ -210,37 +209,38 @@ def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: No
 
             test = run_backtest(
                 profiles_symbol, profile_year, strategy.profiles_min_chance, strategy.profiles_min_times,
-                test_symbol, test_year, strategy.sl_percent, strategy.tp_percent
+                test_symbol, test_year, strategy.sl_percent, strategy.tp_percent,
+                symbol_year_profiles[f"{profiles_symbol}__{profile_year}"][2]
             )
             for profile in test.trades_by_strategy:
-                if profile not in profiles[profile_year]:
-                    profiles[profile_year][profile] = {'win': 0, 'lose': 0, 'pnl': 0}
-                profiles[profile_year][profile]['win'] += test.trades_by_strategy[profile].win
-                profiles[profile_year][profile]['lose'] += test.trades_by_strategy[profile].lose
-                profiles[profile_year][profile]['pnl'] += test.trades_by_strategy[profile].pnl
-                profiles[profile_year][profile][test_year] = test.trades_by_strategy[profile]
+                if profile not in profiles_by_year[profile_year]:
+                    profiles_by_year[profile_year][profile] = {'win': 0, 'lose': 0, 'pnl': 0}
+                profiles_by_year[profile_year][profile]['win'] += test.trades_by_strategy[profile].win
+                profiles_by_year[profile_year][profile]['lose'] += test.trades_by_strategy[profile].lose
+                profiles_by_year[profile_year][profile]['pnl'] += test.trades_by_strategy[profile].pnl
+                profiles_by_year[profile_year][profile][test_year] = test.trades_by_strategy[profile]
 
     unsorted_profiles = []
     for profile_year in strategy.profile_years:
-        for profile in profiles[profile_year]:
+        for profile in profiles_by_year[profile_year]:
             unsorted_profile = {
                 'year': profile_year,
                 'profile': profile,
-                'win': profiles[profile_year][profile]['win'],
-                'lose': profiles[profile_year][profile]['lose'],
-                'pnl': profiles[profile_year][profile]['pnl'],
+                'win': profiles_by_year[profile_year][profile]['win'],
+                'lose': profiles_by_year[profile_year][profile]['lose'],
+                'pnl': profiles_by_year[profile_year][profile]['pnl'],
                 'trades': []
             }
 
             for test_year in strategy.backtest_years:
-                if test_year in profiles[profile_year][profile]:
-                    unsorted_profile['trades'].extend(profiles[profile_year][profile][test_year].trades)
+                if test_year in profiles_by_year[profile_year][profile]:
+                    unsorted_profile['trades'].extend(profiles_by_year[profile_year][profile][test_year].trades)
 
             unsorted_profiles.append(unsorted_profile)
 
     sorted_profiles = sorted(unsorted_profiles, key=lambda x: x['pnl'], reverse=True)
 
-    return sorted_profiles, profiles
+    return sorted_profiles, profiles_by_year
 
 
 if __name__ == "__main__":
@@ -248,9 +248,9 @@ if __name__ == "__main__":
         results = []
         for x in [
             ("BTCUSDT", btc_naive_strategy),
-            ("AAVEUSDT", btc_naive_strategy),
-            ("AVAXUSDT", btc_naive_strategy),
-            ("CRVUSDT", btc_naive_strategy),
+            # ("AAVEUSDT", btc_naive_strategy),
+            # ("AVAXUSDT", btc_naive_strategy),
+            # ("CRVUSDT", btc_naive_strategy),
         ]:
             # [(x[0], [[trade.entry_time for trade in profile['trades']] for profile in x[1][0]]) for x in results]
             # [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]

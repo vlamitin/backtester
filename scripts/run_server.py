@@ -2,12 +2,12 @@ import json
 import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from scripts.run_sessions_sequencer import fill_profiles, profiles
+from scripts.run_sessions_sequencer import fill_profiles
 from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.day import day_from_json
 from stock_market_research_kit.session import session_from_json, json_from_sessions
 
-DATABASE_PATH = "stock_market_research_2025.db"
+DATABASE_PATH = "stock_market_research_2024.db"
 conn = sqlite3.connect(DATABASE_PATH)
 c = conn.cursor()
 
@@ -78,7 +78,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
-        fill_profiles("BTCUSDT", 2024)
+        _, _, profiles = fill_profiles("BTCUSDT", 2024)
         server = HTTPServer(('localhost', 8000), RequestHandler)
         print('Starting server at http://localhost:8000')
         server.serve_forever()

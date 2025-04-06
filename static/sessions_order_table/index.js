@@ -15,13 +15,12 @@ const symbol = 'BTCUSDT';
 //     $('#table thead').prepend(new_row)
 
     const columns = ['chance%', 'num', 'denom'].concat(...Object.keys(profiles))
-
     const dataSet = []
     Object.keys(profiles).forEach(sessionName => {
         Object.keys(profiles[sessionName]).forEach(candleType => {
             profiles[sessionName][candleType].forEach(profile => {
-                const session_keys = [...profile]
-                const chance = session_keys.pop()
+                const session_keys = profile[0]
+                const chance = profile[1]
 
                 dataSet.push(columns.map(columnName => {
                     if (columnName === 'chance%') {
