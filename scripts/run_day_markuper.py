@@ -1,9 +1,10 @@
 import sqlite3
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import List
 from zoneinfo import ZoneInfo
 
 from scripts.setup_db import connect_to_db
+from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.day import Day, new_day
 from utils.date_utils import is_same_day_or_past_or_future, is_some_same_day_session, is_some_prev_day_session, \
     to_utc_datetime, now_utc_datetime, now_ny_datetime, to_date_str, start_of_day
@@ -310,22 +311,6 @@ def is_ny_pm_close_time(checked_time_string, current_day_string):
     return is_some_same_day_session(checked_time_string, current_day_string, "15:00", "16:00")
 
 
-def as_1_candle(candles: List[Tuple[float]]) -> Tuple[float, float, float, float, float, str]:
-    if len(candles) == 0:
-        return -1, -1, -1, -1, 0, ""
-
-    open_, high, low, close, volume, date = candles[0][0], -1, -1, candles[-1][3], 0, candles[0][5]
-
-    for _, h, l, _, v, _ in candles:
-        volume += v
-        if h >= high or high == -1:
-            high = h
-        if l <= low or low == -1:
-            low = l
-
-    return open_, high, low, close, volume, date
-
-
 def insert_to_db(symbol: str, days: List[Day], conn):
     rows = [day.to_db_format(symbol) for day in days]
 
@@ -346,8 +331,21 @@ def main(symbol, year):
     conn = connect_to_db(year)
     c = conn.cursor()
 
-    c.execute("""SELECT open, high, low, close, volume, date_ts
-        FROM raw_candles WHERE symbol = ? AND period = ?""", (symbol, "15m"))
+    c.execute("""WITH last_row_date_ts AS (
+    SELECT date_ts last_row_date FROM raw_candles
+    WHERE symbol = ? AND period = ?
+    ORDER BY strftime('%s', date_ts) DESC
+    LIMIT 1
+),
+     last_full_day AS (
+         SELECT
+             (strftime('%s', last_row_date) - 86400) / 86400 * 86400 + 24 * 3600 AS end_of_day
+         FROM last_row_date_ts
+     )
+SELECT open, high, low, close, volume, date_ts FROM raw_candles
+WHERE strftime('%s', date_ts) + 0 < (SELECT end_of_day FROM last_full_day)
+  AND symbol = ? AND period = ?
+  ORDER BY strftime('%s', date_ts)""", (symbol, "15m", symbol, "15m"))
     rows_15m = c.fetchall()
 
     if len(rows_15m) == 0:

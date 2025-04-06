@@ -7,7 +7,7 @@ from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.day import day_from_json
 from stock_market_research_kit.session import session_from_json, json_from_sessions
 
-DATABASE_PATH = "stock_market_research_2024.db"
+DATABASE_PATH = "stock_market_research_2025.db"
 conn = sqlite3.connect(DATABASE_PATH)
 c = conn.cursor()
 

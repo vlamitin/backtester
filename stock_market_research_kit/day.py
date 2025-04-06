@@ -1,8 +1,8 @@
 import json
-from dataclasses import dataclass, asdict, field
-from datetime import datetime
-from typing import List, Tuple, Dict
-from zoneinfo import ZoneInfo
+from dataclasses import dataclass, asdict
+from typing import List
+
+from stock_market_research_kit.candle import InnerCandle
 
 
 def day_from_json(json_str):
@@ -14,8 +14,8 @@ class Day:
     day_of_week: int
     date_readable: str
 
-    candle_1d: Tuple[float, float, float, float, float, str]
-    candles_15m: List[Tuple[float, float, float, float, float, str]]
+    candle_1d: InnerCandle
+    candles_15m: List[InnerCandle]
 
     # do: float  # TODO заполнить скриптом и это
     # true_do: float
@@ -26,27 +26,27 @@ class Day:
     # yo: float
     # true_yo: float
 
-    cme_open_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 18:00 - 19:00 NY time
-    asian_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 19:00 - 22:00 NY time
-    london_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 02:00 - 05:00 NY time
-    early_session_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 07:00 - 08:00 NY time
-    premarket_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 08:00 - 09:30 NY time
-    ny_am_open_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 09:30 - 10:00 NY time
-    ny_am_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 10:00 - 12:00 NY time
-    ny_lunch_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 12:00 - 13:00 NY time
-    ny_pm_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 13:00 - 15:00 NY time
-    ny_pm_close_candles_15m: List[Tuple[float, float, float, float, float, str]]  # 15:00 - 16:00 NY time
+    cme_open_candles_15m: List[InnerCandle]  # 18:00 - 19:00 NY time
+    asian_candles_15m: List[InnerCandle]  # 19:00 - 22:00 NY time
+    london_candles_15m: List[InnerCandle]  # 02:00 - 05:00 NY time
+    early_session_candles_15m: List[InnerCandle]  # 07:00 - 08:00 NY time
+    premarket_candles_15m: List[InnerCandle]  # 08:00 - 09:30 NY time
+    ny_am_open_candles_15m: List[InnerCandle]  # 09:30 - 10:00 NY time
+    ny_am_candles_15m: List[InnerCandle]  # 10:00 - 12:00 NY time
+    ny_lunch_candles_15m: List[InnerCandle]  # 12:00 - 13:00 NY time
+    ny_pm_candles_15m: List[InnerCandle]  # 13:00 - 15:00 NY time
+    ny_pm_close_candles_15m: List[InnerCandle]  # 15:00 - 16:00 NY time
 
-    cme_as_candle: Tuple[float, float, float, float, float, str]
-    asia_as_candle: Tuple[float, float, float, float, float, str]
-    london_as_candle: Tuple[float, float, float, float, float, str]
-    early_session_as_candle: Tuple[float, float, float, float, float, str]
-    premarket_as_candle: Tuple[float, float, float, float, float, str]
-    ny_am_open_as_candle: Tuple[float, float, float, float, float, str]
-    ny_am_as_candle: Tuple[float, float, float, float, float, str]
-    ny_lunch_as_candle: Tuple[float, float, float, float, float, str]
-    ny_pm_as_candle: Tuple[float, float, float, float, float, str]
-    ny_pm_close_as_candle: Tuple[float, float, float, float, float, str]
+    cme_as_candle: InnerCandle
+    asia_as_candle: InnerCandle
+    london_as_candle: InnerCandle
+    early_session_as_candle: InnerCandle
+    premarket_as_candle: InnerCandle
+    ny_am_open_as_candle: InnerCandle
+    ny_am_as_candle: InnerCandle
+    ny_lunch_as_candle: InnerCandle
+    ny_pm_as_candle: InnerCandle
+    ny_pm_close_as_candle: InnerCandle
 
     @classmethod
     def from_json(cls, data: dict):
@@ -72,6 +72,8 @@ def new_day():
         # true_mo=-1,
         # yo=-1,
         # true_yo=-1,
+        # pdo
+        # pdc
         cme_open_candles_15m=[],
         asian_candles_15m=[],
         london_candles_15m=[],

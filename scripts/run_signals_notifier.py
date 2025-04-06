@@ -5,11 +5,12 @@ from time import sleep
 from typing import List
 from zoneinfo import ZoneInfo
 
-from scripts.run_day_markuper import markup_days, as_1_candle, london_from_to
+from scripts.run_day_markuper import markup_days, london_from_to
 from scripts.run_series_raw_loader import update_candle_from_binance
 from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest, get_backtested_profiles
 from scripts.run_sessions_typifier import typify_sessions, typify_session
 from scripts.setup_db import connect_to_db
+from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy
 from stock_market_research_kit.session import get_next_session_mock
 from stock_market_research_kit.session_trade import SessionTrade, session_trade_from_json, json_from_session_trade

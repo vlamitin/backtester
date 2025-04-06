@@ -15,39 +15,28 @@
     const candles = []
     const plotBands = []
 
-    const candle_types = {
-        "CME Open": "",
-        "Asia Open": "",
-        "London Open": "",
-        "Early session": "",
-        "Premarket": "",
-        "NY AM Open": "",
-        "NY AM": "",
-        "NY Lunch": "",
-        "NY PM": "",
-        "NY PM Close": "",
-    }
-
     const candle_types_map = {}
+
+    window['sessions'] = sessions
 
     sessions.forEach(s => {
         if (!candle_types_map[s.day_date]) {
             candle_types_map[s.day_date] = {}
         }
-        candle_types_map[s.day_date][s.name] = s.type
+        candle_types_map[s.day_date][s.name] = [s.type, s.impact]
     })
 
     days.forEach((day, i) => {
-        day.cme_as_candle[5] && candles.push(toHCCandle(day.cme_as_candle, `CME Open 18:00-19:00 ${candle_types_map[day.date_readable]["CME Open"] || ""}`, 'c'))
-        day.asia_as_candle[5] && candles.push(toHCCandle(day.asia_as_candle, `Asia Open 19:00-22:00 ${candle_types_map[day.date_readable]["Asia Open"] || ""}`, 'a'))
-        day.london_as_candle[5] && candles.push(toHCCandle(day.london_as_candle, `London Open 02:00-05:00 ${candle_types_map[day.date_readable]["London Open"] || ""}`, 'l'))
-        day.early_session_as_candle[5] && candles.push(toHCCandle(day.early_session_as_candle, `Early session 07:00-08:00 ${candle_types_map[day.date_readable]["Early session"] || ""}`, 'e'))
-        day.premarket_as_candle[5] && candles.push(toHCCandle(day.premarket_as_candle, `Premarket 08:00-09:30 ${candle_types_map[day.date_readable]["Premarket"] || ""}`, 'p'))
-        day.ny_am_open_as_candle[5] && candles.push(toHCCandle(day.ny_am_open_as_candle, `NY AM Open 09:30-10:00 ${candle_types_map[day.date_readable]["NY AM Open"] || ""}`, 'O'))
-        day.ny_am_as_candle[5] && candles.push(toHCCandle(day.ny_am_as_candle, `NY AM 10:00-12:00 ${candle_types_map[day.date_readable]["NY AM"] || ""}`, 'A'))
-        day.ny_lunch_as_candle[5] && candles.push(toHCCandle(day.ny_lunch_as_candle, `NY Lunch 12:00-13:00 ${candle_types_map[day.date_readable]["NY Lunch"] || ""}`, 'L'))
-        day.ny_pm_as_candle[5] && candles.push(toHCCandle(day.ny_pm_as_candle, `NY PM 13:00-15:00 ${candle_types_map[day.date_readable]["NY PM"] || ""}`, 'P'))
-        day.ny_pm_close_as_candle[5] && candles.push(toHCCandle(day.ny_pm_close_as_candle, `NY PM Close 15:00-16:00 ${candle_types_map[day.date_readable]["NY PM Close"] || ""}`, 'C'))
+        day.cme_as_candle[5] && candles.push(toHCCandle(day.cme_as_candle, `CME Open 18:00-19:00`, candle_types_map[day.date_readable]["CME Open"], 'c'))
+        day.asia_as_candle[5] && candles.push(toHCCandle(day.asia_as_candle, `Asia Open 19:00-22:00`, candle_types_map[day.date_readable]["Asia Open"], 'a'))
+        day.london_as_candle[5] && candles.push(toHCCandle(day.london_as_candle, `London Open 02:00-05:00`, candle_types_map[day.date_readable]["London Open"], 'l'))
+        day.early_session_as_candle[5] && candles.push(toHCCandle(day.early_session_as_candle, `Early session 07:00-08:00`, candle_types_map[day.date_readable]["Early session"], 'e'))
+        day.premarket_as_candle[5] && candles.push(toHCCandle(day.premarket_as_candle, `Premarket 08:00-09:30`, candle_types_map[day.date_readable]["Premarket"], 'p'))
+        day.ny_am_open_as_candle[5] && candles.push(toHCCandle(day.ny_am_open_as_candle, `NY AM Open 09:30-10:00`, candle_types_map[day.date_readable]["NY AM Open"], 'O'))
+        day.ny_am_as_candle[5] && candles.push(toHCCandle(day.ny_am_as_candle, `NY AM 10:00-12:00`, candle_types_map[day.date_readable]["NY AM"], 'A'))
+        day.ny_lunch_as_candle[5] && candles.push(toHCCandle(day.ny_lunch_as_candle, `NY Lunch 12:00-13:00`, candle_types_map[day.date_readable]["NY Lunch"], 'L'))
+        day.ny_pm_as_candle[5] && candles.push(toHCCandle(day.ny_pm_as_candle, `NY PM 13:00-15:00`, candle_types_map[day.date_readable]["NY PM"], 'P'))
+        day.ny_pm_close_as_candle[5] && candles.push(toHCCandle(day.ny_pm_close_as_candle, `NY PM Close 15:00-16:00`,candle_types_map[day.date_readable]["NY PM Close"], 'C'))
 
 
         if (![6, 0].includes(new Date(day.date_readable).getDay())) {
@@ -134,15 +123,21 @@
                 let s = '<b>' + new Highcharts.Time({ timezone: "America/New_York" })
                     .dateFormat('%a %b %e %Y', this.x) + '</b>'
 
-                s += `<br/><b>${this.description}</b>`
+                s += `<br/><b>${this.point.custom.name}</b> ${this.point.custom.type}`
+                if (this.point.custom.impact == "UNSPECIFIED") {
+                    s += `<br/>impact: ${this.point.custom.impact}`
+                } else {
+                    s += `<br/>impact: <b>${this.point.custom.impact}</b>`
+                }
+
 
                 const perf = (this.point.close - this.point.open).toFixed(2)
                 const volat = (this.point.high - this.point.low).toFixed(2)
 
-                s += `<br/>open:  ${this.point.open}`
-                s += `<br/>high:  ${this.point.high}`
-                s += `<br/>low:   ${this.point.low}`
-                s += `<br/>close: ${this.point.close}`
+                s += `<br/>open:   ${this.point.open}`
+                s += `<br/>high:   ${this.point.high}`
+                s += `<br/>low:    ${this.point.low}`
+                s += `<br/>close:  ${this.point.close}`
                 s += `<br/>perf: ${perf > 0 ? "+" : ""}${perf} (<b>${(perf / this.point.open * 100).toFixed(2)}%</b>)`
                 s += `<br/>volat: ${volat} (<b>${(volat / this.point.open * 100).toFixed(2)}%</b>)`
                 const wicksFractions = [(this.point.high - Math.max(this.point.open, this.point.close)) / (this.point.high - this.point.low),
@@ -312,18 +307,19 @@
     }
 })();
 
-function toHCCandle(binanceCandle, description, label, candleType) {
-    const [open, high, low, close, _, date] = binanceCandle
+function toHCCandle(candle, name, typeImpact, label) {
+    const [open, high, low, close, _, date] = candle
     return {
         x: Number(new Date(date)),
         open,
         high,
         low,
         close,
-        description,
         custom: {
             label,
-            candleType
+            name,
+            type: typeImpact[0],
+            impact: typeImpact[1]
         },
         dataLabels: {
             enabled: true,

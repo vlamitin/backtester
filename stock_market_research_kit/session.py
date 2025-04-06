@@ -46,7 +46,26 @@ class SessionType(Enum):
     BEAR_HAMMER = 'BEAR_HAMMER'  # small body (bull or bear), very long bull wick and almost no bear wick
 
     V_SHAPE = 'V_SHAPE'  # extraordinary bear wick, but body very small compared to wick (bear or bull, whatever)
-    PUMP_AND_DUMP = 'PUMP_AND_DUMP'  # extraordinary bull wick, but body very small compared to wick (bear or bull, whatever)
+    PUMP_AND_DUMP = 'PUMP_AND_DUMP'  # extraordinary bull wick, but body very small (bear or bull, whatever)
+
+
+class SessionImpact(Enum):
+    UNSPECIFIED = 'UNSPECIFIED'
+
+    DAILY_HIGH = 'DAILY_HIGH'  # whatever session with session high forms daily high (manipulation is done ✔)
+    DAILY_LOW = 'DAILY_LOW'  # whatever session with session low forms daily low (manipulation is done ✔)
+
+    # WARN! We skip daily wicks that are very short (< 0.2 of candle volatility)
+    HIGH_WICK_BUILDER = 'HIGH_WICK_BUILDER'  # DH not yet happened and session is responsible for > 0.5 of upper wick
+    LOW_WICK_BUILDER = 'LOW_WICK_BUILDER'  # DL not yet happened and session is responsible for > 0.5 of lower wick
+
+    # WARN! We skip daily wicks that are very short (< 0.2 of candle volatility)
+    HIGH_TO_BODY_REVERSAL = 'HIGH_TO_BODY_REVERSAL'  # after DH & SO in upper wick & SC in body or close to it
+    LOW_TO_BODY_REVERSAL = 'LOW_TO_BODY_REVERSAL'   # after DL & SO in lower wick & SC in body or close to it
+
+    # WARN! We skip daily bodies that are very short (< 0.3 of candle volatility)
+    FORWARD_BODY_BUILDER = 'FORWARD_BODY_BUILDER'  # responsible for > 0.5 of Daily body, and performed same way
+    BACKWARD_BODY_BUILDER = 'BACKWARD_BODY_BUILDER'  # responsible for > 0.5 of Daily body, and performed same way
 
 
 @dataclass
@@ -56,6 +75,7 @@ class Session:
     session_end_date: str
     name: SessionName
     type: SessionType
+    impact: SessionImpact
     open: float
     high: float
     low: float
@@ -67,6 +87,8 @@ def session_decoder(dct):
         dct["name"] = SessionName(dct["name"])
     if "type" in dct:
         dct["type"] = SessionType(dct["type"])
+    if "impact" in dct:
+        dct["impact"] = SessionImpact(dct["impact"])
     return Session(**dct)
 
 
@@ -127,6 +149,7 @@ def get_next_session_mock(session_name: SessionName, date_str) -> Optional[Sessi
         session_end_date=from_to[1],
         name=new_session_name,
         type=SessionType.UNSPECIFIED,
+        impact=SessionImpact.UNSPECIFIED,
         open=0,
         high=0,
         low=0,
