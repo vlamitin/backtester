@@ -113,8 +113,8 @@ def update_candle_from_binance(symbol):
 
     for i, date in enumerate(iteration_days):
         if i == len(iteration_days) - 1:
-            start_time = to_timestamp(to_date_str(start_of_day(date)))
-            end_time = to_timestamp(to_date_str(date))
+            start_time = to_timestamp(last_15m_candle[5])
+            end_time = to_timestamp(to_date_str(date)) - 1
         else:
             start_time = to_timestamp(to_date_str(date))
             end_time = int(end_of_day(date).timestamp() * 1000)

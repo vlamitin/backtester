@@ -13,7 +13,7 @@ from scripts.run_sessions_typifier import typify_sessions, typify_session
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy
-from stock_market_research_kit.session import get_next_session_mock
+from stock_market_research_kit.session import get_next_session_mock, get_from_to, SessionName
 from stock_market_research_kit.session_trade import SessionTrade, session_trade_from_json, json_from_session_trade
 from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
@@ -333,8 +333,10 @@ def maybe_post_session_stat(symbols, symbol_year_profiles):
         if len(chances['variants']) == 0:
             continue
 
+        from_to = get_from_to(SessionName(chances['next_session']), to_date_str(start_of_day(now_utc_datetime())))
         variants = "\n".join(chances['variants'])
-        post_stat_notification(f"""Next <b>{symbol}</b> session is <b>{chances['next_session']}</b>, chances based on 2024:
+        post_stat_notification(f"""Next <b>{symbol}</b> session is <b>{chances['next_session']}</b>
+(from {from_to[0]} to {from_to[1]} UTC), chances based on 2024:
 
 {variants}
 """)

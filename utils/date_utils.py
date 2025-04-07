@@ -29,6 +29,8 @@ def end_of_day(date: datetime) -> datetime:
 
 # it returns start_date, end_date and all days with 0:00 in between
 def get_all_days_between(start_date: datetime, end_date: datetime):
+    if start_date.date() == end_date.date():
+        return [end_date]
     days = [start_date]
     current_date = start_of_day(start_date + timedelta(days=1))
 
@@ -51,7 +53,7 @@ def to_timestamp(date_str: str) -> int:
 def get_previous_candle_15m_close() -> datetime:
     now = datetime.now(ZoneInfo("UTC"))
     rounded = now.replace(minute=(now.minute // 15) * 15, second=0, microsecond=0)
-    return rounded - timedelta(milliseconds=1)
+    return rounded
 
 
 def now_ts() -> int:
