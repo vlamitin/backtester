@@ -245,16 +245,30 @@ def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: No
 
 if __name__ == "__main__":
     try:
+        symbol_year_profiles = {}
+        for symbol, strategy in [
+            ("BTCUSDT", btc_naive_strategy),
+            ("AAVEUSDT", btc_naive_strategy),
+            ("AVAXUSDT", btc_naive_strategy),
+            ("CRVUSDT", btc_naive_strategy),
+        ]:
+            for year in strategy.profile_years:
+                key = f"{symbol}__{year}"
+                if key not in symbol_year_profiles:
+                    symbol_year_profiles[key] = fill_profiles(symbol, year)
+
         results = []
         for x in [
             ("BTCUSDT", btc_naive_strategy),
-            # ("AAVEUSDT", btc_naive_strategy),
-            # ("AVAXUSDT", btc_naive_strategy),
-            # ("CRVUSDT", btc_naive_strategy),
+            ("AAVEUSDT", btc_naive_strategy),
+            ("AVAXUSDT", btc_naive_strategy),
+            ("CRVUSDT", btc_naive_strategy),
         ]:
             # [(x[0], [[trade.entry_time for trade in profile['trades']] for profile in x[1][0]]) for x in results]
             # [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]
-            results.append((x[0], get_backtested_profiles(x[0], x[0], x[1])))
+
+            results.append((x[0], get_backtested_profiles(x[0], x[0], x[1], symbol_year_profiles)))
+
         pnls = [(x[0], sum([profile['pnl'] for profile in x[1][0]])) for x in results]
         april_dates = [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]
 

@@ -7,6 +7,7 @@ def fetch_15m_candles(symbol, start_time, end_time):
     # return mock_fetch_15m_candles()
     response = requests.get(
         f"https://fapi.binance.com/fapi/v1/klines?symbol={symbol}&interval=15m&startTime={start_time}&endTime={end_time}")
+        # f"https://fapi.binance.com/fapi/v1/markPriceKlines?symbol={symbol}&interval=15m&startTime={start_time}&endTime={end_time}")
     response.raise_for_status()
     server_candles = json.loads(response.text)
 

@@ -5,7 +5,7 @@ from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle, as_1_candle
 from stock_market_research_kit.day import Day, day_from_json
 from stock_market_research_kit.session import Session, SessionType, SessionName, SessionImpact
-from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold
+from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold, impact_thresholds
 from utils.date_utils import to_utc_datetime, to_date_str, start_of_day
 
 
@@ -168,13 +168,6 @@ def define_session_impact(session_candles: List[InnerCandle], day_candles: List[
                           day_candle: InnerCandle) -> SessionImpact:
     session_day_candles = [x for x in session_candles
                            if start_of_day(to_utc_datetime(x[5])) == start_of_day(to_utc_datetime(day_candles[0][5]))]
-    thresholds = {
-        'min_meaningful_wick': 0.2,
-        'min_meaningful_body': 0.3,
-        'body_adj_coef': 0.05,
-        'min_wick_overlap_percent': 50,
-        'min_body_overlap_percent': 50,
-    }
 
     session_day_candle = as_1_candle(session_day_candles)
     if session_day_candle[1] == day_candle[1]:
@@ -195,32 +188,35 @@ def define_session_impact(session_candles: List[InnerCandle], day_candles: List[
     overlaps = session_overlaps(session_day_candle, day_candle)
     day_anatomy = candle_anatomy(day_candle)
 
-    if day_anatomy[2] >= thresholds['min_meaningful_wick'] and \
+    if day_anatomy[2] >= impact_thresholds['min_meaningful_wick'] and \
             to_utc_datetime(session_day_candles[-1][5]) < to_utc_datetime(daily_high_time) and \
-            overlaps[0] > thresholds['min_wick_overlap_percent']:
+            overlaps[0] > impact_thresholds['min_wick_overlap_percent']:
         return SessionImpact.HIGH_WICK_BUILDER
 
-    if day_anatomy[4] >= thresholds['min_meaningful_wick'] and \
+    if day_anatomy[4] >= impact_thresholds['min_meaningful_wick'] and \
             to_utc_datetime(session_day_candles[-1][5]) < to_utc_datetime(daily_low_time) and \
-            overlaps[2] > thresholds['min_wick_overlap_percent']:
+            overlaps[2] > impact_thresholds['min_wick_overlap_percent']:
         return SessionImpact.LOW_WICK_BUILDER
 
-    min_body_adj_thr = min(day_candle[0], day_candle[3]) - thresholds['body_adj_coef'] * (day_candle[1] - day_candle[2])
-    max_body_adj_thr = max(day_candle[0], day_candle[3]) + thresholds['body_adj_coef'] * (day_candle[1] - day_candle[2])
+    min_body_adj_thr = min(day_candle[0], day_candle[3]) - impact_thresholds['body_adj_coef'] * (
+                day_candle[1] - day_candle[2])
+    max_body_adj_thr = max(day_candle[0], day_candle[3]) + impact_thresholds['body_adj_coef'] * (
+                day_candle[1] - day_candle[2])
 
-    if day_anatomy[2] >= thresholds['min_meaningful_wick'] and \
+    if day_anatomy[2] >= impact_thresholds['min_meaningful_wick'] and \
             to_utc_datetime(session_day_candles[0][5]) > to_utc_datetime(daily_high_time) and \
             max(day_candle[0], day_candle[3]) < session_day_candles[0][0] < day_candle[1] and \
             min_body_adj_thr < session_day_candles[-1][3] < max_body_adj_thr:
         return SessionImpact.HIGH_TO_BODY_REVERSAL
 
-    if day_anatomy[4] >= thresholds['min_meaningful_wick'] and \
+    if day_anatomy[4] >= impact_thresholds['min_meaningful_wick'] and \
             to_utc_datetime(session_day_candles[0][5]) > to_utc_datetime(daily_low_time) and \
             day_candle[2] < session_day_candles[0][0] < min(day_candle[0], day_candle[3]) and \
             min_body_adj_thr < session_day_candles[-1][3] < max_body_adj_thr:
         return SessionImpact.LOW_TO_BODY_REVERSAL
 
-    if day_anatomy[3] >= thresholds['min_meaningful_body'] and overlaps[1] > thresholds['min_body_overlap_percent']:
+    if day_anatomy[3] >= impact_thresholds['min_meaningful_body'] and overlaps[1] > impact_thresholds[
+        'min_body_overlap_percent']:
         if (session_day_candle[0] - session_day_candle[3] > 0 and day_candle[0] - day_candle[3] > 0) or \
                 (session_day_candle[0] - session_day_candle[3] < 0 and day_candle[0] - day_candle[3] < 0):
             return SessionImpact.FORWARD_BODY_BUILDER
@@ -251,21 +247,6 @@ def get_overlap(range1: Tuple[float, float], range2: Tuple[float, float]) -> Opt
     if start < end:
         return start, end
     return None
-
-
-def candle_anatomy(candle: InnerCandle) -> Tuple[float, float, float, float, float]:
-    perf = (candle[3] - candle[0]) / candle[0] * 100
-    volat = (candle[1] - candle[2]) / candle[0] * 100
-
-    wicks_fractions = (0, 0) if candle[1] - candle[2] == 0 \
-        else (
-        (candle[1] - max(candle[0], candle[3])) / (candle[1] - candle[2]),
-        (min(candle[0], candle[3]) - candle[2]) / (candle[1] - candle[2])
-    )
-    upper_wick_fraction, lower_wick_fraction = wicks_fractions
-    body_fraction = 1 - upper_wick_fraction - lower_wick_fraction
-
-    return perf, volat, upper_wick_fraction, body_fraction, lower_wick_fraction
 
 
 def typify_session(candle: InnerCandle, thresholds: SessionThresholds) -> SessionType:
@@ -330,23 +311,33 @@ def typify_session(candle: InnerCandle, thresholds: SessionThresholds) -> Sessio
         return SessionType.V_SHAPE
 
 
-YEAR = 2025
-SYMBOL = "BTCUSDT"
+def candle_anatomy(candle: InnerCandle) -> Tuple[float, float, float, float, float]:
+    open_, high, low, close = candle[:4]
+
+    perf = (close - open_) / open_ * 100
+    volat = (high - low) / open_ * 100
+
+    wicks_fractions = (0, 0) if high - low == 0 \
+        else (
+        (high - max(open_, close)) / (high - low),
+        (min(open_, close) - low) / (high - low)
+    )
+    upper_wick_fraction, lower_wick_fraction = wicks_fractions
+    body_fraction = 1 - upper_wick_fraction - lower_wick_fraction
+
+    return perf, volat, upper_wick_fraction, body_fraction, lower_wick_fraction
+
+
 if __name__ == "__main__":
     try:
-        conn = connect_to_db(YEAR)
+        conn = connect_to_db(2024)
         c = conn.cursor()
 
-        c.execute("""SELECT data FROM days WHERE symbol = ? AND date_ts >= ?""", (SYMBOL, "2025-03-15 00:00"))
+        c.execute("""SELECT data FROM days WHERE symbol = ?""", ("BTCUSDT",))
         rows = c.fetchall()
 
-        if len(rows) == 0:
-            print(f"Symbol {SYMBOL} not found in DB")
-            quit(0)
-
-        days = [day_from_json(x[0]) for x in rows]
-        print(f"Typifying sessions of {len(rows)} {YEAR} days of {SYMBOL}")
-        sessions = typify_sessions(days)
+        btc_days: List[Day] = [day_from_json(x[0]) for x in rows]
+        sessions = typify_sessions(btc_days)
         print(f"Done typifying up {len(sessions)} sessions")
 
         conn.close()

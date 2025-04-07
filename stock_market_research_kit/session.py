@@ -1,10 +1,11 @@
 import json
 from dataclasses import dataclass, asdict
 from enum import Enum
-from typing import Optional
+from typing import Optional, Tuple
 
 from scripts.run_day_markuper import cme_open_from_to, asia_from_to, london_from_to, early_from_to, pre_from_to, \
     open_from_to, nyam_from_to, lunch_from_to, nypm_from_to, close_from_to
+from utils.date_utils import now_utc_datetime, to_date_str, start_of_day
 
 
 class SessionName(Enum):
@@ -110,9 +111,33 @@ def json_from_sessions(sessions):
     return json.dumps([session.__dict__ for session in sessions], default=enum_serializer, indent=4)
 
 
-def get_next_session_mock(session_name: SessionName, date_str) -> Optional[Session]:
+def get_from_to(session_name: SessionName, date_str: str) -> Tuple[str, str]:
+    match session_name:
+        case SessionName.CME:
+            return cme_open_from_to(date_str)
+        case SessionName.ASIA:
+            return asia_from_to(date_str)
+        case SessionName.LONDON:
+            return london_from_to(date_str)
+        case SessionName.EARLY:
+            return early_from_to(date_str)
+        case SessionName.PRE:
+            return pre_from_to(date_str)
+        case SessionName.NY_OPEN:
+            return open_from_to(date_str)
+        case SessionName.NY_AM:
+            return nyam_from_to(date_str)
+        case SessionName.NY_LUNCH:
+            return lunch_from_to(date_str)
+        case SessionName.NY_PM:
+            return nypm_from_to(date_str)
+        case SessionName.NY_CLOSE:
+            return close_from_to(date_str)
+    return "", ""
+
+
+def get_next_session_mock(session_name: SessionName, date_str: str) -> Optional[Session]:
     new_session_name = SessionName.UNSPECIFIED
-    from_to = ("", "")
 
     for i, s in enumerate(sessions_in_order):
         if i == len(sessions_in_order) - 1:
@@ -121,27 +146,7 @@ def get_next_session_mock(session_name: SessionName, date_str) -> Optional[Sessi
             new_session_name = sessions_in_order[i + 1]
             break
 
-    match new_session_name:
-        case SessionName.CME:
-            from_to = cme_open_from_to(date_str)
-        case SessionName.ASIA:
-            from_to = asia_from_to(date_str)
-        case SessionName.LONDON:
-            from_to = london_from_to(date_str)
-        case SessionName.EARLY:
-            from_to = early_from_to(date_str)
-        case SessionName.PRE:
-            from_to = pre_from_to(date_str)
-        case SessionName.NY_OPEN:
-            from_to = open_from_to(date_str)
-        case SessionName.NY_AM:
-            from_to = nyam_from_to(date_str)
-        case SessionName.NY_LUNCH:
-            from_to = lunch_from_to(date_str)
-        case SessionName.NY_PM:
-            from_to = nypm_from_to(date_str)
-        case SessionName.NY_CLOSE:
-            from_to = close_from_to(date_str)
+    from_to = get_from_to(new_session_name, date_str)
 
     return Session(
         day_date=date_str,
@@ -155,3 +160,14 @@ def get_next_session_mock(session_name: SessionName, date_str) -> Optional[Sessi
         low=0,
         close=0
     )
+
+
+if __name__ == "__main__":
+    try:
+        test = get_from_to(SessionName.NY_OPEN, to_date_str(start_of_day(now_utc_datetime())))
+        test1 = get_from_to(SessionName.NY_OPEN, to_date_str(now_utc_datetime()))
+
+        print(f"hello")
+    except KeyboardInterrupt:
+        print(f"KeyboardInterrupt, exiting ...")
+        quit(0)
