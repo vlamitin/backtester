@@ -62,7 +62,15 @@ def to_trade_profile(backtest_profile_key):
 
     predict_session, predict_type = typed_sessions[-1].split('__')
 
-    return predict_session, predict_type, tuple([*typed_sessions[:-1], (win, trades_count, win_rate_rel)])
+    return {
+        predict_session: {
+            predict_type: (
+                typed_sessions[:-1],
+                (win, trades_count, win_rate_rel),
+                []
+            )
+        }
+    }
 
 
 def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: NotifierStrategy):
@@ -89,16 +97,19 @@ def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: Noti
         to_trade_profile(x['profile']) for x in sorted_profiles
         if x['win'] / len(x['trades']) > strategy.backtest_min_win_rate
            and x['pnl'] / len(x['trades']) > strategy.backtest_min_pnl_per_trade
-           and to_trade_profile(x['profile'])[0] == predicted_session_mock.name.value
+           and list(to_trade_profile(x['profile']).keys())[0] == predicted_session_mock.name.value
     ]
 
     profiles_map = {}
-    for trade_profile in trade_profiles:
-        if trade_profile[0] not in profiles_map:
-            profiles_map[trade_profile[0]] = {}
-        if trade_profile[1] not in profiles_map[trade_profile[0]]:
-            profiles_map[trade_profile[0]][trade_profile[1]] = []
-        profiles_map[trade_profile[0]][trade_profile[1]].append(trade_profile[2])
+    for sub_map in trade_profiles:
+        predict_session = list(sub_map.keys())[0]
+        if predict_session not in profiles_map:
+            profiles_map[predict_session] = {}
+
+        predict_type = list(sub_map[predict_session].keys())[0]
+        if predict_type not in profiles_map[predict_session]:
+            profiles_map[predict_session][predict_type] = []
+        profiles_map[predict_session][predict_type].append(sub_map[predict_session][predict_type])
 
     new_trades = look_for_entry_backtest([*day_sessions, predicted_session_mock], profiles_map, strategy.sl_percent,
                                          strategy.tp_percent)
@@ -239,7 +250,6 @@ def handle_open_trades(strategies: List[NotifierStrategy]):
             trades_with_candles.append([row])
 
     for rows in trades_with_candles:
-
         row_id, row_strategy_name, row_trade_open_date_utc, row_symbol, row_trade_json = rows[0][0:5]
         session_trade = session_trade_from_json(row_trade_json)
         strategy = [x for x in strategies if x.name == row_strategy_name][0]
@@ -368,7 +378,7 @@ def run_notifier(symbols_with_strategy):
     prev_time = now_ny_datetime()
     first_iteration = True
 
-    # prev_time = datetime(prev_time.year, prev_time.month, 5, 9, 30, tzinfo=ZoneInfo("America/New_York"))
+    prev_time = datetime(prev_time.year, prev_time.month, 8, 9, 28, tzinfo=ZoneInfo("America/New_York"))
     while True:
         if not first_iteration:
             sleep(60 - now_ny_datetime().second)
@@ -415,8 +425,6 @@ if __name__ == "__main__":
         update_candles(["AAVEUSDT"])
         update_candles(["AVAXUSDT"])
         update_candles(["CRVUSDT"])
-        # look_for_new_trade([], None, "BTCUSDT")
-        # print("done")
         run_notifier([
             ("BTCUSDT", btc_naive_strategy),
             ("AAVEUSDT", btc_naive_strategy),
