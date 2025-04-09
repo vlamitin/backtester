@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
-from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold
+from stock_market_research_kit.session import SessionName
+from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold, ThresholdsGetter
 
 
 @dataclass
 class NotifierStrategy:
     name: str
-    session_thresholds: SessionThresholds
+    thresholds_getter: ThresholdsGetter
 
     profiles_min_chance: int
     profiles_min_times: int
@@ -23,7 +24,7 @@ class NotifierStrategy:
 
 btc_naive_strategy = NotifierStrategy(
     name="#1 Naive strategy with all expert thresholds",
-    session_thresholds=btc_universal_threshold,
+    thresholds_getter=lambda x, y: btc_universal_threshold,
     profiles_min_chance=40,
     profiles_min_times=2,
     sl_percent=0.5,
@@ -48,30 +49,29 @@ btc_naive_strategy = NotifierStrategy(
 )
 
 
-btc_naive_strategy_copy = NotifierStrategy(
-    name="COPY #1 Naive strategy with all expert thresholds",
-    session_thresholds=btc_universal_threshold,
-    profiles_min_chance=60,
-    profiles_min_times=3,
-    sl_percent=1,
-    tp_percent=3,
-    include_profile_year_to_backtest=False,
-    profile_years=[
-        2021,
-        2022,
-        2023,
-        2024,
-        2025
-    ],
-    backtest_years=[
-        # 2021,
-        # 2022,
-        # 2023,
-        # 2024,
-        2025
-    ],
-    # backtest_min_pnl_per_trade=-5.5,
-    backtest_min_pnl_per_trade=0.5,
-    backtest_min_win_rate=0.5,
-    # backtest_min_win_rate=0.1,
-)
+def session_2024_thresholds_strategy(symbol_thresholds: Dict[SessionName, SessionThresholds]):
+    return NotifierStrategy(
+        name="#2 Naive strategy with all expert thresholds",
+        thresholds_getter=lambda session_name, _: symbol_thresholds[session_name],
+        profiles_min_chance=40,
+        profiles_min_times=2,
+        sl_percent=0.5,
+        tp_percent=3,
+        include_profile_year_to_backtest=False,
+        profile_years=[
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+        ],
+        backtest_years=[
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+        ],
+        backtest_min_pnl_per_trade=0.5,
+        backtest_min_win_rate=0.4,
+    )

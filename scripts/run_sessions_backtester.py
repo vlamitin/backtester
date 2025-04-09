@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from typing import List, Optional
 
 from scripts.run_sessions_sequencer import fill_profiles, get_successful_profiles
@@ -7,19 +6,21 @@ from scripts.run_sessions_typifier import typify_sessions
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.backtest import Backtest, StrategyTrades
 from stock_market_research_kit.day import Day, day_from_json
-from stock_market_research_kit.notifier_strategy import NotifierStrategy, btc_naive_strategy, btc_naive_strategy_copy
-from stock_market_research_kit.session import SessionName, SessionType, Session, sessions_in_order
+from stock_market_research_kit.notifier_strategy import NotifierStrategy, btc_naive_strategy, \
+    session_2024_thresholds_strategy
+from stock_market_research_kit.session import SessionName, SessionType, Session
+from stock_market_research_kit.session_thresholds import ThresholdsGetter, quantile_per_session_year_thresholds
 from stock_market_research_kit.session_trade import SessionTrade
 from utils.date_utils import to_utc_datetime
 
 
-def backtest(days: List[Day], profiles, bt: Backtest):
+def backtest(days: List[Day], profiles, bt: Backtest, thr_getter: ThresholdsGetter):
     result = bt
 
     closed_trades = []
     active_trades = []
     for day in days:
-        day_sessions = typify_sessions([day])
+        day_sessions = typify_sessions([day], thr_getter)
         if len(day_sessions) == 0:
             continue
         active_trades.extend(look_for_entry_backtest(day_sessions, profiles, bt.sl_percent, bt.tp_percent))
@@ -45,15 +46,23 @@ def backtest(days: List[Day], profiles, bt: Backtest):
 
     for trade in closed_trades:
         if trade.entry_profile_key not in result.trades_by_strategy:
-            result.trades_by_strategy[trade.entry_profile_key] = StrategyTrades(win=0, lose=0, pnl=0, trades=[])
+            result.trades_by_strategy[trade.entry_profile_key] = StrategyTrades(
+                win=0, lose=0, guessed=0, missed=0, pnl=0, trades=[]
+            )
         result.trades_by_strategy[trade.entry_profile_key].trades.append(trade)
         result.trades_by_strategy[trade.entry_profile_key].pnl += trade.pnl_usd
         if trade.pnl_usd > 0:
             result.trades_by_strategy[trade.entry_profile_key].win = result.trades_by_strategy[
-                                                                      trade.entry_profile_key].win + 1
+                                                                         trade.entry_profile_key].win + 1
         else:
             result.trades_by_strategy[trade.entry_profile_key].lose = result.trades_by_strategy[
-                                                                       trade.entry_profile_key].lose + 1
+                                                                          trade.entry_profile_key].lose + 1
+        if trade.hunting_type == trade.result_type:
+            result.trades_by_strategy[trade.entry_profile_key].guessed = result.trades_by_strategy[
+                                                                         trade.entry_profile_key].guessed + 1
+        else:
+            result.trades_by_strategy[trade.entry_profile_key].missed = result.trades_by_strategy[
+                                                                             trade.entry_profile_key].missed + 1
 
     return result
 
@@ -146,7 +155,8 @@ PREDICT_PROFILES = [x.value for x in [SessionName.EARLY, SessionName.PRE, Sessio
 
 
 def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: int, profiles_min_times: int,
-                 test_symbol: str, test_year: int, sl_percent: float, tp_percent: float, profiles):
+                 test_symbol: str, test_year: int, sl_percent: float, tp_percent: float, profiles,
+                 thr_getter: ThresholdsGetter):
     start_time = time.perf_counter()
 
     conn = connect_to_db(test_year)
@@ -185,7 +195,7 @@ def run_backtest(profiles_symbol: str, profiles_year: int, profiles_min_chance: 
     )
 
     conn.close()
-    res = backtest([day_from_json(x[0]) for x in days_rows], successful_profiles, bt)
+    res = backtest([day_from_json(x[0]) for x in days_rows], successful_profiles, bt, thr_getter)
 
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
@@ -210,13 +220,16 @@ def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: No
             test = run_backtest(
                 profiles_symbol, profile_year, strategy.profiles_min_chance, strategy.profiles_min_times,
                 test_symbol, test_year, strategy.sl_percent, strategy.tp_percent,
-                symbol_year_profiles[f"{profiles_symbol}__{profile_year}"][2]
+                symbol_year_profiles[f"{profiles_symbol}__{profile_year}"][2],
+                strategy.thresholds_getter
             )
             for profile in test.trades_by_strategy:
                 if profile not in profiles_by_year[profile_year]:
-                    profiles_by_year[profile_year][profile] = {'win': 0, 'lose': 0, 'pnl': 0}
+                    profiles_by_year[profile_year][profile] = {'win': 0, 'lose': 0, 'pnl': 0, 'guessed': 0, 'missed': 0}
                 profiles_by_year[profile_year][profile]['win'] += test.trades_by_strategy[profile].win
                 profiles_by_year[profile_year][profile]['lose'] += test.trades_by_strategy[profile].lose
+                profiles_by_year[profile_year][profile]['guessed'] += test.trades_by_strategy[profile].guessed
+                profiles_by_year[profile_year][profile]['missed'] += test.trades_by_strategy[profile].missed
                 profiles_by_year[profile_year][profile]['pnl'] += test.trades_by_strategy[profile].pnl
                 profiles_by_year[profile_year][profile][test_year] = test.trades_by_strategy[profile]
 
@@ -228,6 +241,8 @@ def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: No
                 'profile': profile,
                 'win': profiles_by_year[profile_year][profile]['win'],
                 'lose': profiles_by_year[profile_year][profile]['lose'],
+                'guessed': profiles_by_year[profile_year][profile]['guessed'],
+                'missed': profiles_by_year[profile_year][profile]['missed'],
                 'pnl': profiles_by_year[profile_year][profile]['pnl'],
                 'trades': []
             }
@@ -245,41 +260,54 @@ def get_backtested_profiles(profiles_symbol: str, test_symbol: str, strategy: No
 
 if __name__ == "__main__":
     try:
+        session_2024_strats = {
+            "BTCUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
+            "AAVEUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
+            "AVAXUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
+            "CRVUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
+        }
+
         symbol_year_profiles = {}
         for symbol, strategy in [
-            ("BTCUSDT", btc_naive_strategy),
-            ("AAVEUSDT", btc_naive_strategy),
-            ("AVAXUSDT", btc_naive_strategy),
-            ("CRVUSDT", btc_naive_strategy),
+            ("BTCUSDT", session_2024_strats["BTCUSDT"]),
+            ("AAVEUSDT", session_2024_strats["AAVEUSDT"]),
+            ("AVAXUSDT", session_2024_strats["AVAXUSDT"]),
+            ("CRVUSDT", session_2024_strats["CRVUSDT"]),
         ]:
             for year in strategy.profile_years:
                 key = f"{symbol}__{year}"
                 if key not in symbol_year_profiles:
-                    symbol_year_profiles[key] = fill_profiles(symbol, year)
+                    symbol_year_profiles[key] = fill_profiles(symbol, year, strategy.thresholds_getter)
 
         results = []
-        for x in [
-            ("BTCUSDT", btc_naive_strategy),
-            ("AAVEUSDT", btc_naive_strategy),
-            ("AVAXUSDT", btc_naive_strategy),
-            ("CRVUSDT", btc_naive_strategy),
+        for symbol, strategy in [
+            ("BTCUSDT", session_2024_strats["BTCUSDT"]),
+            ("AAVEUSDT", session_2024_strats["AAVEUSDT"]),
+            ("AVAXUSDT", session_2024_strats["AVAXUSDT"]),
+            ("CRVUSDT", session_2024_strats["CRVUSDT"]),
         ]:
             # [(x[0], [[trade.entry_time for trade in profile['trades']] for profile in x[1][0]]) for x in results]
             # [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]
 
-            results.append((x[0], get_backtested_profiles(x[0], x[0], x[1], symbol_year_profiles)))
+            results.append((symbol, get_backtested_profiles(symbol, symbol, strategy, symbol_year_profiles)))
 
         pnls = [(x[0], sum([profile['pnl'] for profile in x[1][0]])) for x in results]
-        april_dates = [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1][0]]) for x in results]
+        guessed = [(x[0], sum([profile['guessed'] for profile in x[1][0]])) for x in results]
+        missed = [(x[0], sum([profile['missed'] for profile in x[1][0]])) for x in results]
+        april_dates = [(x[0],
+                        [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for
+                         profile in x[1][0]]) for x in results]
 
         strategy_profiles = [
             (x[0], [profile for profile in x[1][0]
-                    if profile['win'] / len(profile['trades']) > btc_naive_strategy.backtest_min_win_rate
-                    and profile['pnl'] / len(profile['trades']) > btc_naive_strategy.backtest_min_pnl_per_trade
+                    if profile['win'] / len(profile['trades']) > session_2024_strats["BTCUSDT"].backtest_min_win_rate
+                    and profile['pnl'] / len(profile['trades']) > session_2024_strats["BTCUSDT"].backtest_min_pnl_per_trade
                     ])
             for x in results]
         strategy_pnls = [(x[0], sum([profile['pnl'] for profile in x[1]])) for x in strategy_profiles]
-        strategy_april_dates = [(x[0], [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in x[1]]) for x in strategy_profiles]
+        strategy_april_dates = [(x[0], [
+            [trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in
+            x[1]]) for x in strategy_profiles]
 
         print("done!")
 

@@ -1,15 +1,16 @@
 from datetime import timedelta
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, TypeAlias, Callable
 
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle, as_1_candle
 from stock_market_research_kit.day import Day, day_from_json
 from stock_market_research_kit.session import Session, SessionType, SessionName, SessionImpact
-from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold, impact_thresholds
+from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold, impact_thresholds, \
+    ThresholdsGetter
 from utils.date_utils import to_utc_datetime, to_date_str, start_of_day
 
 
-def typify_sessions(days: List[Day]) -> List[Session]:
+def typify_sessions(days: List[Day], thr_getter: ThresholdsGetter) -> List[Session]:
     if len(days) == 0:
         print("no data")
         return []
@@ -23,7 +24,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.cme_as_candle[5],
                 session_end_date=session_end_time(day.cme_as_candle, day.cme_open_candles_15m),
                 name=SessionName.CME,
-                type=typify_session(day.cme_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.CME, day.cme_as_candle, thr_getter),
                 impact=SessionImpact.UNSPECIFIED,
                 open=day.cme_as_candle[0],
                 high=day.cme_as_candle[1],
@@ -37,7 +38,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.asia_as_candle[5],
                 session_end_date=session_end_time(day.asia_as_candle, day.asian_candles_15m),
                 name=SessionName.ASIA,
-                type=typify_session(day.asia_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.ASIA, day.asia_as_candle, thr_getter),
                 impact=define_session_impact(day.asian_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.asia_as_candle[0],
                 high=day.asia_as_candle[1],
@@ -51,7 +52,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.london_as_candle[5],
                 session_end_date=session_end_time(day.london_as_candle, day.london_candles_15m),
                 name=SessionName.LONDON,
-                type=typify_session(day.london_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.LONDON, day.london_as_candle, thr_getter),
                 impact=define_session_impact(day.london_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.london_as_candle[0],
                 high=day.london_as_candle[1],
@@ -65,7 +66,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.early_session_as_candle[5],
                 session_end_date=session_end_time(day.early_session_as_candle, day.early_session_candles_15m),
                 name=SessionName.EARLY,
-                type=typify_session(day.early_session_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.EARLY, day.early_session_as_candle, thr_getter),
                 impact=define_session_impact(day.early_session_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.early_session_as_candle[0],
                 high=day.early_session_as_candle[1],
@@ -79,7 +80,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.premarket_as_candle[5],
                 session_end_date=session_end_time(day.premarket_as_candle, day.premarket_candles_15m),
                 name=SessionName.PRE,
-                type=typify_session(day.premarket_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.PRE, day.premarket_as_candle, thr_getter),
                 impact=define_session_impact(day.premarket_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.premarket_as_candle[0],
                 high=day.premarket_as_candle[1],
@@ -93,7 +94,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.ny_am_open_as_candle[5],
                 session_end_date=session_end_time(day.ny_am_open_as_candle, day.ny_am_open_candles_15m),
                 name=SessionName.NY_OPEN,
-                type=typify_session(day.ny_am_open_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.NY_OPEN, day.ny_am_open_as_candle, thr_getter),
                 impact=define_session_impact(day.ny_am_open_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.ny_am_open_as_candle[0],
                 high=day.ny_am_open_as_candle[1],
@@ -107,7 +108,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.ny_am_as_candle[5],
                 session_end_date=session_end_time(day.ny_am_as_candle, day.ny_am_candles_15m),
                 name=SessionName.NY_AM,
-                type=typify_session(day.ny_am_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.NY_AM, day.ny_am_as_candle, thr_getter),
                 impact=define_session_impact(day.ny_am_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.ny_am_as_candle[0],
                 high=day.ny_am_as_candle[1],
@@ -121,7 +122,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.ny_lunch_as_candle[5],
                 session_end_date=session_end_time(day.ny_lunch_as_candle, day.ny_lunch_candles_15m),
                 name=SessionName.NY_LUNCH,
-                type=typify_session(day.ny_lunch_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.NY_LUNCH, day.ny_lunch_as_candle, thr_getter),
                 impact=define_session_impact(day.ny_lunch_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.ny_lunch_as_candle[0],
                 high=day.ny_lunch_as_candle[1],
@@ -135,7 +136,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.ny_pm_as_candle[5],
                 session_end_date=session_end_time(day.ny_pm_as_candle, day.ny_pm_candles_15m),
                 name=SessionName.NY_PM,
-                type=typify_session(day.ny_pm_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.NY_PM, day.ny_pm_as_candle, thr_getter),
                 impact=define_session_impact(day.ny_pm_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.ny_pm_as_candle[0],
                 high=day.ny_pm_as_candle[1],
@@ -149,7 +150,7 @@ def typify_sessions(days: List[Day]) -> List[Session]:
                 session_date=day.ny_pm_close_as_candle[5],
                 session_end_date=session_end_time(day.ny_pm_close_as_candle, day.ny_pm_close_candles_15m),
                 name=SessionName.NY_CLOSE,
-                type=typify_session(day.ny_pm_close_as_candle, btc_universal_threshold),
+                type=typify_session(SessionName.NY_CLOSE, day.ny_pm_close_as_candle, thr_getter),
                 impact=define_session_impact(day.ny_pm_close_candles_15m, day.candles_15m, day.candle_1d),
                 open=day.ny_pm_close_as_candle[0],
                 high=day.ny_pm_close_as_candle[1],
@@ -199,9 +200,9 @@ def define_session_impact(session_candles: List[InnerCandle], day_candles: List[
         return SessionImpact.LOW_WICK_BUILDER
 
     min_body_adj_thr = min(day_candle[0], day_candle[3]) - impact_thresholds['body_adj_coef'] * (
-                day_candle[1] - day_candle[2])
+            day_candle[1] - day_candle[2])
     max_body_adj_thr = max(day_candle[0], day_candle[3]) + impact_thresholds['body_adj_coef'] * (
-                day_candle[1] - day_candle[2])
+            day_candle[1] - day_candle[2])
 
     if day_anatomy[2] >= impact_thresholds['min_meaningful_wick'] and \
             to_utc_datetime(session_day_candles[0][5]) > to_utc_datetime(daily_high_time) and \
@@ -249,8 +250,10 @@ def get_overlap(range1: Tuple[float, float], range2: Tuple[float, float]) -> Opt
     return None
 
 
-def typify_session(candle: InnerCandle, thresholds: SessionThresholds) -> SessionType:
+def typify_session(session: SessionName, candle: InnerCandle, thr_getter: ThresholdsGetter) -> SessionType:
     perf, volat, upper_wick_fraction, body_fraction, lower_wick_fraction = candle_anatomy(candle)
+
+    thresholds = thr_getter(session, candle)
 
     if volat < thresholds.slow_range[0]:  # COMPRESSION, DOJI
         return SessionType.COMPRESSION
@@ -274,11 +277,11 @@ def typify_session(candle: InnerCandle, thresholds: SessionThresholds) -> Sessio
         return SessionType.INDECISION
     elif thresholds.fast_range[0] <= volat < thresholds.fast_range[1]:
         if body_fraction < thresholds.doji_max_fraction:
-            if min(upper_wick_fraction, upper_wick_fraction) < thresholds.hammer_wick_max_min_fraction:
+            if min(upper_wick_fraction, upper_wick_fraction) < thresholds.hammer_wick_max_fraction:
                 return SessionType.HAMMER
             return SessionType.DOJI
         if thresholds.doji_max_fraction <= body_fraction < thresholds.indecision_max_fraction:
-            if min(upper_wick_fraction, upper_wick_fraction) < thresholds.hammer_wick_max_min_fraction:
+            if min(upper_wick_fraction, upper_wick_fraction) < thresholds.hammer_wick_max_fraction:
                 return SessionType.HAMMER
             return SessionType.INDECISION
         if thresholds.indecision_max_fraction <= body_fraction < thresholds.directional_body_min_fraction:
@@ -337,7 +340,7 @@ if __name__ == "__main__":
         rows = c.fetchall()
 
         btc_days: List[Day] = [day_from_json(x[0]) for x in rows]
-        sessions = typify_sessions(btc_days)
+        sessions = typify_sessions(btc_days, lambda x, y: btc_universal_threshold)
         print(f"Done typifying up {len(sessions)} sessions")
 
         conn.close()

@@ -1,6 +1,6 @@
 (async () => {
 
-    const symbol = "BTCUSDT"
+    const symbol = "CRVUSDT"
 
     document.title = symbol + " sessions"
 

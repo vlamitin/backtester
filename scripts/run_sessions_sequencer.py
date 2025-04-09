@@ -8,6 +8,7 @@ from stock_market_research_kit.candle_tree import tree_from_sessions, Tree
 from stock_market_research_kit.day import day_from_json
 from stock_market_research_kit.session import SessionType, SessionName, Session, sessions_in_order, \
     SessionImpact
+from stock_market_research_kit.session_thresholds import ThresholdsGetter, btc_universal_threshold
 
 
 def fill_trees(sessions: List[Session]):
@@ -290,7 +291,7 @@ def directional_profiles(session_ordered_tree, session_filtered_tree, ordered_tr
     return result
 
 
-def fill_profiles(symbol, year):
+def fill_profiles(symbol, year, thr_getter: ThresholdsGetter):
     start_time = time.perf_counter()
     conn = connect_to_db(year)
     c = conn.cursor()
@@ -302,7 +303,7 @@ def fill_profiles(symbol, year):
         print(f"Symbol {symbol} not found in days table")
         return
 
-    sessions = typify_sessions([day_from_json(x[0]) for x in days_rows])
+    sessions = typify_sessions([day_from_json(x[0]) for x in days_rows], thr_getter)
     ordered_trees, directional_trees = fill_trees(sessions)
 
     profiles = {}
@@ -400,7 +401,7 @@ def get_next_session_chances(typed_sessions: List[str], ordered_trees):
 
 if __name__ == "__main__":
     try:
-        ot, dt, pp = fill_profiles("BTCUSDT", 2024)
+        ot, dt, pp = fill_profiles("BTCUSDT", 2024, lambda x, y: btc_universal_threshold)
         get_next_session_chances(['CME Open__COMPRESSION', 'Asia Open__INDECISION', 'London Open__BEAR'], ot)
         successful_profiles = get_successful_profiles(
             [x.value for x in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,

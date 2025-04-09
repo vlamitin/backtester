@@ -5,7 +5,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from scripts.run_sessions_sequencer import fill_profiles
 from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.day import day_from_json
-from stock_market_research_kit.session import session_from_json, json_from_sessions
+from stock_market_research_kit.session import session_from_json, json_from_sessions, SessionName
+from stock_market_research_kit.session_thresholds import btc_universal_threshold
 
 DATABASE_PATH = "stock_market_research_2024.db"
 conn = sqlite3.connect(DATABASE_PATH)
@@ -50,7 +51,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                 print(f"Symbol {symbol} not found in days table")
                 return
 
-            sessions = typify_sessions([day_from_json(x[0]) for x in days_rows])
+            sessions = typify_sessions(
+                [day_from_json(x[0]) for x in days_rows],
+                lambda x, y: btc_universal_threshold
+            )
 
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -78,7 +82,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
-        _, _, profiles = fill_profiles("BTCUSDT", 2024)
+        _, _, profiles = fill_profiles("CRVUSDT", 2024, lambda x, y: btc_universal_threshold)
         server = HTTPServer(('localhost', 8000), RequestHandler)
         print('Starting server at http://localhost:8000')
         server.serve_forever()

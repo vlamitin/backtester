@@ -368,7 +368,7 @@ def run_notifier(symbols_with_strategy):
         for year in strategy.profile_years:
             key = f"{symbol}__{year}"
             if key not in symbol_year_profiles:
-                symbol_year_profiles[key] = fill_profiles(symbol, year)
+                symbol_year_profiles[key] = fill_profiles(symbol, year, strategy.thresholds_getter)
 
     backtested_profiles = [
         get_backtested_profiles(x[0], x[0], x[1], symbol_year_profiles) for x in symbols_with_strategy]

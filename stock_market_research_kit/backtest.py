@@ -8,6 +8,8 @@ from stock_market_research_kit.session_trade import SessionTrade
 class StrategyTrades:
     win: int
     lose: int
+    guessed: int
+    missed: int
     pnl: float
     trades: List[SessionTrade]
 

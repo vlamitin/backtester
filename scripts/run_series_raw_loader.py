@@ -128,21 +128,21 @@ def update_candle_from_binance(symbol):
 if __name__ == "__main__":
     try:
         # update_candle_from_binance("BTCUSDT")
-
         for smb in [
             "BTCUSDT",
             "AAVEUSDT",
             "CRVUSDT",
             "AVAXUSDT",
         ]:
-            for series_year in [
-                2021,
-                2022,
-                2023,
-                2024,
-                2025
-            ]:
-                fill_year_from_csv(series_year, smb)
+            update_candle_from_binance(smb)
+            # for series_year in [
+            #     2021,
+            #     2022,
+            #     2023,
+            #     2024,
+            #     2025
+            # ]:
+            #     fill_year_from_csv(series_year, smb)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
