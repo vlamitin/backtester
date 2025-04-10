@@ -51,7 +51,7 @@ btc_naive_strategy = NotifierStrategy(
 
 def session_2024_thresholds_strategy(symbol_thresholds: Dict[SessionName, SessionThresholds]):
     return NotifierStrategy(
-        name="#2 Naive strategy with all expert thresholds",
+        name="#2 Same as #1, but sessions thresholds are now calculated per-session based on quantiles for 2024 year",
         thresholds_getter=lambda session_name, _: symbol_thresholds[session_name],
         profiles_min_chance=40,
         profiles_min_times=2,

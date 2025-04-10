@@ -12,8 +12,10 @@ from scripts.run_sessions_sequencer import fill_profiles, get_next_session_chanc
 from scripts.run_sessions_typifier import typify_sessions, typify_session
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import as_1_candle
-from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy
+from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy, \
+    session_2024_thresholds_strategy
 from stock_market_research_kit.session import get_next_session_mock, get_from_to, SessionName
+from stock_market_research_kit.session_thresholds import quantile_per_session_year_thresholds
 from stock_market_research_kit.session_trade import SessionTrade, session_trade_from_json, json_from_session_trade
 from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
@@ -421,6 +423,13 @@ def run_notifier(symbols_with_strategy):
 
 if __name__ == "__main__":
     try:
+        session_2024_strats = {
+            "BTCUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
+            "AAVEUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
+            "AVAXUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
+            "CRVUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
+        }
+
         update_candles(["BTCUSDT"])
         update_candles(["AAVEUSDT"])
         update_candles(["AVAXUSDT"])
@@ -430,6 +439,14 @@ if __name__ == "__main__":
             ("AAVEUSDT", btc_naive_strategy),
             ("AVAXUSDT", btc_naive_strategy),
             ("CRVUSDT", btc_naive_strategy),
+            ("BTCUSDT", session_2024_thresholds_strategy(
+                quantile_per_session_year_thresholds("BTCUSDT", 2024))),
+            ("AAVEUSDT", session_2024_thresholds_strategy(
+                quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
+            ("AVAXUSDT", session_2024_thresholds_strategy(
+                quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
+            ("CRVUSDT", session_2024_thresholds_strategy(
+                quantile_per_session_year_thresholds("CRVUSDT", 2024))),
         ])
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
