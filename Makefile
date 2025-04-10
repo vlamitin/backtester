@@ -20,3 +20,9 @@ recalculate_db:
 	python -m scripts.setup_db \
 		&& python -m scripts.run_series_raw_loader \
 		&& python -m scripts.run_day_markuper
+
+
+.PHONY: show_cycles
+.SILENT: show_cycles
+show_cycles:
+	pydeps ./scripts/run_sessions_backtester.py --show-cycles

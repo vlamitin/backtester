@@ -130,6 +130,196 @@ def log_info_ny(message: str):
     print(f"INFO at {to_date_str(now_ny_datetime())} ny: {message}")
 
 
+def cme_open_from_to(day_string) -> (str, str):
+    return (
+        to_date_str(to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")).replace(
+            hour=18, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str(to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")).replace(
+            hour=18, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_prev_day_cme_open_time(checked_time_string, current_day_string):
+    return is_some_prev_day_session(checked_time_string, current_day_string, "18:00", "19:00")
+
+
+def asia_from_to(day_string) -> (str, str):
+    return (
+        to_date_str(to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")).replace(
+            hour=19, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str(to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")).replace(
+            hour=21, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_asian_time(checked_time_string, current_day_string):
+    return is_some_prev_day_session(checked_time_string, current_day_string, "19:00", "22:00")
+
+
+def london_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=2, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=4, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_london_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "02:00", "05:00")
+
+
+def early_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=7, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=7, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_early_session_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "07:00", "08:00")
+
+
+def pre_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=8, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=9, minute=29, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_premarket_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "08:00", "09:30")
+
+
+def open_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=9, minute=30, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=9, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_ny_am_open_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "09:30", "10:00")
+
+
+def nyam_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=10, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=11, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_ny_am_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "10:00", "12:00")
+
+
+def lunch_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=12, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=12, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_ny_lunch_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "12:00", "13:00")
+
+
+def nypm_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=13, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=14, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_ny_pm_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "13:00", "15:00")
+
+
+def close_from_to(day_string) -> (str, str):
+    return (
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=15, minute=0, second=0, microsecond=0).astimezone(
+            ZoneInfo("UTC"))
+        ),
+        to_date_str((to_utc_datetime(day_string).astimezone(
+            ZoneInfo("America/New_York")) + timedelta(days=1)).replace(
+            hour=15, minute=59, second=59, microsecond=999000).astimezone(
+            ZoneInfo("UTC"))
+        )
+    )
+
+
+def is_ny_pm_close_time(checked_time_string, current_day_string):
+    return is_some_same_day_session(checked_time_string, current_day_string, "15:00", "16:00")
+
+
 if __name__ == "__main__":
     try:
         log_warn("test")

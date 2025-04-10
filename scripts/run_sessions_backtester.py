@@ -10,7 +10,8 @@ from stock_market_research_kit.db_layer import upsert_profiles_to_db, select_day
 from stock_market_research_kit.notifier_strategy import NotifierStrategy, session_2024_thresholds_strategy, \
     session_2024_thresholds_strict_strategy, btc_naive_strategy
 from stock_market_research_kit.session import SessionName, SessionType, Session
-from stock_market_research_kit.session_thresholds import ThresholdsGetter, quantile_per_session_year_thresholds
+from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
+from stock_market_research_kit.session_thresholds import ThresholdsGetter
 from stock_market_research_kit.session_trade import SessionTrade
 from utils.date_utils import to_utc_datetime, to_date_str
 

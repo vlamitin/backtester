@@ -7,6 +7,8 @@ from typing import List, Optional
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.day import Day, day_from_json
+from stock_market_research_kit.session_trade import SessionTrade, json_from_session_trade, json_from_session_trades, \
+    session_trade_from_json, session_trades_from_json
 
 
 def upsert_profiles_to_db(strategy_name: str, smb: str, profiles: List[dict]):
@@ -30,6 +32,25 @@ DO UPDATE SET win = excluded.win, lose = excluded.lose, guessed = excluded.guess
         print(
             f"Error upsert {len(rows)} backtested_profiles for symbol {smb} in strategy '{strategy_name[0:2]}...': {e}")
         return False
+
+
+def select_sorted_profiles(strategy_name: str, symbol: str):
+    conn = connect_to_db(2025)  # hardcoded 2025
+    c = conn.cursor()
+    c.execute("""SELECT profile_year, profile_key, win, lose, guessed, missed, pnl, trades FROM backtested_profiles
+WHERE strategy_name = ? AND profile_symbol = ? ORDER BY pnl DESC""", (strategy_name, symbol))
+    rows = c.fetchall()
+    conn.close()
+    return [{
+        'year': x[0],
+        'profile': x[1],
+        'win': x[2],
+        'lose': x[3],
+        'guessed': x[4],
+        'missed': x[5],
+        'pnl': x[6],
+        'trades': session_trades_from_json(x[7]),
+    } for x in rows]
 
 
 def upsert_days_to_db(year: int, symbol: str, days: List[Day]):
@@ -137,21 +158,7 @@ def last_candle_15m(year, symbol) -> Optional[InnerCandle]:
     return rows_15m[0][0], rows_15m[0][1], rows_15m[0][2], rows_15m[0][3], rows_15m[0][4], rows_15m[0][5]
 
 
-def enum_serializer(obj):
-    if isinstance(obj, Enum):
-        return obj.value
-    raise TypeError(f"Type {type(obj)} not serializable")
-
-
-def json_from_session_trade(session_trade) -> str:
-    return json.dumps(asdict(session_trade), default=enum_serializer, indent=4)
-
-
-def json_from_session_trades(session_trades) -> str:
-    return json.dumps([session_trade.__dict__ for session_trade in session_trades], default=enum_serializer, indent=4)
-
-
-def session_trade_to_db_format(strategy_name: str, symbol: str, session_trade):
+def session_trade_to_db_format(strategy_name: str, symbol: str, session_trade: SessionTrade):
     return (
         strategy_name, session_trade.entry_time, symbol, session_trade.pnl_usd, session_trade.deadline_close,
         json_from_session_trade(session_trade),
@@ -246,3 +253,15 @@ WHERE strftime('%s', date_ts) + 0 BETWEEN (SELECT start_time_sec FROM time_range
         return []
 
     return [[x[0], x[1], x[2], x[3], x[4], x[5]] for x in rows_15m]
+
+
+if __name__ == "__main__":
+    try:
+        res_btc = select_sorted_profiles(
+            "#2 Same as #1, but sessions thresholds are now calculated per-session based on quantiles for 2024 year",
+            "BTCUSDT"
+        )
+        print(res_btc)
+    except KeyboardInterrupt:
+        print(f"KeyboardInterrupt, exiting ...")
+        quit(0)

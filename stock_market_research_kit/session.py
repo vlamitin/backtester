@@ -3,9 +3,9 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 from typing import Optional, Tuple
 
-from scripts.run_day_markuper import cme_open_from_to, asia_from_to, london_from_to, early_from_to, pre_from_to, \
+from utils.date_utils import now_utc_datetime, to_date_str, start_of_day, cme_open_from_to, asia_from_to, \
+    london_from_to, early_from_to, pre_from_to, \
     open_from_to, nyam_from_to, lunch_from_to, nypm_from_to, close_from_to
-from utils.date_utils import now_utc_datetime, to_date_str, start_of_day
 
 
 class SessionName(Enum):
@@ -62,7 +62,7 @@ class SessionImpact(Enum):
 
     # WARN! We skip daily wicks that are very short (< 0.2 of candle volatility)
     HIGH_TO_BODY_REVERSAL = 'HIGH_TO_BODY_REVERSAL'  # after DH & SO in upper wick & SC in body or close to it
-    LOW_TO_BODY_REVERSAL = 'LOW_TO_BODY_REVERSAL'   # after DL & SO in lower wick & SC in body or close to it
+    LOW_TO_BODY_REVERSAL = 'LOW_TO_BODY_REVERSAL'  # after DL & SO in lower wick & SC in body or close to it
 
     # WARN! We skip daily bodies that are very short (< 0.3 of candle volatility)
     FORWARD_BODY_BUILDER = 'FORWARD_BODY_BUILDER'  # responsible for > 0.5 of Daily body, and performed same way

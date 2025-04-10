@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import List, Tuple
 
 from stock_market_research_kit.session import SessionName, SessionType
@@ -41,3 +41,21 @@ def session_trade_decoder(dct):
 
 def session_trade_from_json(json_str: str) -> SessionTrade:
     return json.loads(json_str, object_hook=session_trade_decoder)
+
+
+def session_trades_from_json(json_str: str) -> List[SessionTrade]:
+    return [session_trade_decoder(x) for x in json.loads(json_str)]
+
+
+def enum_serializer(obj):
+    if isinstance(obj, Enum):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+def json_from_session_trade(session_trade) -> str:
+    return json.dumps(asdict(session_trade), default=enum_serializer, indent=4)
+
+
+def json_from_session_trades(session_trades) -> str:
+    return json.dumps([session_trade.__dict__ for session_trade in session_trades], default=enum_serializer, indent=4)

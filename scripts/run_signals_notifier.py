@@ -11,11 +11,11 @@ from scripts.run_sessions_sequencer import fill_profiles, get_next_session_chanc
 from scripts.run_sessions_typifier import typify_sessions, typify_session
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.db_layer import upsert_trades_to_db, select_closed_trades, select_last_day_candles, \
-    select_open_trades_by_strategies
+    select_open_trades_by_strategies, select_sorted_profiles
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy, \
     session_2024_thresholds_strategy
 from stock_market_research_kit.session import get_next_session_mock, get_from_to, SessionName
-from stock_market_research_kit.session_thresholds import quantile_per_session_year_thresholds
+from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
 from stock_market_research_kit.session_trade import session_trade_from_json
 from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
@@ -42,7 +42,7 @@ def to_trade_profile(backtest_profile_key):
     }
 
 
-def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: NotifierStrategy):
+def look_for_new_trade(symbol, strategy: NotifierStrategy):
     now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
 
     candles_15m = select_last_day_candles(now_year, symbol)
@@ -64,6 +64,10 @@ def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: Noti
 
     predicted_session_mock.open = candles_15m[-1][3]  # TODO не будет норм раб, если вызывается в конце сессии в while
 
+    sorted_profiles = select_sorted_profiles(strategy.name, symbol)
+    if len(sorted_profiles) == 0:
+        log_warn_ny("no sorted_profiles!!")
+        return
     trade_profiles = [
         to_trade_profile(x['profile']) for x in sorted_profiles
         if x['win'] / len(x['trades']) > strategy.backtest_min_win_rate
@@ -236,11 +240,6 @@ def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy
 """)
 
 
-def maybe_open_new_trades(items: List[Tuple[str, NotifierStrategy, List[dict], dict]]):
-    for item in items:
-        look_for_new_trade(item[2], item[3], item[0], item[1])
-
-
 def maybe_post_session_stat(symbols, symbol_year_profiles):
     now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
 
@@ -279,9 +278,6 @@ def update_candles(symbols):
 
 
 def run_notifier(symbols_with_strategy):
-    log_info_ny("Starting Notifier")
-    start_time = time.perf_counter()
-
     unique_symbols = list(set([x[0] for x in symbols_with_strategy]))
     strategy_symbol_year_profiles = {}
     for symbol, strategy in symbols_with_strategy:
@@ -292,15 +288,6 @@ def run_notifier(symbols_with_strategy):
             if key not in strategy_symbol_year_profiles[strategy.name]:
                 strategy_symbol_year_profiles[strategy.name][key] = fill_profiles(
                     symbol, year, strategy.thresholds_getter)
-
-    symbol_strategy_backtested_profiles_tuples = []
-    for strategy_name in strategy_symbol_year_profiles:
-        for symbol, strategy in symbols_with_strategy:
-            backtested_profiles_result = get_backtested_profiles(
-                symbol, symbol, strategy, strategy_symbol_year_profiles[strategy_name])
-            symbol_strategy_backtested_profiles_tuples.append(
-                (symbol, strategy, backtested_profiles_result[0], backtested_profiles_result[1])
-            )
 
     log_info_ny(f"Notifier preparation took {(time.perf_counter() - start_time):.6f} seconds")
 
@@ -338,18 +325,21 @@ def run_notifier(symbols_with_strategy):
                 or prev_time < end_lunch <= now_time
                 or prev_time < end_nypm <= now_time
                 or prev_time < end_close <= now_time):
-            start_time = time.perf_counter()
+            handling_start = time.perf_counter()
             update_candles(unique_symbols)
             handle_open_trades(symbols_with_strategy)
-            maybe_open_new_trades(symbol_strategy_backtested_profiles_tuples)
+            for symbol, strategy in symbols_with_strategy:
+                look_for_new_trade(symbol, strategy)
             # maybe_post_session_stat(symbol_strategy_backtested_profiles_tuples)
-            log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - start_time):.6f} seconds")
+            log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - handling_start):.6f} seconds")
 
         prev_time = now_time
 
 
 if __name__ == "__main__":
     try:
+        log_info_ny("Starting Notifier")
+        start_time = time.perf_counter()
         update_candles(["BTCUSDT"])
         update_candles(["AAVEUSDT"])
         update_candles(["AVAXUSDT"])
