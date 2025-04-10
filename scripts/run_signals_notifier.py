@@ -19,7 +19,7 @@ from stock_market_research_kit.session_thresholds import quantile_per_session_ye
 from stock_market_research_kit.session_trade import session_trade_from_json
 from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
-    start_of_day, to_date_str, log_warn, to_utc_datetime, log_info_ny
+    start_of_day, to_date_str, log_warn, to_utc_datetime, log_info_ny, log_warn_ny
 
 
 def to_trade_profile(backtest_profile_key):
@@ -54,12 +54,12 @@ def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: Noti
 
     day_sessions = typify_sessions([days[-1]], strategy.thresholds_getter)
     if len(day_sessions) == 0:
-        log_warn("len(day_sessions) == 0!")
+        log_warn_ny("len(day_sessions) == 0!")
         return
 
     predicted_session_mock = get_next_session_mock(day_sessions[-1].name, days[-1].date_readable)
     if not predicted_session_mock:
-        log_warn("no predicted_session_mock!")
+        log_warn_ny("no predicted_session_mock!")
         return
 
     predicted_session_mock.open = candles_15m[-1][3]  # TODO не будет норм раб, если вызывается в конце сессии в while

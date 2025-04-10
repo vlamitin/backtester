@@ -7,7 +7,8 @@ from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.backtest import Backtest, StrategyTrades
 from stock_market_research_kit.day import Day
 from stock_market_research_kit.db_layer import upsert_profiles_to_db, select_days
-from stock_market_research_kit.notifier_strategy import NotifierStrategy, session_2024_thresholds_strategy
+from stock_market_research_kit.notifier_strategy import NotifierStrategy, session_2024_thresholds_strategy, \
+    session_2024_thresholds_strict_strategy, btc_naive_strategy
 from stock_market_research_kit.session import SessionName, SessionType, Session
 from stock_market_research_kit.session_thresholds import ThresholdsGetter, quantile_per_session_year_thresholds
 from stock_market_research_kit.session_trade import SessionTrade
@@ -261,14 +262,18 @@ if __name__ == "__main__":
             # "AVAXUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
             # "CRVUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
             # "BTCUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
-            "AAVEUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
-            "AVAXUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
-            "CRVUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
+            # "AAVEUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
+            # "AVAXUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
+            # "CRVUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
+            "BTCUSDT": btc_naive_strategy,
+            "AAVEUSDT": btc_naive_strategy,
+            "AVAXUSDT": btc_naive_strategy,
+            "CRVUSDT": btc_naive_strategy,
         }
 
         symbol_year_profiles = {}
         for symbol, strategy in [
-            # ("BTCUSDT", session_2024_strats["BTCUSDT"]),
+            ("BTCUSDT", session_2024_strats["BTCUSDT"]),
             ("AAVEUSDT", session_2024_strats["AAVEUSDT"]),
             ("AVAXUSDT", session_2024_strats["AVAXUSDT"]),
             ("CRVUSDT", session_2024_strats["CRVUSDT"]),
@@ -280,7 +285,7 @@ if __name__ == "__main__":
 
         results = []
         for symbol, strategy in [
-            # ("BTCUSDT", session_2024_strats["BTCUSDT"]),
+            ("BTCUSDT", session_2024_strats["BTCUSDT"]),
             ("AAVEUSDT", session_2024_strats["AAVEUSDT"]),
             ("AVAXUSDT", session_2024_strats["AVAXUSDT"]),
             ("CRVUSDT", session_2024_strats["CRVUSDT"]),

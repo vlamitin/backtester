@@ -1,10 +1,12 @@
+import json
 import sqlite3
+from dataclasses import asdict
+from enum import Enum
 from typing import List, Optional
 
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.day import Day, day_from_json
-from stock_market_research_kit.session_trade import json_from_session_trades, SessionTrade, json_from_session_trade
 
 
 def upsert_profiles_to_db(strategy_name: str, smb: str, profiles: List[dict]):
@@ -135,7 +137,21 @@ def last_candle_15m(year, symbol) -> Optional[InnerCandle]:
     return rows_15m[0][0], rows_15m[0][1], rows_15m[0][2], rows_15m[0][3], rows_15m[0][4], rows_15m[0][5]
 
 
-def session_trade_to_db_format(strategy_name: str, symbol: str, session_trade: SessionTrade):
+def enum_serializer(obj):
+    if isinstance(obj, Enum):
+        return obj.value
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+def json_from_session_trade(session_trade) -> str:
+    return json.dumps(asdict(session_trade), default=enum_serializer, indent=4)
+
+
+def json_from_session_trades(session_trades) -> str:
+    return json.dumps([session_trade.__dict__ for session_trade in session_trades], default=enum_serializer, indent=4)
+
+
+def session_trade_to_db_format(strategy_name: str, symbol: str, session_trade):
     return (
         strategy_name, session_trade.entry_time, symbol, session_trade.pnl_usd, session_trade.deadline_close,
         json_from_session_trade(session_trade),
@@ -144,7 +160,7 @@ def session_trade_to_db_format(strategy_name: str, symbol: str, session_trade: S
 
 
 # TODO returns row_ids only for inserts!
-def upsert_trades_to_db(year: int, strategy_name: str, symbol: str, session_trades: List[SessionTrade]) -> List[int]:
+def upsert_trades_to_db(year: int, strategy_name: str, symbol: str, session_trades) -> List[int]:
     conn = connect_to_db(year)
 
     rows = [session_trade_to_db_format(strategy_name, symbol, tr) for tr in session_trades]
