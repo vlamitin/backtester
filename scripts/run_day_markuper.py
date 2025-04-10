@@ -1,11 +1,10 @@
-import sqlite3
 from datetime import datetime, timedelta
 from typing import List
 from zoneinfo import ZoneInfo
 
-from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.day import Day, new_day
+from stock_market_research_kit.db_layer import upsert_days_to_db, select_full_days_candles_15m
 from utils.date_utils import is_same_day_or_past_or_future, is_some_same_day_session, is_some_prev_day_session, \
     to_utc_datetime, now_utc_datetime, now_ny_datetime, to_date_str, start_of_day
 
@@ -311,55 +310,14 @@ def is_ny_pm_close_time(checked_time_string, current_day_string):
     return is_some_same_day_session(checked_time_string, current_day_string, "15:00", "16:00")
 
 
-def insert_to_db(symbol: str, days: List[Day], conn):
-    rows = [day.to_db_format(symbol) for day in days]
-
-    try:
-        c = conn.cursor()
-        c.executemany("""INSERT INTO
-            days (symbol, date_ts, data) VALUES (?, ?, ?) ON CONFLICT (symbol, date_ts) DO UPDATE SET data = excluded.data""",
-                      rows)
-        conn.commit()
-        print(f"Success inserting {len(rows)} days for symbol {symbol}")
-        return True
-    except sqlite3.ProgrammingError as e:
-        print(f"Error inserting days {len(days)} symbol {symbol}: {e}")
-        return False
-
-
 def main(symbol, year):
-    conn = connect_to_db(year)
-    c = conn.cursor()
-
-    c.execute("""WITH last_row_date_ts AS (
-    SELECT date_ts last_row_date FROM raw_candles
-    WHERE symbol = ? AND period = ?
-    ORDER BY strftime('%s', date_ts) DESC
-    LIMIT 1
-),
-     last_full_day AS (
-         SELECT
-             (strftime('%s', last_row_date) - 86400) / 86400 * 86400 + 24 * 3600 AS end_of_day
-         FROM last_row_date_ts
-     )
-SELECT open, high, low, close, volume, date_ts FROM raw_candles
-WHERE strftime('%s', date_ts) + 0 < (SELECT end_of_day FROM last_full_day)
-  AND symbol = ? AND period = ?
-  ORDER BY strftime('%s', date_ts)""", (symbol, "15m", symbol, "15m"))
-    rows_15m = c.fetchall()
-
-    if len(rows_15m) == 0:
-        print(f"Symbol {symbol} 15m not found in DB")
-        return
-
-    candles_15m = [[x[0], x[1], x[2], x[3], x[4], x[5]] for x in rows_15m]
+    candles_15m = select_full_days_candles_15m(year, symbol)
 
     days = markup_days(candles_15m)
     print(f"Done marking up {symbol} {len(days)} days. Inserting results to db")
-    result = insert_to_db(symbol, days, conn)
+    result = upsert_days_to_db(year, symbol, days)
     if result:
         print(f"Done with {year} year {symbol}")
-    conn.close()
 
     return days
 

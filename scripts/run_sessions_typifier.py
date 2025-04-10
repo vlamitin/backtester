@@ -1,11 +1,11 @@
 from datetime import timedelta
-from typing import List, Tuple, Optional, TypeAlias, Callable
+from typing import List, Tuple, Optional
 
-from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle, as_1_candle
-from stock_market_research_kit.day import Day, day_from_json
+from stock_market_research_kit.day import Day
+from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import Session, SessionType, SessionName, SessionImpact
-from stock_market_research_kit.session_thresholds import SessionThresholds, btc_universal_threshold, impact_thresholds, \
+from stock_market_research_kit.session_thresholds import btc_universal_threshold, impact_thresholds, \
     ThresholdsGetter
 from utils.date_utils import to_utc_datetime, to_date_str, start_of_day
 
@@ -333,17 +333,9 @@ def candle_anatomy(candle: InnerCandle) -> Tuple[float, float, float, float, flo
 
 if __name__ == "__main__":
     try:
-        conn = connect_to_db(2024)
-        c = conn.cursor()
-
-        c.execute("""SELECT data FROM days WHERE symbol = ?""", ("BTCUSDT",))
-        rows = c.fetchall()
-
-        btc_days: List[Day] = [day_from_json(x[0]) for x in rows]
+        btc_days = select_days(2024, "BTCUSDT")
         sessions = typify_sessions(btc_days, lambda x, y: btc_universal_threshold)
         print(f"Done typifying up {len(sessions)} sessions")
-
-        conn.close()
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

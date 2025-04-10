@@ -1,16 +1,11 @@
 import json
-import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from scripts.run_sessions_sequencer import fill_profiles
 from scripts.run_sessions_typifier import typify_sessions
-from stock_market_research_kit.day import day_from_json
-from stock_market_research_kit.session import session_from_json, json_from_sessions, SessionName
+from stock_market_research_kit.db_layer import select_days
+from stock_market_research_kit.session import json_from_sessions
 from stock_market_research_kit.session_thresholds import btc_universal_threshold
-
-DATABASE_PATH = "stock_market_research_2024.db"
-conn = sqlite3.connect(DATABASE_PATH)
-c = conn.cursor()
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -19,17 +14,13 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(days_split_parts) == 2 and days_split_parts[0] == "":
             symbol = days_split_parts[1]
             # sql injections, welcom =)
-            c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
-            days_rows = c.fetchall()
 
-            if len(days_rows) == 0:
+            days = select_days(2024, symbol)
+            if len(days) == 0:
                 self.send_response(404)
                 self.end_headers()
                 print(f"Symbol {symbol} not found in days table")
                 return
-
-            days = [json.loads(x[0]) for x in days_rows]
-
 
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -42,19 +33,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(sessions_split_parts) == 2 and sessions_split_parts[0] == "":
             symbol = sessions_split_parts[1]
             # sql injections, welcom =)
-            c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
-            days_rows = c.fetchall()
-
-            if len(days_rows) == 0:
+            days = select_days(2024, symbol)
+            if len(days) == 0:
                 self.send_response(404)
                 self.end_headers()
                 print(f"Symbol {symbol} not found in days table")
                 return
 
-            sessions = typify_sessions(
-                [day_from_json(x[0]) for x in days_rows],
-                lambda x, y: btc_universal_threshold
-            )
+            sessions = typify_sessions(days, lambda x, y: btc_universal_threshold)
 
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')

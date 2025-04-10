@@ -3,9 +3,8 @@ from itertools import pairwise
 from typing import List
 
 from scripts.run_sessions_typifier import typify_sessions
-from scripts.setup_db import connect_to_db
-from stock_market_research_kit.candle_tree import tree_from_sessions, Tree
-from stock_market_research_kit.day import day_from_json
+from stock_market_research_kit.candle_tree import tree_from_sessions
+from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import SessionType, SessionName, Session, sessions_in_order, \
     SessionImpact
 from stock_market_research_kit.session_thresholds import ThresholdsGetter, btc_universal_threshold
@@ -293,17 +292,13 @@ def directional_profiles(session_ordered_tree, session_filtered_tree, ordered_tr
 
 def fill_profiles(symbol, year, thr_getter: ThresholdsGetter):
     start_time = time.perf_counter()
-    conn = connect_to_db(year)
-    c = conn.cursor()
+    days = select_days(year, symbol)
 
-    c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
-    days_rows = c.fetchall()
-
-    if len(days_rows) == 0:
+    if len(days) == 0:
         print(f"Symbol {symbol} not found in days table")
         return
 
-    sessions = typify_sessions([day_from_json(x[0]) for x in days_rows], thr_getter)
+    sessions = typify_sessions(days, thr_getter)
     ordered_trees, directional_trees = fill_trees(sessions)
 
     profiles = {}
@@ -333,7 +328,6 @@ def fill_profiles(symbol, year, thr_getter: ThresholdsGetter):
 
     print(
         f"Filling profiles from {len(sessions)} {year} {symbol} sessions took {(time.perf_counter() - start_time):.6f} seconds")
-    conn.close()
     return ordered_trees, directional_trees, profiles
 
 

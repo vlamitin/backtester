@@ -6,10 +6,8 @@ from typing import Tuple, Literal, List, TypeAlias, Callable, Dict
 import numpy as np
 import pandas as pd
 
-from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle
-from stock_market_research_kit.candle_with_stat import CandleWithStat
-from stock_market_research_kit.day import day_from_json, Day
+from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import SessionName
 
 
@@ -50,8 +48,16 @@ class SessionThresholds:
     directional_body_min_fraction: float
     hammer_wick_max_fraction: float
 
+    p30_safe_stop_bull: float
+    p30_safe_stop_bear: float
+
+    p70_safe_stop_bull: float
+    p70_safe_stop_bear: float
+
 
 ThresholdsGetter: TypeAlias = Callable[[SessionName, InnerCandle], SessionThresholds]
+SLGetter: TypeAlias = Callable[[SessionName, InnerCandle], float]
+TPGetter: TypeAlias = Callable[[SessionName, InnerCandle], float]
 
 btc_universal_threshold = SessionThresholds(
     session=SessionName.UNSPECIFIED,
@@ -63,7 +69,11 @@ SessionType types looked realistic""",
     doji_max_fraction=0.1,
     indecision_max_fraction=0.3,
     directional_body_min_fraction=0.6,
-    hammer_wick_max_fraction=0.1
+    hammer_wick_max_fraction=0.1,
+    p30_safe_stop_bull=0.5,  # it's not a p30, it's 'expert'
+    p30_safe_stop_bear=0.5,  # it's not a p30, it's 'expert'
+    p70_safe_stop_bull=0.5,  # it's not a p70, it's 'expert'
+    p70_safe_stop_bear=0.5,  # it's not a p70, it's 'expert'
 )
 
 impact_thresholds = {
@@ -89,6 +99,12 @@ def threshold_session_year(symbol: str, session: SessionName, year: int,
     wicks_percentiles = np.percentile(pd.concat([df['upper_wick_fraction'], df['lower_wick_fraction']]),
                                       [10, 30, 70, 90])
 
+    df['min_safe_stop_bull'] = (df['open'] - df['low']) / df['open'] * 100
+    min_safe_stop_bull_percentiles = np.percentile(df['min_safe_stop_bull'], [10, 30, 70, 90])
+
+    df['min_safe_stop_bear'] = (df['high'] - df['open']) / df['open'] * 100
+    min_safe_stop_bear_percentiles = np.percentile(df['min_safe_stop_bear'], [10, 30, 70, 90])
+
     return SessionThresholds(
         session=session,
         description=f"{symbol} thresholds based on quantiles of {session.value} session for full {year} year",
@@ -98,21 +114,18 @@ def threshold_session_year(symbol: str, session: SessionName, year: int,
         doji_max_fraction=float(body_percentiles[0]),
         indecision_max_fraction=float(body_percentiles[1]),
         directional_body_min_fraction=float(body_percentiles[2]),
-        hammer_wick_max_fraction=float(wicks_percentiles[0])
+        hammer_wick_max_fraction=float(wicks_percentiles[0]),
+        p30_safe_stop_bull=float(min_safe_stop_bull_percentiles[2]),
+        p30_safe_stop_bear=float(min_safe_stop_bear_percentiles[2]),
+        p70_safe_stop_bull=float(min_safe_stop_bull_percentiles[3]),
+        p70_safe_stop_bear=float(min_safe_stop_bear_percentiles[3])
     )
 
 
 def quantile_per_session_year_thresholds(symbol: str, year: int) -> Dict[SessionName, SessionThresholds]:
     start_time = time.perf_counter()
-    conn = connect_to_db(year)
 
-    c = conn.cursor()
-    c.execute("""SELECT data FROM days WHERE symbol = ?""", (symbol,))
-    rows = c.fetchall()
-
-    conn.close()
-
-    days: List[Day] = [day_from_json(x[0]) for x in rows]
+    days = select_days(year, symbol)
 
     result = {
         SessionName.CME: threshold_session_year(symbol, SessionName.CME, year,

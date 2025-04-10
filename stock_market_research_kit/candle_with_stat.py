@@ -5,9 +5,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle
-from stock_market_research_kit.day import day_from_json, Day
+from stock_market_research_kit.db_layer import select_days
 
 
 class PercentileGroup(Enum):
@@ -145,14 +144,8 @@ def to_candles_with_stat(candles: List[InnerCandle]):
 
 
 if __name__ == "__main__":
-    conn = connect_to_db(2024)
     try:
-        # charts_example()
-        c = conn.cursor()
-        c.execute("""SELECT data FROM days WHERE symbol = ?""", ("CRVUSDT",))
-        rows = c.fetchall()
-
-        crv_days: List[Day] = [day_from_json(x[0]) for x in rows]
+        crv_days = select_days(2024, "CRVUSDT")
         london_candles = [x.london_as_candle for x in crv_days if x.london_as_candle[5] != ""]
 
         res = to_candles_with_stat(london_candles)
@@ -160,5 +153,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
-    finally:
-        conn.close()

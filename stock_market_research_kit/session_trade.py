@@ -31,11 +31,11 @@ class SessionTrade:
 
 
 def session_trade_decoder(dct):
-    if "name" in dct:
+    if "hunting_session" in dct:
         dct["hunting_session"] = SessionName(dct["hunting_session"])
-    if "type" in dct:
+    if "hunting_type" in dct:
         dct["hunting_type"] = SessionType(dct["hunting_type"])
-    if "type" in dct:
+    if "result_type" in dct:
         dct["result_type"] = SessionType(dct["result_type"])
     return SessionTrade(**dct)
 

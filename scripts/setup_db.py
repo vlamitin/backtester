@@ -47,15 +47,17 @@ def create_profiles_table(conn: Connection) -> None:
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS backtested_profiles (
+            strategy_name TEXT NOT NULL,
             profile_key TEXT NOT NULL,
-            thresholds BLOB NOT NULL,
             profile_symbol TEXT NOT NULL,
             profile_year TEXT NOT NULL,
             win INTEGER NOT NULL,
             lose INTEGER NOT NULL,
+            guessed INTEGER NOT NULL,
+            missed INTEGER NOT NULL,
             pnl REAL NOT NULL,
             trades BLOB NOT NULL,
-            PRIMARY KEY (profile_key, thresholds, profile_symbol)
+            PRIMARY KEY (profile_key, strategy_name, profile_symbol, profile_year)
         );
         """
     )

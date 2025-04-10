@@ -1,58 +1,25 @@
-import sqlite3
 import time
 from datetime import datetime, timedelta
 from time import sleep
-from typing import List
+from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
-from scripts.run_day_markuper import markup_days, london_from_to
+from scripts.run_day_markuper import markup_days
 from scripts.run_series_raw_loader import update_candle_from_binance
 from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest, get_backtested_profiles
 from scripts.run_sessions_sequencer import fill_profiles, get_next_session_chances
 from scripts.run_sessions_typifier import typify_sessions, typify_session
-from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import as_1_candle
+from stock_market_research_kit.db_layer import upsert_trades_to_db, select_closed_trades, select_last_day_candles, \
+    select_open_trades_by_strategies
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy, \
     session_2024_thresholds_strategy
 from stock_market_research_kit.session import get_next_session_mock, get_from_to, SessionName
 from stock_market_research_kit.session_thresholds import quantile_per_session_year_thresholds
-from stock_market_research_kit.session_trade import SessionTrade, session_trade_from_json, json_from_session_trade
+from stock_market_research_kit.session_trade import session_trade_from_json
 from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
 from utils.date_utils import now_ny_datetime, now_utc_datetime, \
     start_of_day, to_date_str, log_warn, to_utc_datetime, log_info_ny
-
-
-def get_last_day_candles(symbol):
-    now_year = now_utc_datetime().year  # TODO не будет работать при смене года
-
-    connection = connect_to_db(now_year)
-    c = connection.cursor()
-
-    # time_from = to_date_str(start_of_day(now_utc_datetime()) - timedelta(hours=2))
-    # time_to = to_date_str(now_utc_datetime())
-
-    c.execute("""WITH last_row_date_ts AS (
-    SELECT date_ts last_row_date FROM raw_candles
-    WHERE symbol = ? AND period = ?
-    ORDER BY strftime('%s', date_ts) DESC
-    LIMIT 1
-),
-     time_range AS (
-         SELECT
-             (strftime('%s', last_row_date) - 86400) / 86400 * 86400 + 22 * 3600 AS start_time_sec,
-             strftime('%s', last_row_date) AS end_time_sec
-         FROM last_row_date_ts
-     )
-SELECT open, high, low, close, volume, date_ts FROM raw_candles
-WHERE strftime('%s', date_ts) + 0 BETWEEN (SELECT start_time_sec FROM time_range) AND (SELECT end_time_sec FROM time_range)
-    AND symbol = ? AND period = ?""", (symbol, "15m", symbol, "15m"))
-    rows_15m = c.fetchall()
-    connection.close()
-    if len(rows_15m) == 0:
-        print(f"Symbol {symbol} 15m not found in DB")
-        return []
-
-    return [[x[0], x[1], x[2], x[3], x[4], x[5]] for x in rows_15m]
 
 
 def to_trade_profile(backtest_profile_key):
@@ -76,14 +43,16 @@ def to_trade_profile(backtest_profile_key):
 
 
 def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: NotifierStrategy):
-    candles_15m = get_last_day_candles(symbol)
+    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
+
+    candles_15m = select_last_day_candles(now_year, symbol)
     if len(candles_15m) == 0:
         log_warn("0 candles 15m in look_for_new_trade")
         return
 
     days = markup_days(candles_15m)
 
-    day_sessions = typify_sessions([days[-1]])
+    day_sessions = typify_sessions([days[-1]], strategy.thresholds_getter)
     if len(day_sessions) == 0:
         log_warn("len(day_sessions) == 0!")
         return
@@ -120,7 +89,7 @@ def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: Noti
         log_info_ny(f"no new trades for {symbol}")
         return
 
-    row_ids = upsert_to_db(strategy.name, symbol, new_trades)
+    row_ids = upsert_trades_to_db(now_year, strategy.name, symbol, new_trades)
 
     for i, tr in enumerate(new_trades):
         profile = [x for x in sorted_profiles if x['profile'] == tr.entry_profile_key][0]
@@ -147,16 +116,7 @@ def look_for_new_trade(sorted_profiles, profiles_by_year, symbol, strategy: Noti
 def stat_for_a_closed_trade(strategy_name: str, open_date_utc: str, symbol: str):
     now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
 
-    connection = connect_to_db(now_year)
-    c = connection.cursor()
-
-    c.execute("""SELECT ROWID, strategy_name, open_date_utc, symbol, session_trade FROM notifier_trades
-            WHERE full_close_date_utc != '' ORDER BY strftime('%s', open_date_utc)""")
-    rows = c.fetchall()
-    connection.close()
-
-    if len(rows) > 10000:
-        log_warn("TODO будут проблемы в памяти всё считать, когда сделок тут много станет")
+    rows = select_closed_trades(now_year)
 
     if len(rows) == 0:
         log_warn("no trades yet!")
@@ -227,25 +187,15 @@ def stat_for_a_closed_trade(strategy_name: str, open_date_utc: str, symbol: str)
     return result
 
 
-def handle_open_trades(strategies: List[NotifierStrategy]):
+def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy]]):
+    unique_strategies = list(set([x[1].name for x in symbols_with_strategies]))
+
     now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
 
-    connection = connect_to_db(now_year)
-    c = connection.cursor()
+    open_trades_rows = select_open_trades_by_strategies(now_year, unique_strategies)
 
-    c.execute(f"""SELECT ns.ROWID, ns.strategy_name, ns.open_date_utc, ns.symbol, ns.session_trade,
-        rc.open, rc.high, rc.low, rc.close, rc.volume, rc.date_ts FROM notifier_trades ns
-    JOIN raw_candles rc ON ns.symbol = rc.symbol
-        AND strftime('%s', rc.date_ts) >= strftime('%s', ns.open_date_utc)
-        AND strftime('%s', rc.date_ts) < strftime('%s', ns.deadline_close)
-    WHERE ns.full_close_date_utc = ''
-        AND strategy_name IN ({','.join(['?'] * len(strategies))})
-    ORDER BY strftime('%s', rc.date_ts)""", [x.name for x in strategies])
-
-    rows = c.fetchall()
     trades_with_candles = []
-
-    for row in rows:
+    for row in open_trades_rows:
         if len(trades_with_candles) > 0 and row[0] == trades_with_candles[-1][0][0]:
             trades_with_candles[-1].append(row)
         else:
@@ -254,13 +204,18 @@ def handle_open_trades(strategies: List[NotifierStrategy]):
     for rows in trades_with_candles:
         row_id, row_strategy_name, row_trade_open_date_utc, row_symbol, row_trade_json = rows[0][0:5]
         session_trade = session_trade_from_json(row_trade_json)
-        strategy = [x for x in strategies if x.name == row_strategy_name][0]
+        strategy = [x[1] for x in symbols_with_strategies if x[0] == row_symbol and x[1].name == row_strategy_name][0]
         candles_15m = [x[5:] for x in rows]
         last_mock_candle = [candles_15m[-1][3], candles_15m[-1][3], candles_15m[-1][3], candles_15m[-1][3], 0,
                             to_date_str(to_utc_datetime(candles_15m[-1][5]) + timedelta(minutes=15))]
         closed_trade = look_for_close_backtest([*candles_15m, last_mock_candle], session_trade)
-        closed_trade.result_type = typify_session(as_1_candle(candles_15m), strategy.session_thresholds)
-        upsert_to_db(strategy.name, row_symbol, [closed_trade])
+        if not closed_trade:
+            continue
+
+        closed_trade.result_type = typify_session(
+            session_trade.hunting_session, as_1_candle(candles_15m), strategy.thresholds_getter
+        )
+        upsert_trades_to_db(now_year, strategy.name, row_symbol, [closed_trade])
         stats = stat_for_a_closed_trade(strategy.name, row_trade_open_date_utc, row_symbol)
         post_signal_notification(f"""Close trade #{row_id} with reason '{closed_trade.closes[-1][3]}':
 
@@ -280,53 +235,17 @@ def handle_open_trades(strategies: List[NotifierStrategy]):
     Strategy: {strategy.name}.
 """)
 
-    connection.close()
 
-
-def to_db_format(strategy_name: str, symbol: str, session_trade: SessionTrade):
-    return (
-        strategy_name, session_trade.entry_time, symbol, session_trade.pnl_usd, session_trade.deadline_close,
-        json_from_session_trade(session_trade),
-        "" if len(session_trade.closes) == 0 else session_trade.closes[-1][2]  # TODO bug with partial close
-    )
-
-
-# TODO returns row_ids only for inserts!
-def upsert_to_db(strategy_name: str, symbol: str, session_trades: List[SessionTrade]) -> List[int]:
-    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
-    conn = connect_to_db(now_year)
-
-    rows = [to_db_format(strategy_name, symbol, tr) for tr in session_trades]
-
-    try:
-        c = conn.cursor()
-        c.executemany(
-            """INSERT INTO notifier_trades (strategy_name, open_date_utc, symbol, pnl, deadline_close, session_trade, full_close_date_utc)
-VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (strategy_name, open_date_utc, symbol) DO UPDATE
-    SET pnl = excluded.pnl, session_trade = excluded.session_trade, full_close_date_utc = excluded.full_close_date_utc
-RETURNING ROWID""",
-            rows
-        )
-        conn.commit()
-        print(f"Success inserting {len(session_trades)} notifier_trades for symbol {symbol}")
-        c.execute("""SELECT ROWID FROM notifier_trades ORDER BY ROWID DESC LIMIT ?""", (len(session_trades),))
-        result = c.fetchall()
-        return [x[0] for x in result]
-    except sqlite3.ProgrammingError as e:
-        print(f"Error inserting {len(session_trades)} notifier_trades for symbol {symbol}: {e}")
-        return []
-    finally:
-        conn.close()
-
-
-def maybe_open_new_trades(backtested_profiles, symbols, strategies: List[NotifierStrategy]):
-    for i, x in enumerate(symbols):
-        look_for_new_trade(backtested_profiles[i][0], backtested_profiles[i][1], x, strategies[i])
+def maybe_open_new_trades(items: List[Tuple[str, NotifierStrategy, List[dict], dict]]):
+    for item in items:
+        look_for_new_trade(item[2], item[3], item[0], item[1])
 
 
 def maybe_post_session_stat(symbols, symbol_year_profiles):
+    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
+
     for symbol in symbols:
-        candles_15m = get_last_day_candles(symbol)
+        candles_15m = select_last_day_candles(now_year, symbol)
         if len(candles_15m) == 0:
             log_warn("0 candles 15m in look_for_new_trade")
             return
@@ -363,24 +282,32 @@ def run_notifier(symbols_with_strategy):
     log_info_ny("Starting Notifier")
     start_time = time.perf_counter()
 
-    symbols = [x[0] for x in symbols_with_strategy]
-    strategies = [x[1] for x in symbols_with_strategy]
-    symbol_year_profiles = {}
+    unique_symbols = list(set([x[0] for x in symbols_with_strategy]))
+    strategy_symbol_year_profiles = {}
     for symbol, strategy in symbols_with_strategy:
+        if strategy.name not in strategy_symbol_year_profiles:
+            strategy_symbol_year_profiles[strategy.name] = {}
         for year in strategy.profile_years:
             key = f"{symbol}__{year}"
-            if key not in symbol_year_profiles:
-                symbol_year_profiles[key] = fill_profiles(symbol, year, strategy.thresholds_getter)
+            if key not in strategy_symbol_year_profiles[strategy.name]:
+                strategy_symbol_year_profiles[strategy.name][key] = fill_profiles(
+                    symbol, year, strategy.thresholds_getter)
 
-    backtested_profiles = [
-        get_backtested_profiles(x[0], x[0], x[1], symbol_year_profiles) for x in symbols_with_strategy]
+    symbol_strategy_backtested_profiles_tuples = []
+    for strategy_name in strategy_symbol_year_profiles:
+        for symbol, strategy in symbols_with_strategy:
+            backtested_profiles_result = get_backtested_profiles(
+                symbol, symbol, strategy, strategy_symbol_year_profiles[strategy_name])
+            symbol_strategy_backtested_profiles_tuples.append(
+                (symbol, strategy, backtested_profiles_result[0], backtested_profiles_result[1])
+            )
 
     log_info_ny(f"Notifier preparation took {(time.perf_counter() - start_time):.6f} seconds")
 
     prev_time = now_ny_datetime()
     first_iteration = True
 
-    prev_time = datetime(prev_time.year, prev_time.month, 8, 9, 28, tzinfo=ZoneInfo("America/New_York"))
+    # prev_time = datetime(prev_time.year, prev_time.month, 10, 9, 58, tzinfo=ZoneInfo("America/New_York"))
     while True:
         if not first_iteration:
             sleep(60 - now_ny_datetime().second)
@@ -412,10 +339,10 @@ def run_notifier(symbols_with_strategy):
                 or prev_time < end_nypm <= now_time
                 or prev_time < end_close <= now_time):
             start_time = time.perf_counter()
-            update_candles(symbols)
-            handle_open_trades(strategies)
-            maybe_open_new_trades(backtested_profiles, symbols, strategies)
-            maybe_post_session_stat(symbols, symbol_year_profiles)
+            update_candles(unique_symbols)
+            handle_open_trades(symbols_with_strategy)
+            maybe_open_new_trades(symbol_strategy_backtested_profiles_tuples)
+            # maybe_post_session_stat(symbol_strategy_backtested_profiles_tuples)
             log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - start_time):.6f} seconds")
 
         prev_time = now_time
@@ -423,13 +350,6 @@ def run_notifier(symbols_with_strategy):
 
 if __name__ == "__main__":
     try:
-        session_2024_strats = {
-            "BTCUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
-            "AAVEUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
-            "AVAXUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
-            "CRVUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
-        }
-
         update_candles(["BTCUSDT"])
         update_candles(["AAVEUSDT"])
         update_candles(["AVAXUSDT"])
