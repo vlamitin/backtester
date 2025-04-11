@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass, asdict
+from enum import Enum
 from typing import List, Tuple
 
 from stock_market_research_kit.session import SessionName, SessionType

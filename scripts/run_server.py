@@ -1,10 +1,12 @@
 import json
+from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from scripts.run_sessions_sequencer import fill_profiles
 from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import json_from_sessions
+from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
 from stock_market_research_kit.session_thresholds import btc_universal_threshold
 
 
@@ -26,7 +28,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps(days, indent=4).encode())
+            self.wfile.write(json.dumps([asdict(x) for x in days], indent=4).encode())
             return
 
         sessions_split_parts = self.path.split("/api/sessions/")
@@ -40,7 +42,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 print(f"Symbol {symbol} not found in days table")
                 return
 
-            sessions = typify_sessions(days, lambda x, y: btc_universal_threshold)
+            sessions = typify_sessions(days, lambda session_name, _: symbol_thresholds[session_name])
 
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -68,7 +70,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
-        _, _, profiles = fill_profiles("CRVUSDT", 2024, lambda x, y: btc_universal_threshold)
+        symbol_thresholds = quantile_per_session_year_thresholds("CRVUSDT", 2024)
+        _, _, profiles = fill_profiles(
+            "CRVUSDT", 2024, lambda session_name, _: symbol_thresholds[session_name])
         server = HTTPServer(('localhost', 8000), RequestHandler)
         print('Starting server at http://localhost:8000')
         server.serve_forever()

@@ -54,9 +54,6 @@ class Day:
         filtered_data = {k: v for k, v in data.items() if k in known_fields}
         return cls(**filtered_data)
 
-    def to_db_format(self, symbol: str):
-        return symbol, self.date_readable, json.dumps(asdict(self), indent=4)
-
 
 def new_day():
     return Day(
@@ -95,3 +92,14 @@ def new_day():
         ny_pm_as_candle=(-1, -1, -1, -1, 0, ""),
         ny_pm_close_as_candle=(-1, -1, -1, -1, 0, "")
     )
+
+
+if __name__ == '__main__':
+    try:
+        d = new_day()
+        marshalled = json.dumps([asdict(d)], indent=4)
+        unmarshalled = [Day.from_json(x) for x in json.loads(marshalled)]
+        print(marshalled, unmarshalled)
+    except KeyboardInterrupt:
+        print(f"KeyboardInterrupt, exiting ...")
+        quit(0)
