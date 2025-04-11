@@ -99,7 +99,7 @@ def main(symbol, year):
     print(f"Done marking up {symbol} {len(days)} days. Inserting results to db")
     result = upsert_days_to_db(year, symbol, days)
     if result:
-        print(f"Done with {year} year {symbol}")
+        print(f"Done with {year} year {symbol}, last day is {days[-1].date_readable}")
 
     return days
 

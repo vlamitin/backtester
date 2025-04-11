@@ -8,7 +8,7 @@ from stock_market_research_kit.backtest import Backtest, StrategyTrades
 from stock_market_research_kit.day import Day
 from stock_market_research_kit.db_layer import upsert_profiles_to_db, select_days
 from stock_market_research_kit.notifier_strategy import NotifierStrategy, session_2024_thresholds_strategy, \
-    session_2024_thresholds_strict_strategy, btc_naive_strategy
+    session_2024_thresholds_strict_strategy, btc_naive_strategy, session_2024_thresholds_loose_strategy
 from stock_market_research_kit.session import SessionName, SessionType, Session
 from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
 from stock_market_research_kit.session_thresholds import ThresholdsGetter
@@ -262,14 +262,18 @@ if __name__ == "__main__":
             # "AAVEUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
             # "AVAXUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
             # "CRVUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
-            # "BTCUSDT": session_2024_thresholds_strict_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
+            # "BTCUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
             # "AAVEUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
             # "AVAXUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
             # "CRVUSDT": session_2024_thresholds_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
-            "BTCUSDT": btc_naive_strategy,
-            "AAVEUSDT": btc_naive_strategy,
-            "AVAXUSDT": btc_naive_strategy,
-            "CRVUSDT": btc_naive_strategy,
+            "BTCUSDT": session_2024_thresholds_loose_strategy(quantile_per_session_year_thresholds("BTCUSDT", 2024)),
+            "AAVEUSDT": session_2024_thresholds_loose_strategy(quantile_per_session_year_thresholds("AAVEUSDT", 2024)),
+            "AVAXUSDT": session_2024_thresholds_loose_strategy(quantile_per_session_year_thresholds("AVAXUSDT", 2024)),
+            "CRVUSDT": session_2024_thresholds_loose_strategy(quantile_per_session_year_thresholds("CRVUSDT", 2024)),
+            # "BTCUSDT": btc_naive_strategy,
+            # "AAVEUSDT": btc_naive_strategy,
+            # "AVAXUSDT": btc_naive_strategy,
+            # "CRVUSDT": btc_naive_strategy,
         }
 
         symbol_year_profiles = {}
@@ -299,8 +303,10 @@ if __name__ == "__main__":
         guessed = [(x[0], sum([profile['guessed'] for profile in x[1][0]])) for x in results]
         missed = [(x[0], sum([profile['missed'] for profile in x[1][0]])) for x in results]
         april_dates = [(x[0],
-                        [[trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for
-                         profile in x[1][0]]) for x in results]
+                        sorted([ts for sublist in [
+                            [trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')]
+                            for
+                            profile in x[1][0]] for ts in sublist])) for x in results]
 
         strategy_profiles = [
             (x[0], [profile for profile in x[1][0]
@@ -310,9 +316,9 @@ if __name__ == "__main__":
                     ])
             for x in results]
         strategy_pnls = [(x[0], sum([profile['pnl'] for profile in x[1]])) for x in strategy_profiles]
-        strategy_april_dates = [(x[0], [
+        strategy_april_dates = [(x[0], sorted([ts for sublist in [
             [trade.entry_time for trade in profile['trades'] if trade.entry_time.startswith('2025-04')] for profile in
-            x[1]]) for x in strategy_profiles]
+            x[1]] for ts in sublist])) for x in strategy_profiles]
 
         print("done!")
 

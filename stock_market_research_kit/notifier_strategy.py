@@ -103,3 +103,31 @@ def session_2024_thresholds_strict_strategy(symbol_thresholds: Dict[SessionName,
         backtest_min_pnl_per_trade=0.5,
         backtest_min_win_rate=0.4,
     )
+
+
+def session_2024_thresholds_loose_strategy(symbol_thresholds: Dict[SessionName, SessionThresholds]):
+    return NotifierStrategy(
+        name="#4 Loose first filtering, loose backtested profiles filtering",
+        thresholds_getter=lambda session_name, _: symbol_thresholds[session_name],
+        profiles_min_chance=27,
+        profiles_min_times=2,
+        sl_percent=0.5,
+        tp_percent=3,
+        include_profile_year_to_backtest=False,
+        profile_years=[
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+        ],
+        backtest_years=[
+            2021,
+            2022,
+            2023,
+            2024,
+            2025
+        ],
+        backtest_min_pnl_per_trade=-2.5,
+        backtest_min_win_rate=0,
+    )

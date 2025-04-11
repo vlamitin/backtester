@@ -11,6 +11,8 @@ class StrategyTrades:
     guessed: int
     missed: int
     pnl: float
+    # max_win_series: int  TODO
+    # max_lose_series: int  TODO
     trades: List[SessionTrade]
 
 

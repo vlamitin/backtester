@@ -13,7 +13,7 @@ from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.db_layer import upsert_trades_to_db, select_closed_trades, select_last_day_candles, \
     select_open_trades_by_strategies, select_sorted_profiles
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy, \
-    session_2024_thresholds_strategy
+    session_2024_thresholds_strategy, session_2024_thresholds_strict_strategy, session_2024_thresholds_loose_strategy
 from stock_market_research_kit.session import get_next_session_mock, get_from_to, SessionName
 from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
 from stock_market_research_kit.session_trade import session_trade_from_json
@@ -90,7 +90,7 @@ def look_for_new_trade(symbol, strategy: NotifierStrategy):
                                          strategy.tp_percent)
 
     if len(new_trades) == 0:
-        log_info_ny(f"no new trades for {symbol}")
+        log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value}")
         return
 
     row_ids = upsert_trades_to_db(now_year, strategy.name, symbol, new_trades)
@@ -356,6 +356,22 @@ if __name__ == "__main__":
             ("AVAXUSDT", session_2024_thresholds_strategy(
                 quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
             ("CRVUSDT", session_2024_thresholds_strategy(
+                quantile_per_session_year_thresholds("CRVUSDT", 2024))),
+            ("BTCUSDT", session_2024_thresholds_strict_strategy(
+                quantile_per_session_year_thresholds("BTCUSDT", 2024))),
+            ("AAVEUSDT", session_2024_thresholds_strict_strategy(
+                quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
+            ("AVAXUSDT", session_2024_thresholds_strict_strategy(
+                quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
+            ("CRVUSDT", session_2024_thresholds_strict_strategy(
+                quantile_per_session_year_thresholds("CRVUSDT", 2024))),
+            ("BTCUSDT", session_2024_thresholds_loose_strategy(
+                quantile_per_session_year_thresholds("BTCUSDT", 2024))),
+            ("AAVEUSDT", session_2024_thresholds_loose_strategy(
+                quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
+            ("AVAXUSDT", session_2024_thresholds_loose_strategy(
+                quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
+            ("CRVUSDT", session_2024_thresholds_loose_strategy(
                 quantile_per_session_year_thresholds("CRVUSDT", 2024))),
         ])
     except KeyboardInterrupt:
