@@ -182,7 +182,7 @@ RETURNING ROWID""",
             rows
         )
         conn.commit()
-        print(f"Success inserting {len(session_trades)} notifier_trades for symbol {symbol}")
+        print(f"Success inserting {len(session_trades)} notifier_trades for symbol {symbol} for strategy {strategy_name[0:2]}...")
         c.execute("""SELECT ROWID FROM notifier_trades ORDER BY ROWID DESC LIMIT ?""", (len(session_trades),))
         result = c.fetchall()
         return [x[0] for x in result]
@@ -216,7 +216,7 @@ def select_open_trades_by_strategies(year: int, strategy_names: List[str]):
             AND strftime('%s', rc.date_ts) < strftime('%s', ns.deadline_close)
         WHERE ns.full_close_date_utc = ''
             AND strategy_name IN ({','.join(['?'] * len(strategy_names))})
-        ORDER BY strftime('%s', rc.date_ts)""", strategy_names)
+        ORDER BY ns.ROWID""", strategy_names)
 
     rows = c.fetchall()
     connection.close()

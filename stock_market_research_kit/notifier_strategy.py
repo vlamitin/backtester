@@ -49,10 +49,10 @@ btc_naive_strategy = NotifierStrategy(
 )
 
 
-def session_2024_thresholds_strategy(symbol_thresholds: Dict[SessionName, SessionThresholds]):
+def session_2024_thresholds_strategy(thresholds_2024: Dict[SessionName, SessionThresholds]):
     return NotifierStrategy(
         name="#2 Same as #1, but sessions thresholds are now calculated per-session based on quantiles for 2024 year",
-        thresholds_getter=lambda session_name, _: symbol_thresholds[session_name],
+        thresholds_getter=lambda session_name, _: thresholds_2024[session_name],
         profiles_min_chance=40,
         profiles_min_times=2,
         sl_percent=0.5,
@@ -77,10 +77,10 @@ def session_2024_thresholds_strategy(symbol_thresholds: Dict[SessionName, Sessio
     )
 
 
-def session_2024_thresholds_strict_strategy(symbol_thresholds: Dict[SessionName, SessionThresholds]):
+def session_2024_thresholds_strict_strategy(thresholds_2024: Dict[SessionName, SessionThresholds]):
     return NotifierStrategy(
         name="#3 Same as #2, but more strict profiles first filtering",
-        thresholds_getter=lambda session_name, _: symbol_thresholds[session_name],
+        thresholds_getter=lambda session_name, _: thresholds_2024[session_name],
         profiles_min_chance=41,
         profiles_min_times=3,
         sl_percent=0.5,
@@ -105,10 +105,10 @@ def session_2024_thresholds_strict_strategy(symbol_thresholds: Dict[SessionName,
     )
 
 
-def session_2024_thresholds_loose_strategy(symbol_thresholds: Dict[SessionName, SessionThresholds]):
+def session_2024_thresholds_loose_strategy(thresholds_2024: Dict[SessionName, SessionThresholds]):
     return NotifierStrategy(
         name="#4 Loose first filtering, loose backtested profiles filtering",
-        thresholds_getter=lambda session_name, _: symbol_thresholds[session_name],
+        thresholds_getter=lambda session_name, _: thresholds_2024[session_name],
         profiles_min_chance=27,
         profiles_min_times=2,
         sl_percent=0.5,

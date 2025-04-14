@@ -1,8 +1,10 @@
 from typing import List
 
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from scripts.run_sessions_typifier import candle_anatomy
 from stock_market_research_kit.candle import InnerCandle
@@ -80,46 +82,108 @@ def enrich_with_stat(candles: List[InnerCandle]):
 
 
 def test_groups():
-    data = [10, 12, 13, 14, 15, 18, 20, 21, 22, 25, 25, 30, 35]
+    pass
 
-    # Создаём DataFrame
-    df = pd.DataFrame(data, columns=['value'])
 
-    # Вычисляем среднее значение и отклонение (5% от среднего)
-    mean_value = df['value'].mean()
-    percent_range = mean_value * 0.05  # 5% отклонение
+# step = (end - start) * step_fraction
+# points = np.arange(start, end, step)
+#
+# intervals = list(zip(points, points + step))
+#
+# def assign_group(x):
+#     for i, (low, high) in enumerate(intervals):
+#         if i == len(intervals) - 1:
+#             if low <= x <= high:
+#                 return f"{low:.1f}–{high:.1f}"
+#         elif low <= x < high:
+#             return f"{low:.1f}–{high:.1f}"
+#     return np.nan
+#
+# s_grouped = df_series.apply(assign_group)
+# return s_grouped
 
-    # Используем pd.cut() для группировки значений в диапазоны с шагом 5% от среднего
-    bins = pd.cut(df['value'], bins=pd.interval_range(start=df['value'].min(), end=df['value'].max(), freq=percent_range))
 
-    # Добавляем результат группировки в DataFrame
-    df['group'] = bins
+def test_corr():
+    data1 = {
+        'date': pd.date_range(start='2023-01-01', periods=5),
+        'open': [100, 102, 104, 106, 108],
+        'high': [105, 107, 109, 111, 113],
+        'low': [98, 100, 101, 103, 105],
+        'close': [104, 101, 108, 107, 110]
+    }
 
-    # Считаем количество значений в каждой группе
-    vc = df['group'].value_counts().sort_index()
+    data2 = {
+        'date': pd.date_range(start='2023-01-01', periods=5),
+        'open': [200, 202, 204, 206, 208],
+        'high': [210, 212, 214, 216, 218],
+        'low': [195, 198, 199, 201, 203],
+        'close': [205, 200, 213, 208, 215]
+    }
 
-    # Печатаем результат
-    print(df)
-    print("\nГруппировка по диапазонам с отклонением ±5%:")
-    print(vc)
+    df1 = pd.DataFrame(data1)
+    df2 = pd.DataFrame(data2)
+
+    # Вычисления
+    df1['range'] = df1['high'] - df1['low']
+    df1['body'] = (df1['open'] - df1['close']).abs()
+
+    df2['range'] = df2['high'] - df2['low']
+    df2['body'] = (df2['open'] - df2['close']).abs()
+    df2['target'] = df2['range'] / df2['body'].replace(0, np.nan)
+
+    # Объединение
+    merged = df1[['date', 'range', 'body']].merge(df2[['date', 'target']], on='date')
+    merged.columns = ['date', 'range_df1', 'body_df1', 'target_df2']
+
+    # # Визуализация pairplot
+    # sns.pairplot(merged[['range_df1', 'body_df1', 'target_df2']])
+    # plt.suptitle("Pairplot — Взаимосвязи между признаками", y=1.02)
+    # plt.show()
+
+    # Визуализация heatmap
+    # corr = merged[['range_df1', 'body_df1', 'target_df2']].corr()
+    # plt.figure(figsize=(6, 4))
+    # sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f')
+    # plt.title("Heatmap — Корреляции признаков")
+    # plt.show()
+
+        # Построение регрессионных графиков
+    plt.figure(figsize=(12, 5))
+
+    # 1. Зависимость target_df2 от range_df1
+    # plt.subplot(1, 2, 1)
+    sns.regplot(x='range_df1', y='target_df2', data=merged)
+    plt.title('Регрессия: target_df2 ~ range_df1')
+
+    # 2. Зависимость target_df2 от body_df1
+    # plt.subplot(1, 2, 2)
+    # sns.regplot(x='body_df1', y='target_df2', data=merged)
+    # plt.title('Регрессия: target_df2 ~ body_df1')
+
+    plt.tight_layout()
+    plt.show()
+
+
+# def linear_regression(df1: pd.DataFrame, df2: pd.DataFrame):
 
 
 if __name__ == "__main__":
     try:
+        test_corr()
         # charts_example()
-        test_groups()
-
-        crv_days = select_days(2024, "CRVUSDT")
-        london_candles = [x.london_as_candle for x in crv_days if x.london_as_candle[5] != ""]
-        enrich_with_stat(london_candles)
-
-        london_candles_anatomy = [list(candle_anatomy(x.london_as_candle)) for x in crv_days if
-                                  x.london_as_candle[5] != ""]
-        np_candles = np.array(london_candles_anatomy, dtype=np.float64)
-
-        # normalized data used mean as base, while percentile-based calculation uses median data, which is better
-        normalized_volat = (np_candles[:, 1] - np.mean(np_candles[:, 1])) / np.std(np_candles[:, 1])
-        print(np.arange(24).reshape(2, -1, 3))
+        # test_groups()
+        #
+        # crv_days = select_days(2024, "CRVUSDT")
+        # london_candles = [x.london_as_candle for x in crv_days if x.london_as_candle[5] != ""]
+        # enrich_with_stat(london_candles)
+        #
+        # london_candles_anatomy = [list(candle_anatomy(x.london_as_candle)) for x in crv_days if
+        #                           x.london_as_candle[5] != ""]
+        # np_candles = np.array(london_candles_anatomy, dtype=np.float64)
+        #
+        # # normalized data used mean as base, while percentile-based calculation uses median data, which is better
+        # normalized_volat = (np_candles[:, 1] - np.mean(np_candles[:, 1])) / np.std(np_candles[:, 1])
+        # print(np.arange(24).reshape(2, -1, 3))
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

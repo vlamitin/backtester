@@ -3,6 +3,7 @@ from dataclasses import dataclass, asdict
 from typing import List
 
 from stock_market_research_kit.candle import InnerCandle
+from utils.date_utils import to_utc_datetime
 
 
 def day_from_json(json_str):
@@ -47,6 +48,19 @@ class Day:
     ny_lunch_as_candle: InnerCandle
     ny_pm_as_candle: InnerCandle
     ny_pm_close_as_candle: InnerCandle
+
+    def day_candles_before(self, date: str):
+        if date == "":
+            raise ValueError("day_candles_before date is empty!")
+        result = []
+        date_before = to_utc_datetime(date)
+        for candle in self.candles_15m:
+            if to_utc_datetime(candle[5]) < date_before:
+                result.append(candle)
+            else:
+                break
+        return result
+
 
     @classmethod
     def from_json(cls, data: dict):
