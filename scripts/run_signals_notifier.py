@@ -93,9 +93,19 @@ def look_for_new_trade(symbol, strategy: NotifierStrategy):
         log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value}")
         return
 
-    row_ids = upsert_trades_to_db(now_year, strategy.name, symbol, new_trades)
+    # TODO пока выбираю из всех найденных сделку с наивысшим guess_rate
+    max_guess_rate, trade = 0, None
+    for tr in new_trades:
+        profile = [x for x in sorted_profiles if x['profile'] == tr.entry_profile_key][0]
+        guess_rate = profile['guessed'] / (profile['guessed'] + profile['missed'])
+        if guess_rate > max_guess_rate:
+            max_guess_rate, trade = guess_rate, tr
 
-    for i, tr in enumerate(new_trades):
+    # print('trade')
+
+    row_ids = upsert_trades_to_db(now_year, strategy.name, symbol, [trade])
+
+    for i, tr in enumerate([trade]):
         profile = [x for x in sorted_profiles if x['profile'] == tr.entry_profile_key][0]
         post_signal_notification(f"""New trade #{row_ids[i]}:
 
@@ -103,14 +113,14 @@ def look_for_new_trade(symbol, strategy: NotifierStrategy):
     Entry time: {tr.entry_time} (UTC),
     Entry price: {tr.entry_price},
     Position: {tr.entry_position_usd}$.
-    
+
     Hunting session: {tr.hunting_session.value}, hunting type: {tr.hunting_type.value},
     Predict direction: {tr.predict_direction}.
-    
+
     Stop price: {tr.initial_stop},
     Position close deadline: {tr.deadline_close} (UTC),
     Take profit: {tr.take_profit}.
-    
+
     Strategy: {strategy.name},
     Profile: {profile['profile']} ({profile['year']} year),
     Profile backtest result: {profile['win']}/{len(profile['trades'])} {str(round(profile['win'] / len(profile['trades']) * 100, 2))}% ({', '.join([str(x) for x in strategy.backtest_years if x != profile['year']])} years) with pnl {round(profile['pnl'], 2)}$.
@@ -227,15 +237,15 @@ def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy
     Time open/close: {closed_trade.entry_time} / {closed_trade.closes[-1][2]} (UTC),
     Price open/close: {closed_trade.entry_price} / {closed_trade.closes[-1][1]},
     PNL: {round(closed_trade.pnl_usd, 2)}$.
-    
-    Session {closed_trade.hunting_session} predicted {closed_trade.hunting_type} ({closed_trade.predict_direction}), but instead got {closed_trade.result_type.value}.
-    
+
+    Session {closed_trade.hunting_session.name} predicted {closed_trade.hunting_type.name} ({closed_trade.predict_direction}), but instead got {closed_trade.result_type.value}.
+
     WIN/GUESSED/TRADES/PNL
     Total: {stats['total_win_trades']}/{stats['total_guessed']}/{stats['total_trades']}/{round(stats['total_pnl'], 2)}$,
     Strategy: {stats['strategy_win_trades']}/{stats['strategy_guessed']}/{stats['strategy_trades']}/{round(stats['strategy_pnl'], 2)}$,
     {row_symbol}: {stats['symbol_win_trades']}/{stats['symbol_guessed']}/{stats['symbol_trades']}/{round(stats['symbol_pnl'], 2)}$,
     {row_symbol}+Strategy: {stats['symbol_strategy_win_trades']}/{stats['symbol_strategy_guessed']}/{stats['symbol_strategy_trades']}/{round(stats['symbol_strategy_pnl'], 2)}$.
-    
+
     Strategy: {strategy.name}.
 """)
 
@@ -279,22 +289,22 @@ def update_candles(symbols):
 
 def run_notifier(symbols_with_strategy):
     unique_symbols = list(set([x[0] for x in symbols_with_strategy]))
-    strategy_symbol_year_profiles = {}
-    for symbol, strategy in symbols_with_strategy:
-        if strategy.name not in strategy_symbol_year_profiles:
-            strategy_symbol_year_profiles[strategy.name] = {}
-        for year in strategy.profile_years:
-            key = f"{symbol}__{year}"
-            if key not in strategy_symbol_year_profiles[strategy.name]:
-                strategy_symbol_year_profiles[strategy.name][key] = fill_profiles(
-                    symbol, year, strategy.thresholds_getter)
+    # strategy_symbol_year_profiles = {}
+    # for symbol, strategy in symbols_with_strategy:
+    #     if strategy.name not in strategy_symbol_year_profiles:
+    #         strategy_symbol_year_profiles[strategy.name] = {}
+    #     for year in strategy.profile_years:
+    #         key = f"{symbol}__{year}"
+    #         if key not in strategy_symbol_year_profiles[strategy.name]:
+    #             strategy_symbol_year_profiles[strategy.name][key] = fill_profiles(
+    #                 symbol, year, strategy.thresholds_getter)
 
     log_info_ny(f"Notifier preparation took {(time.perf_counter() - start_time):.6f} seconds")
 
     prev_time = now_ny_datetime()
     first_iteration = True
 
-    # prev_time = datetime(prev_time.year, prev_time.month, 10, 9, 58, tzinfo=ZoneInfo("America/New_York"))
+    # prev_time = datetime(prev_time.year, prev_time.month, 14, 6, 58, tzinfo=ZoneInfo("America/New_York"))
     while True:
         if not first_iteration:
             sleep(60 - now_ny_datetime().second)
