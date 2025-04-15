@@ -98,7 +98,7 @@ def look_for_new_trade(symbol, strategy: NotifierStrategy):
     for tr in new_trades:
         profile = [x for x in sorted_profiles if x['profile'] == tr.entry_profile_key][0]
         guess_rate = profile['guessed'] / (profile['guessed'] + profile['missed'])
-        if guess_rate > max_guess_rate:
+        if guess_rate >= max_guess_rate:
             max_guess_rate, trade = guess_rate, tr
 
     # print('trade')
