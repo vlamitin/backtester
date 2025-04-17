@@ -90,7 +90,7 @@ def look_for_new_trade(symbol, strategy: NotifierStrategy):
                                          strategy.tp_percent)
 
     if len(new_trades) == 0:
-        log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value}")
+        log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value} for '{strategy.name[0:2]}...'")
         return
 
     # TODO пока выбираю из всех найденных сделку с наивысшим guess_rate
@@ -381,8 +381,6 @@ if __name__ == "__main__":
                 quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
             ("AVAXUSDT", session_2024_thresholds_loose_strategy(
                 quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
-            ("CRVUSDT", session_2024_thresholds_loose_strategy(
-                quantile_per_session_year_thresholds("CRVUSDT", 2024))),
         ])
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
