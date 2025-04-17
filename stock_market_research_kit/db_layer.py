@@ -1,14 +1,11 @@
-import json
 import sqlite3
-from dataclasses import asdict
-from enum import Enum
 from typing import List, Optional
 
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle
-from stock_market_research_kit.day import Day, day_from_json
+from stock_market_research_kit.day import Day
 from stock_market_research_kit.session_trade import SessionTrade, json_from_session_trade, json_from_session_trades, \
-    session_trade_from_json, session_trades_from_json
+    session_trades_from_json
 
 
 def upsert_profiles_to_db(strategy_name: str, smb: str, profiles: List[dict]):
@@ -79,7 +76,7 @@ def select_days(year: int, symbol: str) -> List[Day]:
     days_rows = c.fetchall()
 
     conn.close()
-    return [day_from_json(x[0]) for x in days_rows]
+    return [Day.from_json(x[0]) for x in days_rows]
 
 
 def select_full_days_candles_15m(year, symbol) -> List[InnerCandle]:

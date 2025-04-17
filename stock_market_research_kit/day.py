@@ -6,11 +6,6 @@ from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.session import SessionName
 from utils.date_utils import to_utc_datetime
 
-
-def day_from_json(json_str):
-    return Day.from_json(json.loads(json_str))
-
-
 PriceDate: TypeAlias = Tuple[float, str]
 
 
@@ -31,20 +26,20 @@ class Day:
     yo: PriceDate
     true_yo: PriceDate  # 1st of april
 
-    # prev_ny_close: PriceDate  # 16:00 NY
-    # prev_cme_close: PriceDate  # 17:00 NY, it's also called True daily close
+    prev_ny_close: PriceDate  # 16:00 NY
+    prev_cme_close: PriceDate  # 17:00 NY, it's also called True daily close
 
-    # week_high: PriceDate
-    # week_range_75q: PriceDate
-    # week_range_50q: PriceDate
-    # week_range_25q: PriceDate
-    # week_low: PriceDate
+    week_high: PriceDate  # все week экстремумы считаются от предыдущего дня
+    week_range_75q: PriceDate
+    week_range_50q: PriceDate
+    week_range_25q: PriceDate
+    week_low: PriceDate
 
-    # prev_week_high: PriceDate
-    # prev_week_range_75q: PriceDate
-    # prev_week_range_50q: PriceDate
-    # prev_week_range_25q: PriceDate
-    # prev_week_low: PriceDate
+    prev_week_high: PriceDate
+    prev_week_range_75q: PriceDate
+    prev_week_range_50q: PriceDate
+    prev_week_range_25q: PriceDate
+    prev_week_low: PriceDate
 
     # month_high: PriceDate
     # month_range_75q: PriceDate
@@ -116,10 +111,14 @@ class Day:
                 return self.ny_pm_close_candles_15m
         return []
 
+    def to_db_format(self, symbol):
+        return symbol, self.date_readable, json.dumps(asdict(self), indent=4)
+
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, data_str: str):
+        data_dict = json.loads(data_str)
         known_fields = set(cls.__dataclass_fields__.keys())  # Get dataclass fields
-        filtered_data = {k: v for k, v in data.items() if k in known_fields}
+        filtered_data = {k: v for k, v in data_dict.items() if k in known_fields}
         return cls(**filtered_data)
 
 
@@ -137,8 +136,18 @@ def new_day():
         true_mo=(-1, ""),
         yo=(-1, ""),
         true_yo=(-1, ""),
-        # pdo
-        # pdc
+        prev_ny_close=(-1, ""),
+        prev_cme_close=(-1, ""),
+        week_high=(-1, ""),
+        week_range_75q=(-1, ""),
+        week_range_50q=(-1, ""),
+        week_range_25q=(-1, ""),
+        week_low=(-1, ""),
+        prev_week_high=(-1, ""),
+        prev_week_range_75q=(-1, ""),
+        prev_week_range_50q=(-1, ""),
+        prev_week_range_25q=(-1, ""),
+        prev_week_low=(-1, ""),
         cme_open_candles_15m=[],
         asian_candles_15m=[],
         london_candles_15m=[],
