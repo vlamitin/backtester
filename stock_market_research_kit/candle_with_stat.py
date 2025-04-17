@@ -10,7 +10,9 @@ import seaborn as sns
 import scipy.stats as stats
 
 from stock_market_research_kit.candle import InnerCandle, as_1_candle
+from stock_market_research_kit.day import Day
 from stock_market_research_kit.db_layer import select_days
+from stock_market_research_kit.session import SessionName, sessions_in_order
 from utils.date_utils import start_of_day, to_date_str, to_utc_datetime
 
 
@@ -177,13 +179,22 @@ def to_df(candles: List[InnerCandle]):
     return df
 
 
+def days_matching_session_df_condition(days, session_name, condition):
+    session_candles = [as_1_candle(x.candles_by_session(session_name)) for x in days if
+                       len(x.candles_by_session(session_name)) > 0]
+    sess_df = to_df(session_candles)
+    indices = sess_df.index[condition(sess_df)].to_list()
+    return [days[x] for x in indices]
+
+
 def show_correlation_2_sessions(title: str, session1_candles: List[InnerCandle], session2_candles: List[InnerCandle]):
     show_corr_charts(
         title,
         to_df([candle for candle in session1_candles if candle[5] != ""]),
         to_df([candle for candle in session2_candles if candle[5] != ""]),
         ['perf', 'volat', 'upper_wick_fraction', 'body_fraction', 'lower_wick_fraction'],
-        ['perf', 'upper_wick_fraction', 'body_fraction', 'lower_wick_fraction'],
+        ['perf', 'upper_wick_fraction', 'body_fraction', 'lower_wick_fraction', 'min_safe_stop_bull',
+         'min_safe_stop_bear']
     )
 
 
@@ -193,7 +204,7 @@ def show_corr_charts(title, df1, df2, columns1, columns2):
         for col2 in columns2:
             df1[f"target_{col2}"] = df2[col2]
             corr, p_value = stats.pearsonr(df1[col1], df1[f"target_{col2}"])
-            if -0.2 < corr < 0.2:
+            if -0.25 < corr < 0.25:
                 continue
             pairs.append((col1, f"target_{col2}", corr, p_value))
 
@@ -223,7 +234,7 @@ def show_corr_charts(title, df1, df2, columns1, columns2):
                     ax = fig.add_subplot(gs[1, 1])
 
             sns.regplot(x=pair[0], y=pair[1], data=df1, ax=ax)
-            plt.title(f"Regression: {pair[1]} ~ {pair[0]}, corr={pair[2]:.2f}, p-value={pair[3]:.4f}")
+            plt.title(f"Regression: {pair[0]} ~> {pair[1]}, corr={pair[2]:.2f}, p-value={pair[3]:.4f}")
 
         fig.suptitle(title, fontsize=14)
         plt.tight_layout(rect=[0, 0, 1, 0.985])
@@ -268,229 +279,194 @@ def predicts_for_incomplete(year_session_candles: List[List[InnerCandle]]):
     return predicts(df_session, df_minus15), predicts(df_session, df_minus30)
 
 
+def show_correlations_for_session(days: List[Day], target_session: SessionName, predict_sessions: List[SessionName],
+                                  only_predict_sessions: bool):
+    def to_sn(names: List[SessionName]):
+        return ' + '.join([str(x).replace('SessionName.', '') for x in names])
+
+    sn = to_sn([target_session])
+
+    def to_candles(day: Day, names: List[SessionName]):
+        candles = []
+        for name in names:
+            candles.extend(day.candles_by_session(name))
+        return candles
+
+    if len(predict_sessions) > 0:
+        show_correlation_2_sessions(
+            f"{to_sn(predict_sessions)} + {sn}[:-1] -> {sn}[-1:]",
+            [as_1_candle([*to_candles(x, predict_sessions), *x.candles_by_session(target_session)[:-1]]) for x in days],
+            [as_1_candle([*x.candles_by_session(target_session)[-1:]]) for x in days]
+        )
+        if target_session not in [SessionName.NY_OPEN]:
+            show_correlation_2_sessions(
+                f"{to_sn(predict_sessions)} + {sn}[:-2] -> {sn}[-2:]",
+                [as_1_candle([*to_candles(x, predict_sessions), *x.candles_by_session(target_session)[:-2]]) for x in
+                 days],
+                [as_1_candle([*x.candles_by_session(target_session)[-2:]]) for x in days]
+            )
+
+        show_correlation_2_sessions(
+            f"{to_sn(predict_sessions)} -> {sn}",
+            [as_1_candle(to_candles(x, predict_sessions)) for x in days],
+            [as_1_candle(x.candles_by_session(target_session)) for x in days]
+        )
+        show_correlation_2_sessions(
+            f"{to_sn(predict_sessions)} -> {sn}[:1]",
+            [as_1_candle(to_candles(x, predict_sessions)) for x in days],
+            [as_1_candle([*x.candles_by_session(target_session)][:1]) for x in days]
+        )
+        if target_session not in [SessionName.NY_OPEN]:
+            show_correlation_2_sessions(
+                f"{to_sn(predict_sessions)} -> {sn}[:2]",
+                [as_1_candle(to_candles(x, predict_sessions)) for x in days],
+                [as_1_candle([*x.candles_by_session(target_session)][:2]) for x in days]
+            )
+
+    if only_predict_sessions:
+        return
+
+    show_correlation_2_sessions(
+        f"{sn}[:-1] -> {sn}[-1:]",
+        [as_1_candle([*x.candles_by_session(target_session)[:-1]]) for x in days],
+        [as_1_candle([*x.candles_by_session(target_session)[-1:]]) for x in days]
+    )
+    if target_session not in [SessionName.NY_OPEN]:
+        show_correlation_2_sessions(
+            f"{sn}[:-2] -> {sn}[-2:]",
+            [as_1_candle([*x.candles_by_session(target_session)[:-2]]) for x in days],
+            [as_1_candle([*x.candles_by_session(target_session)[-2:]]) for x in days]
+        )
+
+    if target_session not in [SessionName.CME, SessionName.ASIA]:
+        show_correlation_2_sessions(
+            f"Current day before {sn} -> {sn}",
+            [as_1_candle([*x.day_candles_before(x.candles_by_session(target_session)[0][5])]) for x in days if
+             len(x.candles_by_session(target_session)) > 0],
+            [as_1_candle([*x.candles_by_session(target_session)]) for x in days]
+        )
+        show_correlation_2_sessions(
+            f"Current day before {sn} -> {sn}[:1]",
+            [as_1_candle([*x.day_candles_before(x.candles_by_session(target_session)[0][5])]) for x in days if
+             len(x.candles_by_session(target_session)) > 0],
+            [as_1_candle([*x.candles_by_session(target_session)][:1]) for x in days]
+        )
+        if target_session not in [SessionName.NY_OPEN]:
+            show_correlation_2_sessions(
+                f"Current day before {sn} -> {sn}[:2]",
+                [as_1_candle([*x.day_candles_before(x.candles_by_session(target_session)[0][5])]) for x in days if
+                 len(x.candles_by_session(target_session)) > 0],
+                [as_1_candle([*x.candles_by_session(target_session)][:2]) for x in days]
+            )
+
+    show_correlation_2_sessions(
+        f"{sn} -> 1D",
+        [as_1_candle(x.candles_by_session(target_session)) for x in days],
+        [x.candle_1d for x in days]
+    )
+
+
+def show_sessions(days: List[Day]):
+    if len(days) == 0:
+        print('no days!')
+        return
+    print(f'Start showing charts for {len(days)} days (weekends will probably also be excluded from this number)')
+    show_correlations_for_session(days, SessionName.CME, [], False)
+    show_correlations_for_session(days, SessionName.ASIA, [SessionName.CME], False)
+    show_correlations_for_session(days, SessionName.LONDON, [SessionName.ASIA], False)
+    show_correlations_for_session(days, SessionName.EARLY, [SessionName.LONDON], False)
+    show_correlations_for_session(days, SessionName.EARLY, [SessionName.ASIA, SessionName.LONDON], True)
+    show_correlations_for_session(days, SessionName.EARLY, [SessionName.CME, SessionName.ASIA, SessionName.LONDON],
+                                  True)
+    show_correlations_for_session(days, SessionName.EARLY, [SessionName.CME], True)
+    show_correlations_for_session(days, SessionName.PRE, [SessionName.EARLY], False)
+    show_correlations_for_session(days, SessionName.PRE, [SessionName.LONDON, SessionName.EARLY], True)
+    show_correlations_for_session(days, SessionName.PRE,
+                                  [SessionName.CME, SessionName.ASIA, SessionName.LONDON, SessionName.EARLY], True)
+    show_correlations_for_session(days, SessionName.PRE, [SessionName.CME], True)
+    show_correlations_for_session(days, SessionName.NY_OPEN, [SessionName.PRE], False)
+    show_correlations_for_session(days, SessionName.NY_OPEN, [SessionName.CME], True)
+    show_correlations_for_session(days, SessionName.NY_OPEN, [SessionName.ASIA, SessionName.LONDON], True)
+    show_correlations_for_session(days, SessionName.NY_OPEN, [SessionName.LONDON], True)
+    show_correlations_for_session(days, SessionName.NY_OPEN, [SessionName.EARLY, SessionName.PRE], True)
+    show_correlations_for_session(days, SessionName.NY_AM, [SessionName.NY_OPEN], False)
+    show_correlations_for_session(days, SessionName.NY_AM, [SessionName.PRE, SessionName.NY_OPEN], True)
+    show_correlations_for_session(days, SessionName.NY_LUNCH, [SessionName.NY_AM], False)
+    show_correlations_for_session(days, SessionName.NY_LUNCH, [SessionName.NY_OPEN, SessionName.NY_AM], True)
+    show_correlations_for_session(days, SessionName.NY_PM, [SessionName.NY_LUNCH], False)
+    show_correlations_for_session(days, SessionName.NY_PM, [SessionName.NY_AM], True)
+    show_correlations_for_session(days, SessionName.NY_PM, [SessionName.NY_OPEN, SessionName.NY_AM], True)
+    show_correlations_for_session(days, SessionName.NY_PM,
+                                  [SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH], True)
+    show_correlations_for_session(days, SessionName.NY_PM,
+                                  [SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH], True)
+    show_correlations_for_session(days, SessionName.NY_PM,
+                                  [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
+                                   SessionName.NY_LUNCH], True)
+    show_correlations_for_session(days, SessionName.NY_CLOSE, [SessionName.NY_PM], False)
+    show_correlations_for_session(days, SessionName.NY_CLOSE,
+                                  [SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM],
+                                  True)
+    show_correlations_for_session(days, SessionName.NY_CLOSE,
+                                  [SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM, SessionName.NY_LUNCH,
+                                   SessionName.NY_PM], True)
+    show_correlations_for_session(days, SessionName.NY_CLOSE,
+                                  [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN, SessionName.NY_AM,
+                                   SessionName.NY_LUNCH, SessionName.NY_PM], True)
+
+
 if __name__ == "__main__":
     try:
-        days = [
-            # *select_days(2023, "BTCUSDT"),
+        days_from_db: List[Day] = [
+            *select_days(2023, "AVAXUSDT"),
             *select_days(2024, "AVAXUSDT"),
             *select_days(2025, "AVAXUSDT"),
         ]
+        # show_sessions(days_from_db)
+        #
+        # mondays = [x for x in days_from_db if to_utc_datetime(x.date_readable).isoweekday() == 1]
+        # show_sessions(mondays)
 
-        # res_cme15, res_cme30 = predicts_for_incomplete([x.cme_open_candles_15m for x in days])
-        # res_asia15, res_asia30 = predicts_for_incomplete([x.asian_candles_15m for x in days])
-        # res_london15, res_london30 = predicts_for_incomplete([x.london_candles_15m for x in days])
-        # res_early15, res_early30 = predicts_for_incomplete([x.early_session_candles_15m for x in days])
-        # res_pre15, res_pre30 = predicts_for_incomplete([x.premarket_candles_15m for x in days])
-        # res_open15, _ = predicts_for_incomplete([x.ny_am_open_candles_15m for x in days])
-        # res_nyam15, res_nyam30 = predicts_for_incomplete([x.ny_am_candles_15m for x in days])
-        # res_nylunch15, res_nylunch30 = predicts_for_incomplete([x.ny_lunch_candles_15m for x in days])
-        # res_nypm15, res_nypm30 = predicts_for_incomplete([x.ny_pm_candles_15m for x in days])
-        # res_close15, res_close30 = predicts_for_incomplete([x.ny_pm_close_candles_15m for x in days])
-        # # TODO last 1-2 candles
-        # show_correlation_2_sessions(
-        #     "Asia[:-1] -> Asia[-1:]",
-        #     [as_1_candle([*x.asian_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.asian_candles_15m[-1:]]) for x in days]
+        fridays = [x for x in days_from_db if to_utc_datetime(x.date_readable).isoweekday() == 5]
+        show_sessions(fridays)
+
+        # days_with_asia_tothemoon = days_matching_session_df_condition(
+        #     days_from_db, SessionName.ASIA,
+        #     # lambda df: (df['volat_perc_all'] == '<p90') & (df['body_fraction_perc_all'] == '<p90')
+        #     lambda df: (df['perf_perc_all'] == '>=p90') & (df['body_fraction_perc_all'] == '>=p90')
         # )
-        # show_correlation_2_sessions(
-        #     "Asia[:-2] -> Asia[-2:]",
-        #     [as_1_candle([*x.asian_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.asian_candles_15m[-2:]]) for x in days]
+        # show_sessions(days_with_asia_tothemoon)
+
+        # days_with_open_stb = days_matching_session_df_condition(
+        #     days_from_db, SessionName.NY_OPEN,
+        #     # lambda df: (df['volat_perc_all'] == '<p90') & (df['body_fraction_perc_all'] == '<p90')
+        #     lambda df: (df['lower_wick_fraction_perc_all'] == '>=p90') | (df['lower_wick_fraction_perc_all'] == '<p90')
         # )
-        #
-        # show_correlation_2_sessions(
-        #     "London[:-1] -> London[-1:]",
-        #     [as_1_candle([*x.london_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.london_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "London[:-2] -> London[-2:]",
-        #     [as_1_candle([*x.london_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.london_candles_15m[-2:]]) for x in days]
-        # )
-        #
-        # show_correlation_2_sessions(
-        #     "Early[:-1] -> Early[-1:]",
-        #     [as_1_candle([*x.early_session_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.early_session_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Early[:-2] -> Early[-2:]",
-        #     [as_1_candle([*x.early_session_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.early_session_candles_15m[-2:]]) for x in days]
-        # )
-        #
-        # show_correlation_2_sessions(
-        #     "Pre[:-1] -> Pre[-1:]",
-        #     [as_1_candle([*x.premarket_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.premarket_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Pre[:-2] -> Pre[-2:]",
-        #     [as_1_candle([*x.premarket_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.premarket_candles_15m[-2:]]) for x in days]
-        # )
-        #
-        # show_correlation_2_sessions(
-        #     "Open[:-1] -> Open[-1:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_am_open_candles_15m[-1:]]) for x in days]
-        # )
-        #
-        # show_correlation_2_sessions(
-        #     "NYAM[:-1] -> NYAM[-1:]",
-        #     [as_1_candle([*x.ny_am_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_am_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "NYAM[:-2] -> NYAM[-2:]",
-        #     [as_1_candle([*x.ny_am_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_am_candles_15m[-2:]]) for x in days]
-        # )
-        #
-        # show_correlation_2_sessions(
-        #     "Open + NYAM[:-1] -> NYAM[-1:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m, *x.ny_am_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_am_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Open + NYAM[:-2] -> NYAM[-2:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m, *x.ny_am_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_am_candles_15m[-2:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Lunch[:-1] -> Lunch[-1:]",
-        #     [as_1_candle([*x.ny_lunch_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_lunch_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Lunch[:-2] -> Lunch[-2:]",
-        #     [as_1_candle([*x.ny_lunch_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_lunch_candles_15m[-2:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Open + NYAM + Lunch[:-1] -> Lunch[-1:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m, *x.ny_am_candles_15m, *x.ny_lunch_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_lunch_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Lunch[:-2] -> Lunch[-2:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m, *x.ny_am_candles_15m, *x.ny_lunch_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_lunch_candles_15m[-2:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "NYPM[:-1] -> NYPM[-1:]",
-        #     [as_1_candle([*x.ny_pm_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "NYPM[:-2] -> NYPM[-2:]",
-        #     [as_1_candle([*x.ny_pm_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_candles_15m[-2:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Close[:-1] -> Close[-1:]",
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Close[:-2] -> Close[-2:]",
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[-2:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "NYPM + Close[:-1] -> Close[-1:]",
-        #     [as_1_candle([*x.ny_pm_candles_15m, *x.ny_pm_close_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "NYPM + Close[:-2] -> Close[-2:]",
-        #     [as_1_candle([*x.ny_pm_candles_15m, *x.ny_pm_close_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[-2:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Open + NYAM + Lunch + NYPM + Close[:-1] -> Close[-1:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m, *x.ny_am_candles_15m, *x.ny_lunch_candles_15m, *x.ny_pm_candles_15m, *x.ny_pm_close_candles_15m[:-1]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[-1:]]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Open + NYAM + Lunch + NYPM + Close[:-2] -> Close[-2:]",
-        #     [as_1_candle([*x.ny_am_open_candles_15m, *x.ny_am_candles_15m, *x.ny_lunch_candles_15m, *x.ny_pm_candles_15m, *x.ny_pm_close_candles_15m[:-2]]) for x in days],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m[-2:]]) for x in days]
-        # )
+        # show_sessions(days_with_open_stb)
+
+        # res_cme15, res_cme30 = predicts_for_incomplete([x.cme_open_candles_15m for x in days_from_db])
+        # res_asia15, res_asia30 = predicts_for_incomplete([x.asian_candles_15m for x in days_from_db])
+        # res_london15, res_london30 = predicts_for_incomplete([x.london_candles_15m for x in days_from_db])
+        # res_early15, res_early30 = predicts_for_incomplete([x.early_session_candles_15m for x in days_from_db])
+        # res_pre15, res_pre30 = predicts_for_incomplete([x.premarket_candles_15m for x in days_from_db])
+        # res_open15, _ = predicts_for_incomplete([x.ny_am_open_candles_15m for x in days_from_db])
+        # res_nyam15, res_nyam30 = predicts_for_incomplete([x.ny_am_candles_15m for x in days_from_db])
+        # res_nylunch15, res_nylunch30 = predicts_for_incomplete([x.ny_lunch_candles_15m for x in days_from_db])
+        # res_nypm15, res_nypm30 = predicts_for_incomplete([x.ny_pm_candles_15m for x in days_from_db])
+        # res_close15, res_close30 = predicts_for_incomplete([x.ny_pm_close_candles_15m for x in days_from_db])
+
         # # TODO 2 and more sessions
         # show_correlation_2_sessions(
         #     "Asia + London -> PM + Close",
-        #     [as_1_candle([*x.asian_candles_15m, *x.london_candles_15m]) for x in days],
-        #     [as_1_candle([*x.ny_pm_candles_15m, *x.ny_pm_close_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Asia + London -> Early",
-        #     [as_1_candle([*x.asian_candles_15m, *x.london_candles_15m]) for x in days],
-        #     [as_1_candle([*x.early_session_candles_15m]) for x in days]
+        #     [as_1_candle([*x.asian_candles_15m, *x.london_candles_15m]) for x in days_from_db],
+        #     [as_1_candle([*x.ny_pm_candles_15m, *x.ny_pm_close_candles_15m]) for x in days_from_db]
         # )
         # show_correlation_2_sessions(
         #     "Asia + London -> Early + Pre",
-        #     [as_1_candle([*x.asian_candles_15m, *x.london_candles_15m]) for x in days],
-        #     [as_1_candle([*x.early_session_candles_15m, *x.premarket_candles_15m]) for x in days]
+        #     [as_1_candle([*x.asian_candles_15m, *x.london_candles_15m]) for x in days_from_db],
+        #     [as_1_candle([*x.early_session_candles_15m, *x.premarket_candles_15m]) for x in days_from_db]
         # )
-        # # TODO Day before
-        # show_correlation_2_sessions(
-        #     "Day before London -> London",
-        #     [as_1_candle([*x.day_candles_before(x.london_candles_15m[0][5])]) for x in days if len(x.london_candles_15m) > 0],
-        #     [as_1_candle([*x.london_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before Early -> Early",
-        #     [as_1_candle([*x.day_candles_before(x.early_session_candles_15m[0][5])]) for x in days if len(x.early_session_candles_15m) > 0],
-        #     [as_1_candle([*x.early_session_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before Pre -> Pre",
-        #     [as_1_candle([*x.day_candles_before(x.premarket_candles_15m[0][5])]) for x in days if len(x.premarket_candles_15m) > 0],
-        #     [as_1_candle([*x.premarket_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before Open -> Open",
-        #     [as_1_candle([*x.day_candles_before(x.ny_am_open_candles_15m[0][5])]) for x in days if len(x.ny_am_open_candles_15m) > 0],
-        #     [as_1_candle([*x.ny_am_open_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before NYAM -> NYAM",
-        #     [as_1_candle([*x.day_candles_before(x.ny_am_candles_15m[0][5])]) for x in days if len(x.ny_am_candles_15m) > 0],
-        #     [as_1_candle([*x.ny_am_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before Lunch -> Lunch",
-        #     [as_1_candle([*x.day_candles_before(x.ny_lunch_candles_15m[0][5])]) for x in days if len(x.ny_lunch_candles_15m) > 0],
-        #     [as_1_candle([*x.ny_lunch_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before PM -> PM",
-        #     [as_1_candle([*x.day_candles_before(x.ny_pm_candles_15m[0][5])]) for x in days if len(x.ny_pm_candles_15m) > 0],
-        #     [as_1_candle([*x.ny_pm_candles_15m]) for x in days]
-        # )
-        # show_correlation_2_sessions(
-        #     "Day before Close -> Close",
-        #     [as_1_candle([*x.day_candles_before(x.ny_pm_close_candles_15m[0][5])]) for x in days if len(x.ny_pm_close_candles_15m) > 0],
-        #     [as_1_candle([*x.ny_pm_close_candles_15m]) for x in days]
-        # )
-        # # TODO session -> 1d
-        # show_correlation_2_sessions("London -> 1D", [x.london_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("Early -> 1D", [x.early_session_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("Pre -> 1D", [x.premarket_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("Open -> 1D", [x.ny_am_open_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("NYAM -> 1D", [x.ny_am_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("Lunch -> 1D", [x.ny_lunch_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("PM -> 1D", [x.ny_pm_as_candle for x in days], [x.candle_1d for x in days])
-        # show_correlation_2_sessions("Close -> 1D", [x.ny_pm_close_as_candle for x in days], [x.candle_1d for x in days])
-        # # TODO session1 -> session2
-        # show_correlation_2_sessions("Pre -> Open", [x.premarket_as_candle for x in days], [x.ny_am_open_as_candle for x in days])
-        # show_correlation_2_sessions("Open -> AM", [x.ny_am_open_as_candle for x in days], [x.ny_am_as_candle for x in days])
-        # show_correlation_2_sessions("AM -> Lunch", [x.ny_am_as_candle for x in days], [x.ny_lunch_as_candle for x in days])
-        # show_correlation_2_sessions("AM -> PM", [x.ny_am_as_candle for x in days], [x.ny_pm_as_candle for x in days])
-        # show_correlation_2_sessions("Lunch -> PM", [x.ny_lunch_as_candle for x in days], [x.ny_pm_as_candle for x in days])
-        # show_correlation_2_sessions("PM -> Close", [x.ny_pm_as_candle for x in days], [x.ny_pm_close_as_candle for x in days])
+
         # # TODO первая и вторая свечка сессии
         print("done!")
     except KeyboardInterrupt:
