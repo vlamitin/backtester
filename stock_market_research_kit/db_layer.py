@@ -85,7 +85,7 @@ def select_days(year: int, symbol: str) -> List[Day]:
 def select_full_days_candles_15m(year, symbol) -> List[InnerCandle]:
     conn = connect_to_db(year)
     c = conn.cursor()
-
+    # TODO will only work with 15m candles because of 85500!!
     c.execute("""WITH last_row_date_ts AS (
         SELECT date_ts last_row_date FROM raw_candles
         WHERE symbol = ? AND period = ?
@@ -94,7 +94,7 @@ def select_full_days_candles_15m(year, symbol) -> List[InnerCandle]:
     ),
          last_full_day AS (
              SELECT
-                 (strftime('%s', last_row_date) - 86400) / 86400 * 86400 + 24 * 3600 AS end_of_day
+                 (strftime('%s', last_row_date) - 85500) / 86400 * 86400 + 86400 AS end_of_day
              FROM last_row_date_ts
          )
     SELECT open, high, low, close, volume, date_ts FROM raw_candles
