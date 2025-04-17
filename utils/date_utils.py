@@ -320,6 +320,13 @@ def is_ny_pm_close_time(checked_time_string, current_day_string):
     return is_some_same_day_session(checked_time_string, current_day_string, "15:00", "16:00")
 
 
+def get_second_monday(date: datetime):
+    first_day = date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    days_to_first_monday = (7 - first_day.weekday() + 0) % 7
+    first_monday = first_day + timedelta(days=days_to_first_monday)
+    return first_monday + timedelta(days=7)
+
+
 if __name__ == "__main__":
     try:
         log_warn("test")
@@ -327,7 +334,8 @@ if __name__ == "__main__":
         #     datetime(2024, 3, 1, 15, 0, tzinfo=ZoneInfo("UTC")),
         #     datetime(2024, 3, 5, 10, 0, tzinfo=ZoneInfo("UTC"))
         # )
-        pass
+        res = get_second_monday(datetime.now())
+        print('res', res)
 
         # for smb in [
         #     "BTCUSDT",

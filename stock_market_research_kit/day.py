@@ -1,13 +1,17 @@
 import json
 from dataclasses import dataclass, asdict
-from typing import List
+from typing import List, TypeAlias, Tuple
 
 from stock_market_research_kit.candle import InnerCandle
+from stock_market_research_kit.session import SessionName
 from utils.date_utils import to_utc_datetime
 
 
 def day_from_json(json_str):
     return Day.from_json(json.loads(json_str))
+
+
+PriceDate: TypeAlias = Tuple[float, str]
 
 
 @dataclass
@@ -18,14 +22,41 @@ class Day:
     candle_1d: InnerCandle
     candles_15m: List[InnerCandle]
 
-    # do: float  # TODO заполнить скриптом и это
-    # true_do: float
-    # wo: float
-    # true_wo: float
-    # mo: float
-    # true_mo: float
-    # yo: float
-    # true_yo: float
+    do: PriceDate
+    true_do: PriceDate  # NY midnight
+    wo: PriceDate
+    true_wo: PriceDate  # monday 6pm NY
+    mo: PriceDate
+    true_mo: PriceDate  # 2nd monday of month
+    yo: PriceDate
+    true_yo: PriceDate  # 1st of april
+
+    # prev_ny_close: PriceDate  # 16:00 NY
+    # prev_cme_close: PriceDate  # 17:00 NY, it's also called True daily close
+
+    # week_high: PriceDate
+    # week_range_75q: PriceDate
+    # week_range_50q: PriceDate
+    # week_range_25q: PriceDate
+    # week_low: PriceDate
+
+    # prev_week_high: PriceDate
+    # prev_week_range_75q: PriceDate
+    # prev_week_range_50q: PriceDate
+    # prev_week_range_25q: PriceDate
+    # prev_week_low: PriceDate
+
+    # month_high: PriceDate
+    # month_range_75q: PriceDate
+    # month_range_50q: PriceDate
+    # month_range_25q: PriceDate
+    # month_low: PriceDate
+
+    # prev_month_high: PriceDate
+    # prev_month_range_75q: PriceDate
+    # prev_month_range_50q: PriceDate
+    # prev_month_range_25q: PriceDate
+    # prev_month_low: PriceDate
 
     cme_open_candles_15m: List[InnerCandle]  # 18:00 - 19:00 NY time
     asian_candles_15m: List[InnerCandle]  # 19:00 - 22:00 NY time
@@ -61,6 +92,29 @@ class Day:
                 break
         return result
 
+    def candles_by_session(self, session_name: SessionName) -> List[InnerCandle]:
+        match session_name:
+            case SessionName.CME:
+                return self.cme_open_candles_15m
+            case SessionName.ASIA:
+                return self.asian_candles_15m
+            case SessionName.LONDON:
+                return self.london_candles_15m
+            case SessionName.EARLY:
+                return self.early_session_candles_15m
+            case SessionName.PRE:
+                return self.premarket_candles_15m
+            case SessionName.NY_OPEN:
+                return self.ny_am_open_candles_15m
+            case SessionName.NY_AM:
+                return self.ny_am_candles_15m
+            case SessionName.NY_LUNCH:
+                return self.ny_lunch_candles_15m
+            case SessionName.NY_PM:
+                return self.ny_pm_candles_15m
+            case SessionName.NY_CLOSE:
+                return self.ny_pm_close_candles_15m
+        return []
 
     @classmethod
     def from_json(cls, data: dict):
@@ -75,14 +129,14 @@ def new_day():
         date_readable="",
         candle_1d=(-1, -1, -1, -1, 0, ""),
         candles_15m=[],
-        # do=-1,
-        # true_do=-1,
-        # wo=-1,
-        # true_wo=-1,
-        # mo=-1,
-        # true_mo=-1,
-        # yo=-1,
-        # true_yo=-1,
+        do=(-1, ""),
+        true_do=(-1, ""),
+        wo=(-1, ""),
+        true_wo=(-1, ""),
+        mo=(-1, ""),
+        true_mo=(-1, ""),
+        yo=(-1, ""),
+        true_yo=(-1, ""),
         # pdo
         # pdc
         cme_open_candles_15m=[],

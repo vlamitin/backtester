@@ -6,7 +6,7 @@ from stock_market_research_kit.db_layer import upsert_days_to_db, select_full_da
 from utils.date_utils import is_same_day_or_past_or_future, to_utc_datetime, to_date_str, start_of_day, \
     is_prev_day_cme_open_time, \
     is_asian_time, is_london_time, is_early_session_time, is_premarket_time, is_ny_am_open_time, is_ny_am_time, \
-    is_ny_lunch_time, is_ny_pm_time, is_ny_pm_close_time
+    is_ny_lunch_time, is_ny_pm_time, is_ny_pm_close_time, is_some_same_day_session, get_second_monday
 
 
 def group_15m_by_days(candles_15m):
@@ -32,6 +32,13 @@ def markup_days(candles_15m):
 
     grouped_candles_15m = group_15m_by_days(candles_15m)
 
+    wo = (-1, "")
+    true_wo = (-1, "")
+    mo = (-1, "")
+    true_mo = (-1, "")
+    yo = (-1, "")
+    true_yo = (-1, "")
+
     for i, day_group in enumerate(grouped_candles_15m):
         if len(grouped_candles_15m) > 50 and (i % 50 == 0 or i == len(grouped_candles_15m) - 1):
             print(f"marking up {i + 1}/{len(grouped_candles_15m)} days")
@@ -41,10 +48,41 @@ def markup_days(candles_15m):
         day.day_of_week = utc_start_of_day.isoweekday()
         day.date_readable = to_date_str(utc_start_of_day)
 
+        if utc_start_of_day.isoweekday() == 1:
+            wo = (day_group[0][0], day_group[0][5])
+
+        if utc_start_of_day.day == 1:
+            mo = (day_group[0][0], day_group[0][5])
+
+        if get_second_monday(utc_start_of_day) == utc_start_of_day:
+            true_mo = (day_group[0][0], day_group[0][5])
+
+        if utc_start_of_day.day == 1 and utc_start_of_day.month == 1:
+            yo = (day_group[0][0], day_group[0][5])
+
+        if utc_start_of_day.day == 1 and utc_start_of_day.month == 4:
+            true_yo = (day_group[0][0], day_group[0][5])
+
+        day.do = (day_group[0][0], day_group[0][5])
+        day.wo = wo
+        day.true_wo = true_wo
+        day.mo = mo
+        day.true_mo = true_mo
+        day.yo = yo
+        day.true_yo = true_yo
+
         day.candle_1d = as_1_candle(day_group)
         candles_to_iterate = day_group if i == 0 else [*grouped_candles_15m[i - 1][-8:], *day_group]
 
         for candle in candles_to_iterate:
+            candle_datetime = to_utc_datetime(candle[5])
+
+            if is_some_same_day_session(candle[5], day_group[0][5], "00:00", "00:01"):
+                day.true_do = (candle[0], candle[5])
+
+            if candle_datetime.isoweekday() == 1 and is_some_same_day_session(candle[5], day_group[0][5], "18:00", "18:01"):
+                true_wo = (candle[0], candle[5])
+
             comparison_result = is_same_day_or_past_or_future(candle[5], day.date_readable)
             if comparison_result == 1:
                 break
@@ -92,14 +130,26 @@ def markup_days(candles_15m):
     return days
 
 
-def main(symbol, year):
-    candles_15m = select_full_days_candles_15m(year, symbol)
+def main(symbol, years):
+    candles_15m = []
+    for year in years:
+        candles_15m.extend(select_full_days_candles_15m(year, symbol))
 
     days = markup_days(candles_15m)
     print(f"Done marking up {symbol} {len(days)} days. Inserting results to db")
-    result = upsert_days_to_db(year, symbol, days)
-    if result:
-        print(f"Done with {year} year {symbol}, last day is {days[-1].date_readable}")
+
+    grouped_days = []
+    for day in days:
+        if len(grouped_days) > 0 and to_utc_datetime(day.date_readable).year == to_utc_datetime(grouped_days[-1][-1].date_readable).year:
+            grouped_days[-1].append(day)
+        else:
+            grouped_days.append([day])
+
+    for day_group in grouped_days:
+        year = to_utc_datetime(day_group[0].date_readable).year
+        result = upsert_days_to_db(year, symbol, day_group)
+        if result:
+            print(f"Done with {year} year {symbol}, last day is {day_group[-1].date_readable}")
 
     return days
 
@@ -119,18 +169,18 @@ if __name__ == "__main__":
         # cmet = get_actual_cme_open_time()
         for smb in [
             "BTCUSDT",
-            "AAVEUSDT",
-            "CRVUSDT",
-            "AVAXUSDT",
+            # "AAVEUSDT",
+            # "CRVUSDT",
+            # "AVAXUSDT",
         ]:
-            for series_year in [
+            series_years = [
                 # 2021,
                 # 2022,
                 # 2023,
-                # 2024,
+                2024,
                 2025
-            ]:
-                main(smb, series_year)
+            ]
+            main(smb, series_years)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
