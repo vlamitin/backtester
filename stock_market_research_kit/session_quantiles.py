@@ -13,30 +13,25 @@ def quantile_per_session_year_thresholds(symbol: str, year: int) -> Dict[Session
 
     result = {
         SessionName.CME: threshold_session_year(symbol, SessionName.CME, year,
-                                                [x.cme_as_candle for x in days if x.cme_as_candle[5] != ""]),
+                                                [x.cme.session_candle for x in days if x.cme]),
         SessionName.ASIA: threshold_session_year(symbol, SessionName.ASIA, year,
-                                                 [x.asia_as_candle for x in days if x.asia_as_candle[5] != ""]),
+                                                 [x.asia.session_candle for x in days if x.asia]),
         SessionName.LONDON: threshold_session_year(symbol, SessionName.LONDON, year,
-                                                   [x.london_as_candle for x in days if x.london_as_candle[5] != ""]),
+                                                   [x.london.session_candle for x in days if x.london]),
         SessionName.EARLY: threshold_session_year(symbol, SessionName.EARLY, year,
-                                                  [x.early_session_as_candle for x in days if
-                                                   x.early_session_as_candle[5] != ""]),
+                                                  [x.early_session.session_candle for x in days if x.early_session]),
         SessionName.PRE: threshold_session_year(symbol, SessionName.PRE, year,
-                                                [x.premarket_as_candle for x in days if
-                                                 x.premarket_as_candle[5] != ""]),
+                                                [x.premarket.session_candle for x in days if x.premarket]),
         SessionName.NY_OPEN: threshold_session_year(symbol, SessionName.NY_OPEN, year,
-                                                    [x.ny_am_open_as_candle for x in days if
-                                                     x.ny_am_open_as_candle[5] != ""]),
+                                                    [x.ny_am_open.session_candle for x in days if x.ny_am_open]),
         SessionName.NY_AM: threshold_session_year(symbol, SessionName.NY_AM, year,
-                                                  [x.ny_am_as_candle for x in days if x.ny_am_as_candle[5] != ""]),
+                                                  [x.ny_am.session_candle for x in days if x.ny_am]),
         SessionName.NY_LUNCH: threshold_session_year(symbol, SessionName.NY_LUNCH, year,
-                                                     [x.ny_lunch_as_candle for x in days if
-                                                      x.ny_lunch_as_candle[5] != ""]),
+                                                     [x.ny_lunch.session_candle for x in days if x.ny_lunch]),
         SessionName.NY_PM: threshold_session_year(symbol, SessionName.NY_PM, year,
-                                                  [x.ny_pm_as_candle for x in days if x.ny_pm_as_candle[5] != ""]),
+                                                  [x.ny_pm.session_candle for x in days if x.ny_pm]),
         SessionName.NY_CLOSE: threshold_session_year(symbol, SessionName.NY_CLOSE, year,
-                                                     [x.ny_pm_close_as_candle for x in days if
-                                                      x.ny_pm_close_as_candle[5] != ""]),
+                                                     [x.ny_pm_close.session_candle for x in days if x.ny_pm_close]),
     }
 
     print(

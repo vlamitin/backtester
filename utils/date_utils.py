@@ -68,7 +68,7 @@ def now_ny_datetime() -> datetime:
     return datetime.now(ZoneInfo("America/New_York"))
 
 
-def is_some_prev_day_session(checked_time_string, current_day_string, from_str, to_str):
+def is_some_prev_day_session(checked_time_string, current_day_string, from_ny, to_ny):
     current_day = to_utc_datetime(current_day_string)
     prev_day = current_day - timedelta(days=1)
 
@@ -77,8 +77,8 @@ def is_some_prev_day_session(checked_time_string, current_day_string, from_str, 
 
     checked_time = to_utc_datetime(checked_time_string)
 
-    from_h, from_m = [int(x) for x in from_str.split(":")]
-    to_h, to_m = [int(x) for x in to_str.split(":")]
+    from_h, from_m = [int(x) for x in from_ny.split(":")]
+    to_h, to_m = [int(x) for x in to_ny.split(":")]
 
     range_from = datetime(
         prev_day.year, prev_day.month, prev_day.day, from_h, from_m, tzinfo=ZoneInfo("America/New_York")
@@ -90,15 +90,20 @@ def is_some_prev_day_session(checked_time_string, current_day_string, from_str, 
     return range_from <= checked_time < range_to
 
 
-def is_some_same_day_session(checked_time_string: str, current_day_string: str, from_str: str, to_str: str):
+def is_some_same_day_session(checked_time_string: str, current_day_string: str, from_ny: str, to_ny: str):
     current_day = to_utc_datetime(current_day_string)
     if current_day.isoweekday() in [6, 7]:
         return False
 
+    return is_some_same_day(checked_time_string, current_day_string, from_ny, to_ny)
+
+
+def is_some_same_day(checked_time_string: str, current_day_string: str, from_ny: str, to_ny: str):
+    current_day = to_utc_datetime(current_day_string)
     checked_time = to_utc_datetime(checked_time_string)
 
-    from_h, from_m = [int(x) for x in from_str.split(":")]
-    to_h, to_m = [int(x) for x in to_str.split(":")]
+    from_h, from_m = [int(x) for x in from_ny.split(":")]
+    to_h, to_m = [int(x) for x in to_ny.split(":")]
 
     range_from = datetime(
         current_day.year, current_day.month, current_day.day, from_h, from_m, tzinfo=ZoneInfo("America/New_York")

@@ -1,12 +1,11 @@
 import json
 from dataclasses import dataclass, asdict
-from typing import List, TypeAlias, Tuple
+from enum import Enum
+from typing import List, Optional
 
-from stock_market_research_kit.candle import InnerCandle
-from stock_market_research_kit.session import SessionName
+from stock_market_research_kit.candle import InnerCandle, PriceDate
+from stock_market_research_kit.session import SessionName, SessionPriceAction, new_spa
 from utils.date_utils import to_utc_datetime
-
-PriceDate: TypeAlias = Tuple[float, str]
 
 
 @dataclass
@@ -53,27 +52,16 @@ class Day:
     # prev_month_range_25q: PriceDate
     # prev_month_low: PriceDate
 
-    cme_open_candles_15m: List[InnerCandle]  # 18:00 - 19:00 NY time
-    asian_candles_15m: List[InnerCandle]  # 19:00 - 22:00 NY time
-    london_candles_15m: List[InnerCandle]  # 02:00 - 05:00 NY time
-    early_session_candles_15m: List[InnerCandle]  # 07:00 - 08:00 NY time
-    premarket_candles_15m: List[InnerCandle]  # 08:00 - 09:30 NY time
-    ny_am_open_candles_15m: List[InnerCandle]  # 09:30 - 10:00 NY time
-    ny_am_candles_15m: List[InnerCandle]  # 10:00 - 12:00 NY time
-    ny_lunch_candles_15m: List[InnerCandle]  # 12:00 - 13:00 NY time
-    ny_pm_candles_15m: List[InnerCandle]  # 13:00 - 15:00 NY time
-    ny_pm_close_candles_15m: List[InnerCandle]  # 15:00 - 16:00 NY time
-
-    cme_as_candle: InnerCandle
-    asia_as_candle: InnerCandle
-    london_as_candle: InnerCandle
-    early_session_as_candle: InnerCandle
-    premarket_as_candle: InnerCandle
-    ny_am_open_as_candle: InnerCandle
-    ny_am_as_candle: InnerCandle
-    ny_lunch_as_candle: InnerCandle
-    ny_pm_as_candle: InnerCandle
-    ny_pm_close_as_candle: InnerCandle
+    cme: Optional[SessionPriceAction]  # 18:00 - 19:00 NY time
+    asia: Optional[SessionPriceAction]  # 19:00 - 22:00 NY time
+    london: Optional[SessionPriceAction]  # 02:00 - 05:00 NY time
+    early_session: Optional[SessionPriceAction]  # 07:00 - 08:00 NY time
+    premarket: Optional[SessionPriceAction]  # 08:00 - 09:30 NY time
+    ny_am_open: Optional[SessionPriceAction]  # 09:30 - 10:00 NY time
+    ny_am: Optional[SessionPriceAction]  # 10:00 - 12:00 NY time
+    ny_lunch: Optional[SessionPriceAction]  # 12:00 - 13:00 NY time
+    ny_pm: Optional[SessionPriceAction]  # 13:00 - 15:00 NY time
+    ny_pm_close: Optional[SessionPriceAction]  # 15:00 - 16:00 NY time
 
     def day_candles_before(self, date: str):
         if date == "":
@@ -90,29 +78,26 @@ class Day:
     def candles_by_session(self, session_name: SessionName) -> List[InnerCandle]:
         match session_name:
             case SessionName.CME:
-                return self.cme_open_candles_15m
+                return [] if not self.cme else self.cme.candles_15m
             case SessionName.ASIA:
-                return self.asian_candles_15m
+                return [] if not self.asia else self.asia.candles_15m
             case SessionName.LONDON:
-                return self.london_candles_15m
+                return [] if not self.london else self.london.candles_15m
             case SessionName.EARLY:
-                return self.early_session_candles_15m
+                return [] if not self.early_session else self.early_session.candles_15m
             case SessionName.PRE:
-                return self.premarket_candles_15m
+                return [] if not self.premarket else self.premarket.candles_15m
             case SessionName.NY_OPEN:
-                return self.ny_am_open_candles_15m
+                return [] if not self.ny_am_open else self.ny_am_open.candles_15m
             case SessionName.NY_AM:
-                return self.ny_am_candles_15m
+                return [] if not self.ny_am else self.ny_am.candles_15m
             case SessionName.NY_LUNCH:
-                return self.ny_lunch_candles_15m
+                return [] if not self.ny_lunch else self.ny_lunch.candles_15m
             case SessionName.NY_PM:
-                return self.ny_pm_candles_15m
+                return [] if not self.ny_pm else self.ny_pm.candles_15m
             case SessionName.NY_CLOSE:
-                return self.ny_pm_close_candles_15m
+                return [] if not self.ny_pm_close else self.ny_pm_close.candles_15m
         return []
-
-    def to_db_format(self, symbol):
-        return symbol, self.date_readable, json.dumps(asdict(self), indent=4)
 
     @classmethod
     def from_json(cls, data_str: str):
@@ -120,6 +105,34 @@ class Day:
         known_fields = set(cls.__dataclass_fields__.keys())  # Get dataclass fields
         filtered_data = {k: v for k, v in data_dict.items() if k in known_fields}
         return cls(**filtered_data)
+
+
+def day_decoder(dct):
+    if "date_readable" in dct:
+        return Day(**dct)
+    if "name" in dct and "session_candle" in dct:
+        dct["name"] = SessionName(dct["name"])
+    return SessionPriceAction(**dct)
+
+
+def day_from_json(json_str):
+    return json.loads(json_str, object_hook=day_decoder)
+
+
+def enum_serializer(obj):
+    if isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, SessionPriceAction):
+        return asdict(obj)
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+
+def json_from_day(day):
+    return json.dumps(asdict(day), default=enum_serializer, indent=4)
+
+
+def json_from_days(days):
+    return json.dumps([day.__dict__ for day in days], default=enum_serializer, indent=4)
 
 
 def new_day():
@@ -148,35 +161,28 @@ def new_day():
         prev_week_range_50q=(-1, ""),
         prev_week_range_25q=(-1, ""),
         prev_week_low=(-1, ""),
-        cme_open_candles_15m=[],
-        asian_candles_15m=[],
-        london_candles_15m=[],
-        early_session_candles_15m=[],
-        premarket_candles_15m=[],
-        ny_am_open_candles_15m=[],
-        ny_am_candles_15m=[],
-        ny_lunch_candles_15m=[],
-        ny_pm_candles_15m=[],
-        ny_pm_close_candles_15m=[],
-        cme_as_candle=(-1, -1, -1, -1, 0, ""),
-        asia_as_candle=(-1, -1, -1, -1, 0, ""),
-        london_as_candle=(-1, -1, -1, -1, 0, ""),
-        early_session_as_candle=(-1, -1, -1, -1, 0, ""),
-        premarket_as_candle=(-1, -1, -1, -1, 0, ""),
-        ny_am_open_as_candle=(-1, -1, -1, -1, 0, ""),
-        ny_am_as_candle=(-1, -1, -1, -1, 0, ""),
-        ny_lunch_as_candle=(-1, -1, -1, -1, 0, ""),
-        ny_pm_as_candle=(-1, -1, -1, -1, 0, ""),
-        ny_pm_close_as_candle=(-1, -1, -1, -1, 0, "")
+        cme=None,
+        asia=None,
+        london=None,
+        early_session=None,
+        premarket=None,
+        ny_am_open=None,
+        ny_am=None,
+        ny_lunch=None,
+        ny_pm=None,
+        ny_pm_close=None,
     )
 
 
 if __name__ == '__main__':
     try:
         d = new_day()
-        marshalled = json.dumps([asdict(d)], indent=4)
-        unmarshalled = [Day.from_json(x) for x in json.loads(marshalled)]
-        print(marshalled, unmarshalled)
+        d.london = new_spa(SessionName.LONDON)
+        marsh_d = json_from_day(d)
+        unm_d = day_from_json(marsh_d)
+        marshalled_list = json_from_days([d])
+        unmarshalled_list = [x for x in json.loads(marshalled_list, object_hook=day_decoder)]
+        print(marshalled_list, unmarshalled_list)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

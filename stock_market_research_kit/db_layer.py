@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from scripts.setup_db import connect_to_db
 from stock_market_research_kit.candle import InnerCandle
-from stock_market_research_kit.day import Day
+from stock_market_research_kit.day import Day, json_from_day, day_from_json
 from stock_market_research_kit.session_trade import SessionTrade, json_from_session_trade, json_from_session_trades, \
     session_trades_from_json
 
@@ -51,7 +51,7 @@ WHERE strategy_name = ? AND profile_symbol = ? ORDER BY pnl DESC""", (strategy_n
 
 
 def upsert_days_to_db(year: int, symbol: str, days: List[Day]):
-    rows = [day.to_db_format(symbol) for day in days]
+    rows = [(symbol, day.date_readable, json_from_day(day)) for day in days]
     conn = connect_to_db(year)
 
     try:
@@ -76,7 +76,7 @@ def select_days(year: int, symbol: str) -> List[Day]:
     days_rows = c.fetchall()
 
     conn.close()
-    return [Day.from_json(x[0]) for x in days_rows]
+    return [day_from_json(x[0]) for x in days_rows]
 
 
 def select_full_days_candles_15m(year, symbol) -> List[InnerCandle]:

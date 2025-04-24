@@ -2,6 +2,8 @@ from typing import TypeAlias, Tuple, List
 
 InnerCandle: TypeAlias = Tuple[float, float, float, float, float, str]
 
+PriceDate: TypeAlias = Tuple[float, str]
+
 
 def as_1_candle(candles: List[InnerCandle]) -> InnerCandle:
     if len(candles) == 0:

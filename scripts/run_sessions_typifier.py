@@ -18,144 +18,144 @@ def typify_sessions(days: List[Day], thr_getter: ThresholdsGetter) -> List[Sessi
     sessions: List[Session] = []
 
     for day in days:
-        if day.cme_as_candle[5] != "":
+        if day.cme:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.cme_as_candle[5],
-                session_end_date=session_end_time(day.cme_as_candle, day.cme_open_candles_15m),
+                session_date=day.cme.session_candle[5],
+                session_end_date=session_end_time(day.cme.session_candle, day.cme.candles_15m),
                 name=SessionName.CME,
-                type=typify_session(SessionName.CME, day.cme_as_candle, thr_getter),
+                type=typify_session(SessionName.CME, day.cme.session_candle, thr_getter),
                 impact=SessionImpact.UNSPECIFIED,
-                open=day.cme_as_candle[0],
-                high=day.cme_as_candle[1],
-                low=day.cme_as_candle[2],
-                close=day.cme_as_candle[3]
+                open=day.cme.session_candle[0],
+                high=day.cme.session_candle[1],
+                low=day.cme.session_candle[2],
+                close=day.cme.session_candle[3]
             ))
 
-        if day.asia_as_candle[5] != "":
+        if day.asia:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.asia_as_candle[5],
-                session_end_date=session_end_time(day.asia_as_candle, day.asian_candles_15m),
+                session_date=day.asia.session_candle[5],
+                session_end_date=session_end_time(day.asia.session_candle, day.asia.candles_15m),
                 name=SessionName.ASIA,
-                type=typify_session(SessionName.ASIA, day.asia_as_candle, thr_getter),
-                impact=define_session_impact(day.asian_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.asia_as_candle[0],
-                high=day.asia_as_candle[1],
-                low=day.asia_as_candle[2],
-                close=day.asia_as_candle[3]
+                type=typify_session(SessionName.ASIA, day.asia.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.asia.session_candle[0],
+                high=day.asia.session_candle[1],
+                low=day.asia.session_candle[2],
+                close=day.asia.session_candle[3]
             ))
 
-        if day.london_as_candle[5] != "":
+        if day.london:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.london_as_candle[5],
-                session_end_date=session_end_time(day.london_as_candle, day.london_candles_15m),
+                session_date=day.london.session_candle[5],
+                session_end_date=session_end_time(day.london.session_candle, day.london.candles_15m),
                 name=SessionName.LONDON,
-                type=typify_session(SessionName.LONDON, day.london_as_candle, thr_getter),
-                impact=define_session_impact(day.london_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.london_as_candle[0],
-                high=day.london_as_candle[1],
-                low=day.london_as_candle[2],
-                close=day.london_as_candle[3]
+                type=typify_session(SessionName.LONDON, day.london.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.london.session_candle[0],
+                high=day.london.session_candle[1],
+                low=day.london.session_candle[2],
+                close=day.london.session_candle[3]
             ))
 
-        if day.early_session_as_candle[5] != "":
+        if day.early_session:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.early_session_as_candle[5],
-                session_end_date=session_end_time(day.early_session_as_candle, day.early_session_candles_15m),
+                session_date=day.early_session.session_candle[5],
+                session_end_date=session_end_time(day.early_session.session_candle, day.early_session.candles_15m),
                 name=SessionName.EARLY,
-                type=typify_session(SessionName.EARLY, day.early_session_as_candle, thr_getter),
-                impact=define_session_impact(day.early_session_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.early_session_as_candle[0],
-                high=day.early_session_as_candle[1],
-                low=day.early_session_as_candle[2],
-                close=day.early_session_as_candle[3]
+                type=typify_session(SessionName.EARLY, day.early_session.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.early_session.session_candle[0],
+                high=day.early_session.session_candle[1],
+                low=day.early_session.session_candle[2],
+                close=day.early_session.session_candle[3]
             ))
 
-        if day.premarket_as_candle[5] != "":
+        if day.premarket:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.premarket_as_candle[5],
-                session_end_date=session_end_time(day.premarket_as_candle, day.premarket_candles_15m),
+                session_date=day.premarket.session_candle[5],
+                session_end_date=session_end_time(day.premarket.session_candle, day.premarket.candles_15m),
                 name=SessionName.PRE,
-                type=typify_session(SessionName.PRE, day.premarket_as_candle, thr_getter),
-                impact=define_session_impact(day.premarket_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.premarket_as_candle[0],
-                high=day.premarket_as_candle[1],
-                low=day.premarket_as_candle[2],
-                close=day.premarket_as_candle[3]
+                type=typify_session(SessionName.PRE, day.premarket.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.premarket.session_candle[0],
+                high=day.premarket.session_candle[1],
+                low=day.premarket.session_candle[2],
+                close=day.premarket.session_candle[3]
             ))
 
-        if day.ny_am_open_as_candle[5] != "":
+        if day.ny_am_open:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.ny_am_open_as_candle[5],
-                session_end_date=session_end_time(day.ny_am_open_as_candle, day.ny_am_open_candles_15m),
+                session_date=day.ny_am_open.session_candle[5],
+                session_end_date=session_end_time(day.ny_am_open.session_candle, day.ny_am_open.candles_15m),
                 name=SessionName.NY_OPEN,
-                type=typify_session(SessionName.NY_OPEN, day.ny_am_open_as_candle, thr_getter),
-                impact=define_session_impact(day.ny_am_open_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.ny_am_open_as_candle[0],
-                high=day.ny_am_open_as_candle[1],
-                low=day.ny_am_open_as_candle[2],
-                close=day.ny_am_open_as_candle[3]
+                type=typify_session(SessionName.NY_OPEN, day.ny_am_open.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.ny_am_open.session_candle[0],
+                high=day.ny_am_open.session_candle[1],
+                low=day.ny_am_open.session_candle[2],
+                close=day.ny_am_open.session_candle[3]
             ))
 
-        if day.ny_am_as_candle[5] != "":
+        if day.ny_am:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.ny_am_as_candle[5],
-                session_end_date=session_end_time(day.ny_am_as_candle, day.ny_am_candles_15m),
+                session_date=day.ny_am.session_candle[5],
+                session_end_date=session_end_time(day.ny_am.session_candle, day.ny_am.candles_15m),
                 name=SessionName.NY_AM,
-                type=typify_session(SessionName.NY_AM, day.ny_am_as_candle, thr_getter),
-                impact=define_session_impact(day.ny_am_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.ny_am_as_candle[0],
-                high=day.ny_am_as_candle[1],
-                low=day.ny_am_as_candle[2],
-                close=day.ny_am_as_candle[3]
+                type=typify_session(SessionName.NY_AM, day.ny_am.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.ny_am.session_candle[0],
+                high=day.ny_am.session_candle[1],
+                low=day.ny_am.session_candle[2],
+                close=day.ny_am.session_candle[3]
             ))
 
-        if day.ny_lunch_as_candle[5] != "":
+        if day.ny_lunch:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.ny_lunch_as_candle[5],
-                session_end_date=session_end_time(day.ny_lunch_as_candle, day.ny_lunch_candles_15m),
+                session_date=day.ny_lunch.session_candle[5],
+                session_end_date=session_end_time(day.ny_lunch.session_candle, day.ny_lunch.candles_15m),
                 name=SessionName.NY_LUNCH,
-                type=typify_session(SessionName.NY_LUNCH, day.ny_lunch_as_candle, thr_getter),
-                impact=define_session_impact(day.ny_lunch_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.ny_lunch_as_candle[0],
-                high=day.ny_lunch_as_candle[1],
-                low=day.ny_lunch_as_candle[2],
-                close=day.ny_lunch_as_candle[3]
+                type=typify_session(SessionName.NY_LUNCH, day.ny_lunch.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.ny_lunch.session_candle[0],
+                high=day.ny_lunch.session_candle[1],
+                low=day.ny_lunch.session_candle[2],
+                close=day.ny_lunch.session_candle[3]
             ))
 
-        if day.ny_pm_as_candle[5] != "":
+        if day.ny_pm:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.ny_pm_as_candle[5],
-                session_end_date=session_end_time(day.ny_pm_as_candle, day.ny_pm_candles_15m),
+                session_date=day.ny_pm.session_candle[5],
+                session_end_date=session_end_time(day.ny_pm.session_candle, day.ny_pm.candles_15m),
                 name=SessionName.NY_PM,
-                type=typify_session(SessionName.NY_PM, day.ny_pm_as_candle, thr_getter),
-                impact=define_session_impact(day.ny_pm_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.ny_pm_as_candle[0],
-                high=day.ny_pm_as_candle[1],
-                low=day.ny_pm_as_candle[2],
-                close=day.ny_pm_as_candle[3]
+                type=typify_session(SessionName.NY_PM, day.ny_pm.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.ny_pm.session_candle[0],
+                high=day.ny_pm.session_candle[1],
+                low=day.ny_pm.session_candle[2],
+                close=day.ny_pm.session_candle[3]
             ))
 
-        if day.ny_pm_close_as_candle[5] != "":
+        if day.ny_pm_close:
             sessions.append(Session(
                 day_date=day.date_readable,
-                session_date=day.ny_pm_close_as_candle[5],
-                session_end_date=session_end_time(day.ny_pm_close_as_candle, day.ny_pm_close_candles_15m),
+                session_date=day.ny_pm_close.session_candle[5],
+                session_end_date=session_end_time(day.ny_pm_close.session_candle, day.ny_pm_close.candles_15m),
                 name=SessionName.NY_CLOSE,
-                type=typify_session(SessionName.NY_CLOSE, day.ny_pm_close_as_candle, thr_getter),
-                impact=define_session_impact(day.ny_pm_close_candles_15m, day.candles_15m, day.candle_1d),
-                open=day.ny_pm_close_as_candle[0],
-                high=day.ny_pm_close_as_candle[1],
-                low=day.ny_pm_close_as_candle[2],
-                close=day.ny_pm_close_as_candle[3]
+                type=typify_session(SessionName.NY_CLOSE, day.ny_pm_close.session_candle, thr_getter),
+                impact=SessionImpact.UNSPECIFIED,
+                open=day.ny_pm_close.session_candle[0],
+                high=day.ny_pm_close.session_candle[1],
+                low=day.ny_pm_close.session_candle[2],
+                close=day.ny_pm_close.session_candle[3]
             ))
 
     return sessions

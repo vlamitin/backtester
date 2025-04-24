@@ -1,8 +1,9 @@
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
+from stock_market_research_kit.candle import InnerCandle, PriceDate
 from utils.date_utils import now_utc_datetime, to_date_str, start_of_day, cme_open_from_to, asia_from_to, \
     london_from_to, early_from_to, pre_from_to, \
     open_from_to, nyam_from_to, lunch_from_to, nypm_from_to, close_from_to
@@ -159,6 +160,114 @@ def get_next_session_mock(session_name: SessionName, date_str: str) -> Optional[
         high=0,
         low=0,
         close=0
+    )
+
+
+class LevelAction(Enum):
+    UNSPECIFIED = 'UNSPECIFIED'
+    BREAK = 'BREAK'  # пробой и закрытие за уровнем (больше чем на threshold в допустим 0.1% Open Price)
+    FAKEBREAK = 'FAKEBREAK'
+    BOUNCE = 'BOUNCE'  # отскок прям от уровня (или +/- пару пипсов)
+    TURNAWAY = 'TURNAWAY'  # отскок не доходя больше чем пару пипсов, но меньше чем threshold (0.1% от Open Price напр)
+    STALL = 'STALL'  # коснулись +/- уровня и зависли на нём
+    PASSTHROUGH = 'PASSTHROUGH'  # без замедления прошли
+    IGNORE = 'IGNORE'  # не дошли к уровню ближе чем на TURNAWAY threshold
+
+
+@dataclass
+class SessionPriceAction:
+    name: SessionName
+    candles_15m: List[InnerCandle]
+    session_candle: InnerCandle
+
+    do: PriceDate
+    true_do: PriceDate  # NY midnight
+    wo: PriceDate
+    true_wo: PriceDate  # monday 6pm NY
+    mo: PriceDate
+    true_mo: PriceDate  # 2nd monday of month
+    yo: PriceDate
+    true_yo: PriceDate  # 1st of april
+
+    prev_ny_close: PriceDate  # 16:00 NY
+    prev_cme_close: PriceDate  # 17:00 NY, it's also called True daily close
+
+    week_high: PriceDate  # все week экстремумы считаются от предыдущего дня
+    week_range_75q: PriceDate
+    week_range_50q: PriceDate
+    week_range_25q: PriceDate
+    week_low: PriceDate
+
+    def level_action(self, level: float) -> LevelAction:
+        threshold = 0.001  # 0.1%
+        pip_slack = 0.0002  # пара пипсов (условно)
+
+        if len(self.candles_15m):
+            return LevelAction.UNSPECIFIED
+
+        open_price = self.session_candle[0]
+        close_price = self.session_candle[3]
+
+        def within_pip(price):
+            return abs(price - level) <= pip_slack
+
+        def within_turnaway_range(price):
+            return pip_slack < abs(price - level) <= (open_price * threshold)
+
+        broke_above = any(c[3] > level + open_price * threshold for c in self.candles_15m)
+        broke_below = any(c[3] < level - open_price * threshold for c in self.candles_15m)
+
+        if broke_above or broke_below:
+            if level > open_price and close_price < level:  # пробили вверх и закрылись ниже
+                return LevelAction.FAKEBREAK
+            elif level < open_price and close_price > level:  # пробили вниз и закрылись выше
+                return LevelAction.FAKEBREAK
+            else:
+                return LevelAction.BREAK
+
+        if any(within_pip(c[1]) or within_pip(c[2]) for c in self.candles_15m):
+            if level < open_price and close_price < open_price:  # отскок вниз
+                return LevelAction.BOUNCE
+            elif level > open_price and close_price > open_price:  # отскок вверх
+                return LevelAction.BOUNCE
+
+        if any(within_turnaway_range(c[1]) or within_turnaway_range(c[2]) for c in self.candles_15m):
+            return LevelAction.TURNAWAY
+
+        touching_count = sum(1 for c in self.candles_15m if c[2] <= level <= c[1])
+        if touching_count >= len(self.candles_15m) // 2:
+            return LevelAction.STALL
+
+        if broke_above or broke_below:
+            return LevelAction.PASSTHROUGH
+
+        min_dist = min(abs(c[1] - level) for c in self.candles_15m)
+        if min_dist > open_price * threshold:
+            return LevelAction.IGNORE
+
+        return LevelAction.UNSPECIFIED
+
+
+def new_spa(session_name: SessionName) -> SessionPriceAction:
+    return SessionPriceAction(
+        name=session_name,
+        candles_15m=[],
+        session_candle=(-1, -1, -1, -1, -1, ""),
+        do=(-1, ""),
+        true_do=(-1, ""),
+        wo=(-1, ""),
+        true_wo=(-1, ""),
+        mo=(-1, ""),
+        true_mo=(-1, ""),
+        yo=(-1, ""),
+        true_yo=(-1, ""),
+        prev_ny_close=(-1, ""),
+        prev_cme_close=(-1, ""),
+        week_high=(-1, ""),
+        week_range_75q=(-1, ""),
+        week_range_50q=(-1, ""),
+        week_range_25q=(-1, ""),
+        week_low=(-1, ""),
     )
 
 
