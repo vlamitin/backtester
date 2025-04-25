@@ -10,10 +10,12 @@ from scripts.run_sessions_typifier import typify_sessions, typify_session
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.db_layer import upsert_trades_to_db, select_closed_trades, select_last_day_candles, \
     select_open_trades_by_strategies, select_sorted_profiles
-from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy, \
-    session_2024_thresholds_strategy, session_2024_thresholds_strict_strategy, session_2024_thresholds_loose_strategy
+from stock_market_research_kit.notifier_strategy import btc_naive_strategy01, NotifierStrategy, \
+    thr2024_p70_safe_stops_strategy05, thr2024_strict_strategy03, thr2024_loose_strategy04, \
+    btc_naive_p30_safe_stops_strategy_strategy11, thr2024_p30_safe_stops_strategy07, \
+    thr2024_strict_p70_safe_stops_strategy10, thr2024_loose_p70_safe_stops_strategy06
 from stock_market_research_kit.session import get_next_session_mock
-from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
+from stock_market_research_kit.session_quantiles import quantile_session_year_thr
 from stock_market_research_kit.session_trade import session_trade_from_json
 from stock_market_research_kit.tg_notifier import post_signal_notification
 from utils.date_utils import to_date_str, log_warn, to_utc_datetime, log_info_ny, log_warn_ny
@@ -83,11 +85,11 @@ def look_for_new_trade(symbol, time_till: datetime, strategy: NotifierStrategy):
             profiles_map[predict_session][predict_type] = []
         profiles_map[predict_session][predict_type].append(sub_map[predict_session][predict_type])
 
-    new_trades = look_for_entry_backtest([*day_sessions, predicted_session_mock], profiles_map, strategy.sl_percent,
-                                         strategy.tp_percent)
+    new_trades = look_for_entry_backtest([*day_sessions, predicted_session_mock], profiles_map, strategy.slg,
+                                         strategy.tpg)
 
     if len(new_trades) == 0:
-        log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value} for '{strategy.name[0:2]}...'")
+        log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value} for '{strategy.name[0:3]}...'")
         return
 
     # TODO пока выбираю из всех найденных сделку с наивысшим guess_rate
@@ -341,32 +343,22 @@ if __name__ == "__main__":
         update_candles(["AVAXUSDT"])
         update_candles(["CRVUSDT"])
         run_notifier([
-            ("BTCUSDT", btc_naive_strategy),
-            ("AAVEUSDT", btc_naive_strategy),
-            ("AVAXUSDT", btc_naive_strategy),
-            ("CRVUSDT", btc_naive_strategy),
-            ("BTCUSDT", session_2024_thresholds_strategy(
-                quantile_per_session_year_thresholds("BTCUSDT", 2024))),
-            ("AAVEUSDT", session_2024_thresholds_strategy(
-                quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
-            ("AVAXUSDT", session_2024_thresholds_strategy(
-                quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
-            ("CRVUSDT", session_2024_thresholds_strategy(
-                quantile_per_session_year_thresholds("CRVUSDT", 2024))),
-            ("BTCUSDT", session_2024_thresholds_strict_strategy(
-                quantile_per_session_year_thresholds("BTCUSDT", 2024))),
-            ("AAVEUSDT", session_2024_thresholds_strict_strategy(
-                quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
-            ("AVAXUSDT", session_2024_thresholds_strict_strategy(
-                quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
-            ("CRVUSDT", session_2024_thresholds_strict_strategy(
-                quantile_per_session_year_thresholds("CRVUSDT", 2024))),
-            ("BTCUSDT", session_2024_thresholds_loose_strategy(
-                quantile_per_session_year_thresholds("BTCUSDT", 2024))),
-            ("AAVEUSDT", session_2024_thresholds_loose_strategy(
-                quantile_per_session_year_thresholds("AAVEUSDT", 2024))),
-            ("AVAXUSDT", session_2024_thresholds_loose_strategy(
-                quantile_per_session_year_thresholds("AVAXUSDT", 2024))),
+            ("BTCUSDT", btc_naive_p30_safe_stops_strategy_strategy11(quantile_session_year_thr("BTCUSDT", 2024))),
+            ("AAVEUSDT", btc_naive_p30_safe_stops_strategy_strategy11(quantile_session_year_thr("AAVEUSDT", 2024))),
+            ("AVAXUSDT", btc_naive_p30_safe_stops_strategy_strategy11(quantile_session_year_thr("AVAXUSDT", 2024))),
+            ("CRVUSDT", btc_naive_p30_safe_stops_strategy_strategy11(quantile_session_year_thr("CRVUSDT", 2024))),
+            ("BTCUSDT", thr2024_p30_safe_stops_strategy07(quantile_session_year_thr("BTCUSDT", 2024))),
+            ("AAVEUSDT", thr2024_p30_safe_stops_strategy07(quantile_session_year_thr("AAVEUSDT", 2024))),
+            ("AVAXUSDT", thr2024_p30_safe_stops_strategy07(quantile_session_year_thr("AVAXUSDT", 2024))),
+            ("CRVUSDT", thr2024_p30_safe_stops_strategy07(quantile_session_year_thr("CRVUSDT", 2024))),
+            ("BTCUSDT", thr2024_strict_p70_safe_stops_strategy10(quantile_session_year_thr("BTCUSDT", 2024))),
+            ("AAVEUSDT", thr2024_strict_p70_safe_stops_strategy10(quantile_session_year_thr("AAVEUSDT", 2024))),
+            ("AVAXUSDT", thr2024_strict_p70_safe_stops_strategy10(quantile_session_year_thr("AVAXUSDT", 2024))),
+            ("CRVUSDT", thr2024_strict_p70_safe_stops_strategy10(quantile_session_year_thr("CRVUSDT", 2024))),
+            ("BTCUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("BTCUSDT", 2024))),
+            ("AAVEUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("AAVEUSDT", 2024))),
+            ("AVAXUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("AVAXUSDT", 2024))),
+            ("CRVUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("CRVUSDT", 2024))),
         ])
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")

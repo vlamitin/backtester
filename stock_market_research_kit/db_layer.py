@@ -24,11 +24,11 @@ ON CONFLICT (strategy_name, profile_key, profile_symbol, profile_year)
 DO UPDATE SET win = excluded.win, lose = excluded.lose, guessed = excluded.guessed, missed = excluded.missed, pnl = excluded.pnl, trades = excluded.trades""",
                       rows)
         conn.commit()
-        print(f"Success upsert {len(rows)} backtested_profiles for symbol {smb} in strategy '{strategy_name[0:2]}...'")
+        print(f"Success upsert {len(rows)} backtested_profiles for symbol {smb} in strategy '{strategy_name[0:3]}...'")
         return True
     except sqlite3.ProgrammingError as e:
         print(
-            f"Error upsert {len(rows)} backtested_profiles for symbol {smb} in strategy '{strategy_name[0:2]}...': {e}")
+            f"Error upsert {len(rows)} backtested_profiles for symbol {smb} in strategy '{strategy_name[0:3]}...': {e}")
         return False
 
 

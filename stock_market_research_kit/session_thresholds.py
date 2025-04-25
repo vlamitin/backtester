@@ -13,6 +13,7 @@ class ThresholdsCalcMethod(Enum):
     EXPERT = 'EXPERT'
     # сравниваем с этими же сессиями других дней
     SESSION_ALL = 'SESSION_ALL'
+    SESSION_YEAR_2022 = 'SESSION_YEAR_2022'
     SESSION_YEAR_2023 = 'SESSION_YEAR_2023'
     SESSION_YEAR_2024 = 'SESSION_YEAR_2024'
     SESSION_YEAR_2025 = 'SESSION_YEAR_2025'
@@ -54,8 +55,7 @@ class SessionThresholds:
 
 
 ThresholdsGetter: TypeAlias = Callable[[SessionName, InnerCandle], SessionThresholds]
-SLGetter: TypeAlias = Callable[[SessionName, InnerCandle], float]
-TPGetter: TypeAlias = Callable[[SessionName, InnerCandle], float]
+SGetter: TypeAlias = Callable[[SessionName, InnerCandle, str], float]  # str is direction: 'UP' or 'DOWN'
 
 btc_universal_threshold = SessionThresholds(
     session=SessionName.UNSPECIFIED,

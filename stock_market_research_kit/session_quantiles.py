@@ -6,7 +6,7 @@ from stock_market_research_kit.session import SessionName
 from stock_market_research_kit.session_thresholds import SessionThresholds, threshold_session_year
 
 
-def quantile_per_session_year_thresholds(symbol: str, year: int) -> Dict[SessionName, SessionThresholds]:
+def quantile_session_year_thr(symbol: str, year: int) -> Dict[SessionName, SessionThresholds]:
     start_time = time.perf_counter()
 
     days = select_days(year, symbol)
@@ -42,10 +42,10 @@ def quantile_per_session_year_thresholds(symbol: str, year: int) -> Dict[Session
 
 if __name__ == "__main__":
     try:
-        res_btc = quantile_per_session_year_thresholds("BTCUSDT", 2024)
-        res_aave = quantile_per_session_year_thresholds("AAVEUSDT", 2024)
-        res_avax = quantile_per_session_year_thresholds("AVAXUSDT", 2024)
-        res_crv = quantile_per_session_year_thresholds("CRVUSDT", 2024)
+        res_btc = quantile_session_year_thr("BTCUSDT", 2024)
+        res_aave = quantile_session_year_thr("AAVEUSDT", 2024)
+        res_avax = quantile_session_year_thr("AVAXUSDT", 2024)
+        res_crv = quantile_session_year_thr("CRVUSDT", 2024)
         print(res_crv, res_btc)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")

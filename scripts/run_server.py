@@ -6,7 +6,7 @@ from scripts.run_sessions_sequencer import fill_profiles
 from scripts.run_sessions_typifier import typify_sessions
 from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import json_from_sessions
-from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
+from stock_market_research_kit.session_quantiles import quantile_session_year_thr
 from stock_market_research_kit.session_thresholds import btc_universal_threshold
 
 
@@ -70,7 +70,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
-        symbol_thresholds = quantile_per_session_year_thresholds("CRVUSDT", 2024)
+        symbol_thresholds = quantile_session_year_thr("CRVUSDT", 2024)
         _, _, profiles = fill_profiles(
             "CRVUSDT", 2024, lambda session_name, _: symbol_thresholds[session_name])
         server = HTTPServer(('localhost', 8000), RequestHandler)

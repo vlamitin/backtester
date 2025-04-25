@@ -420,10 +420,10 @@ if __name__ == "__main__":
             "AVAXUSDT",
         ]:
             series_years = [
-                2021,
-                2022,
-                2023,
-                2024,
+                # 2021,
+                # 2022,
+                # 2023,
+                # 2024,
                 2025
             ]
             main(smb, series_years)

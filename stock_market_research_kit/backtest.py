@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
+from stock_market_research_kit.session_thresholds import SGetter
 from stock_market_research_kit.session_trade import SessionTrade
 
 
@@ -25,8 +26,8 @@ class Backtest:
 
     test_symbol: str
     test_year: int
-    sl_percent: float
-    tp_percent: float
+    slg: SGetter
+    tpg: SGetter
 
     trades: int
     win: int
