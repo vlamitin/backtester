@@ -6,6 +6,7 @@ from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.day import Day, json_from_day, day_from_json
 from stock_market_research_kit.session_trade import SessionTrade, json_from_session_trade, json_from_session_trades, \
     session_trades_from_json
+from utils.date_utils import log_warn_ny
 
 
 def upsert_profiles_to_db(strategy_name: str, smb: str, profiles: List[dict]):
@@ -221,7 +222,7 @@ def select_open_trades_by_strategies(year: int, strategy_names: List[str]):
     return rows
 
 
-def select_last_day_candles(year, symbol):
+def select_last_day_candles(year, time_till: str, symbol):
     connection = connect_to_db(year)
     c = connection.cursor()
 
@@ -230,7 +231,7 @@ def select_last_day_candles(year, symbol):
 
     c.execute("""WITH last_row_date_ts AS (
     SELECT date_ts last_row_date FROM raw_candles
-    WHERE symbol = ? AND period = ?
+    WHERE symbol = ? AND period = ? AND strftime('%s', date_ts) + 0 < strftime('%s', ?) + 0
     ORDER BY strftime('%s', date_ts) DESC
     LIMIT 1
 ),
@@ -241,10 +242,12 @@ def select_last_day_candles(year, symbol):
          FROM last_row_date_ts
      )
 SELECT open, high, low, close, volume, date_ts FROM raw_candles
-WHERE strftime('%s', date_ts) + 0 BETWEEN (SELECT start_time_sec FROM time_range) AND (SELECT end_time_sec FROM time_range)
-    AND symbol = ? AND period = ?""", (symbol, "15m", symbol, "15m"))
+WHERE strftime('%s', date_ts) + 0 BETWEEN (SELECT start_time_sec FROM time_range) + 0 AND (SELECT end_time_sec FROM time_range) + 0
+    AND symbol = ? AND period = ?""", (symbol, "15m", time_till, symbol, "15m"))
     rows_15m = c.fetchall()
     connection.close()
+    if len(rows_15m) > 96:
+        log_warn_ny(f"For symbol {symbol} {len(rows_15m)} 15m items found!")
     if len(rows_15m) == 0:
         print(f"Symbol {symbol} 15m not found in DB")
         return []

@@ -1,25 +1,22 @@
 import time
-from datetime import datetime, timedelta
-from time import sleep
+from datetime import datetime, timedelta, time as dtime
 from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
 from scripts.run_day_markuper import markup_days
 from scripts.run_series_raw_loader import update_candle_from_binance
-from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest, get_backtested_profiles
-from scripts.run_sessions_sequencer import fill_profiles, get_next_session_chances
+from scripts.run_sessions_backtester import look_for_entry_backtest, look_for_close_backtest
 from scripts.run_sessions_typifier import typify_sessions, typify_session
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.db_layer import upsert_trades_to_db, select_closed_trades, select_last_day_candles, \
     select_open_trades_by_strategies, select_sorted_profiles
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy, NotifierStrategy, \
     session_2024_thresholds_strategy, session_2024_thresholds_strict_strategy, session_2024_thresholds_loose_strategy
-from stock_market_research_kit.session import get_next_session_mock, get_from_to, SessionName
+from stock_market_research_kit.session import get_next_session_mock
 from stock_market_research_kit.session_quantiles import quantile_per_session_year_thresholds
 from stock_market_research_kit.session_trade import session_trade_from_json
-from stock_market_research_kit.tg_notifier import post_signal_notification, post_stat_notification
-from utils.date_utils import now_ny_datetime, now_utc_datetime, \
-    start_of_day, to_date_str, log_warn, to_utc_datetime, log_info_ny, log_warn_ny
+from stock_market_research_kit.tg_notifier import post_signal_notification
+from utils.date_utils import to_date_str, log_warn, to_utc_datetime, log_info_ny, log_warn_ny
 
 
 def to_trade_profile(backtest_profile_key):
@@ -42,10 +39,10 @@ def to_trade_profile(backtest_profile_key):
     }
 
 
-def look_for_new_trade(symbol, strategy: NotifierStrategy):
-    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
+def look_for_new_trade(symbol, time_till: datetime, strategy: NotifierStrategy):
+    now_year = time_till.year  # TODO не будет работать при смене года
 
-    candles_15m = select_last_day_candles(now_year, symbol)
+    candles_15m = select_last_day_candles(now_year, to_date_str(time_till), symbol)
     if len(candles_15m) == 0:
         log_warn("0 candles 15m in look_for_new_trade")
         return
@@ -214,7 +211,7 @@ def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy
             trades_with_candles[-1].append(row)
         else:
             trades_with_candles.append([row])
-
+    trades_with_candles = sorted(trades_with_candles, key=lambda x: x[0][0])
     for rows in trades_with_candles:
         row_id, row_strategy_name, row_trade_open_date_utc, row_symbol, row_trade_json = rows[0][0:5]
         session_trade = session_trade_from_json(row_trade_json)
@@ -250,36 +247,36 @@ def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy
 """)
 
 
-def maybe_post_session_stat(symbols, symbol_year_profiles):
-    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
-
-    for symbol in symbols:
-        candles_15m = select_last_day_candles(now_year, symbol)
-        if len(candles_15m) == 0:
-            log_warn("0 candles 15m in look_for_new_trade")
-            return
-
-        days = markup_days(candles_15m)
-
-        day_sessions = typify_sessions([days[-1]])
-        if len(day_sessions) == 0:
-            log_warn("len(day_sessions) == 0!")
-            continue
-
-        chances = get_next_session_chances(
-            [f"{x.name.value}__{x.type.value}" for x in day_sessions],
-            symbol_year_profiles[f"{symbol}__2024"][0]
-        )
-        if len(chances['variants']) == 0:
-            continue
-
-        from_to = get_from_to(SessionName(chances['next_session']), to_date_str(start_of_day(now_utc_datetime())))
-        variants = "\n".join(chances['variants'])
-        post_stat_notification(f"""Next <b>{symbol}</b> session is <b>{chances['next_session']}</b>
-(from {from_to[0]} to {from_to[1]} UTC), chances based on 2024:
-
-{variants}
-""")
+# def maybe_post_session_stat(symbols, symbol_year_profiles):
+#     now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
+#
+#     for symbol in symbols:
+#         candles_15m = select_last_day_candles(now_year, symbol)
+#         if len(candles_15m) == 0:
+#             log_warn("0 candles 15m in look_for_new_trade")
+#             return
+#
+#         days = markup_days(candles_15m)
+#
+#         day_sessions = typify_sessions([days[-1]])
+#         if len(day_sessions) == 0:
+#             log_warn("len(day_sessions) == 0!")
+#             continue
+#
+#         chances = get_next_session_chances(
+#             [f"{x.name.value}__{x.type.value}" for x in day_sessions],
+#             symbol_year_profiles[f"{symbol}__2024"][0]
+#         )
+#         if len(chances['variants']) == 0:
+#             continue
+#
+#         from_to = get_from_to(SessionName(chances['next_session']), to_date_str(start_of_day(now_utc_datetime())))
+#         variants = "\n".join(chances['variants'])
+#         post_stat_notification(f"""Next <b>{symbol}</b> session is <b>{chances['next_session']}</b>
+# (from {from_to[0]} to {from_to[1]} UTC), chances based on 2024:
+#
+# {variants}
+# """)
 
 
 def update_candles(symbols):
@@ -287,63 +284,52 @@ def update_candles(symbols):
         update_candle_from_binance(symbol)
 
 
+def ny_time_generator(start_date: datetime, times_ny: list[dtime]):
+    current_date = start_date.astimezone(ZoneInfo("America/New_York"))
+    while True:
+        if current_date.isoweekday() not in [6, 7]:
+            for t in times_ny:
+                dt_ny = datetime.combine(current_date.date(), t, tzinfo=ZoneInfo("America/New_York"))
+                if dt_ny < start_date:
+                    continue
+                dt_utc = dt_ny.astimezone(ZoneInfo("UTC"))
+                now_utc = datetime.now(ZoneInfo("UTC"))
+                if dt_utc > now_utc:
+                    seconds_to_wait = (dt_utc - now_utc).total_seconds()
+                    time.sleep(seconds_to_wait)
+                yield dt_utc
+        current_date += timedelta(days=1)
+
+
 def run_notifier(symbols_with_strategy):
     unique_symbols = list(set([x[0] for x in symbols_with_strategy]))
-    # strategy_symbol_year_profiles = {}
-    # for symbol, strategy in symbols_with_strategy:
-    #     if strategy.name not in strategy_symbol_year_profiles:
-    #         strategy_symbol_year_profiles[strategy.name] = {}
-    #     for year in strategy.profile_years:
-    #         key = f"{symbol}__{year}"
-    #         if key not in strategy_symbol_year_profiles[strategy.name]:
-    #             strategy_symbol_year_profiles[strategy.name][key] = fill_profiles(
-    #                 symbol, year, strategy.thresholds_getter)
 
-    log_info_ny(f"Notifier preparation took {(time.perf_counter() - start_time):.6f} seconds")
+    times_of_day = [
+        dtime(7, 0),  # early open
+        dtime(8, 0),  # pre open
+        dtime(9, 30),  # ny open
+        dtime(10, 0),  # ny am open
+        dtime(12, 0),  # ny lunch start
+        dtime(13, 0),  # ny pm open
+        dtime(15, 0),  # ny close start
+        dtime(16, 0),  # ny close
+    ]
+    gen = ny_time_generator(
+        # datetime(2025, 4, 23, 6, 58, tzinfo=ZoneInfo("America/New_York")),
+        datetime.now(ZoneInfo("America/New_York")),
+        times_of_day
+    )
 
-    prev_time = now_ny_datetime()
-    first_iteration = True
-
-    # prev_time = datetime(prev_time.year, prev_time.month, 14, 6, 58, tzinfo=ZoneInfo("America/New_York"))
     while True:
-        if not first_iteration:
-            sleep(60 - now_ny_datetime().second)
-
-        first_iteration = False
-        now_time = now_ny_datetime()
-        if now_time.minute % 15 == 0:
-            log_info_ny(f"heartbeat at {now_time}")
-
-        if now_time.isoweekday() in [6, 7]:
-            prev_time = now_time
-            continue
-
-        start_early = datetime(now_time.year, now_time.month, now_time.day, 7, 0, tzinfo=ZoneInfo("America/New_York"))
-        end_early = datetime(now_time.year, now_time.month, now_time.day, 8, 0, tzinfo=ZoneInfo("America/New_York"))
-        end_pre = datetime(now_time.year, now_time.month, now_time.day, 9, 30, tzinfo=ZoneInfo("America/New_York"))
-        end_open = datetime(now_time.year, now_time.month, now_time.day, 10, 0, tzinfo=ZoneInfo("America/New_York"))
-        end_nyam = datetime(now_time.year, now_time.month, now_time.day, 12, 0, tzinfo=ZoneInfo("America/New_York"))
-        end_lunch = datetime(now_time.year, now_time.month, now_time.day, 13, 0, tzinfo=ZoneInfo("America/New_York"))
-        end_nypm = datetime(now_time.year, now_time.month, now_time.day, 15, 0, tzinfo=ZoneInfo("America/New_York"))
-        end_close = datetime(now_time.year, now_time.month, now_time.day, 16, 0, tzinfo=ZoneInfo("America/New_York"))
-
-        if (prev_time < start_early <= now_time
-                or prev_time < end_early <= now_time
-                or prev_time < end_pre <= now_time
-                or prev_time < end_open <= now_time
-                or prev_time < end_nyam <= now_time
-                or prev_time < end_lunch <= now_time
-                or prev_time < end_nypm <= now_time
-                or prev_time < end_close <= now_time):
-            handling_start = time.perf_counter()
-            update_candles(unique_symbols)
-            handle_open_trades(symbols_with_strategy)
-            for symbol, strategy in symbols_with_strategy:
-                look_for_new_trade(symbol, strategy)
-            # maybe_post_session_stat(symbol_strategy_backtested_profiles_tuples)
-            log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - handling_start):.6f} seconds")
-
-        prev_time = now_time
+        next_dt_utc = next(gen)
+        print(f"handling next_dt_utc {next_dt_utc}")
+        handling_start = time.perf_counter()
+        update_candles(unique_symbols)
+        handle_open_trades(symbols_with_strategy)
+        for symbol, strategy in symbols_with_strategy:
+            look_for_new_trade(symbol, next_dt_utc, strategy)
+        # maybe_post_session_stat(symbol_strategy_backtested_profiles_tuples)
+        log_info_ny(f"Candles&Trades handling took {(time.perf_counter() - handling_start):.6f} seconds")
 
 
 if __name__ == "__main__":
