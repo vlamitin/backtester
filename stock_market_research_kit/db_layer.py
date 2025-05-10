@@ -32,11 +32,11 @@ DO UPDATE SET win = excluded.win, lose = excluded.lose, guessed = excluded.guess
         return False
 
 
-def select_sorted_profiles(strategy_name: str, symbol: str):
+def select_sorted_profiles(strategy_name_first_letters: str, symbol: str):
     conn = connect_to_db(2025)  # hardcoded 2025
     c = conn.cursor()
     c.execute("""SELECT profile_year, profile_key, win, lose, guessed, missed, pnl, trades FROM backtested_profiles
-WHERE strategy_name = ? AND profile_symbol = ? ORDER BY pnl DESC""", (strategy_name, symbol))
+WHERE strategy_name LIKE ? AND profile_symbol = ? ORDER BY pnl DESC""", (f"{strategy_name_first_letters}%", symbol))
     rows = c.fetchall()
     conn.close()
     return [{

@@ -1,11 +1,12 @@
 import json
 from dataclasses import dataclass, asdict
+from datetime import timedelta
 from enum import Enum
 from typing import List, Optional
 
 from stock_market_research_kit.candle import InnerCandle, PriceDate
-from stock_market_research_kit.session import SessionName, SessionPriceAction, new_spa
-from utils.date_utils import to_utc_datetime
+from stock_market_research_kit.session import SessionName, SessionPriceAction, new_spa, sessions_in_order
+from utils.date_utils import to_utc_datetime, to_date_str
 
 
 @dataclass
@@ -63,7 +64,7 @@ class Day:
     ny_pm: Optional[SessionPriceAction]  # 13:00 - 15:00 NY time
     ny_pm_close: Optional[SessionPriceAction]  # 15:00 - 16:00 NY time
 
-    def day_candles_before(self, date: str):
+    def candles_before_date(self, date: str):
         if date == "":
             raise ValueError("day_candles_before date is empty!")
         result = []
@@ -75,36 +76,41 @@ class Day:
                 break
         return result
 
+    def candles_before_session(self, session_name: SessionName):
+        session_index = sessions_in_order.index(session_name)
+        if session_index == 0:
+            return []
+        prev_spa = self.spa_by_session(sessions_in_order[session_index - 1])
+        return self.candles_before_date(
+            to_date_str(to_utc_datetime(prev_spa.candles_15m[-1][5]) + timedelta(minutes=15)))
+
     def candles_by_session(self, session_name: SessionName) -> List[InnerCandle]:
+        spa = self.spa_by_session(session_name)
+        return [] if not spa else spa.candles_15m
+
+    def spa_by_session(self, session_name: SessionName) -> Optional[SessionPriceAction]:
         match session_name:
             case SessionName.CME:
-                return [] if not self.cme else self.cme.candles_15m
+                return self.cme
             case SessionName.ASIA:
-                return [] if not self.asia else self.asia.candles_15m
+                return self.asia
             case SessionName.LONDON:
-                return [] if not self.london else self.london.candles_15m
+                return self.london
             case SessionName.EARLY:
-                return [] if not self.early_session else self.early_session.candles_15m
+                return self.early_session
             case SessionName.PRE:
-                return [] if not self.premarket else self.premarket.candles_15m
+                return self.premarket
             case SessionName.NY_OPEN:
-                return [] if not self.ny_am_open else self.ny_am_open.candles_15m
+                return self.ny_am_open
             case SessionName.NY_AM:
-                return [] if not self.ny_am else self.ny_am.candles_15m
+                return self.ny_am
             case SessionName.NY_LUNCH:
-                return [] if not self.ny_lunch else self.ny_lunch.candles_15m
+                return self.ny_lunch
             case SessionName.NY_PM:
-                return [] if not self.ny_pm else self.ny_pm.candles_15m
+                return self.ny_pm
             case SessionName.NY_CLOSE:
-                return [] if not self.ny_pm_close else self.ny_pm_close.candles_15m
-        return []
-
-    @classmethod
-    def from_json(cls, data_str: str):
-        data_dict = json.loads(data_str)
-        known_fields = set(cls.__dataclass_fields__.keys())  # Get dataclass fields
-        filtered_data = {k: v for k, v in data_dict.items() if k in known_fields}
-        return cls(**filtered_data)
+                return self.ny_pm_close
+        return None
 
 
 def day_decoder(dct):

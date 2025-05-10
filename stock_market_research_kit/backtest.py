@@ -21,13 +21,9 @@ class StrategyTrades:
 class Backtest:
     profiles_symbol: str
     profiles_year: int
-    profiles_min_chance: int
-    profiles_min_times: int
 
     test_symbol: str
     test_year: int
-    slg: SGetter
-    tpg: SGetter
 
     trades: int
     win: int

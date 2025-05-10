@@ -2,7 +2,8 @@
 
 PERIOD="15m"
 YEAR="2025"
-SYMBOLS=("BTCUSDT" "AAVEUSDT" "CRVUSDT" "AVAXUSDT")
+SYMBOLS=("SUSHIUSDT" "1INCHUSDT" "COMPUSDT" "XLMUSDT" "XMRUSDT")
+#SYMBOLS=("UNIUSDT" "LTCUSDT" "LINKUSDT")
 
 #https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2025-02.zip
 
@@ -11,7 +12,7 @@ for SYMBOL in "${SYMBOLS[@]}"; do
   TARGET_DIR="./${SYMBOL}/${PERIOD}"
   mkdir -p "$TARGET_DIR"
 
-  for MONTH in {03..03}; do
+  for MONTH in {01..04}; do
       FILE_NAME="${SYMBOL}-${PERIOD}-${YEAR}-${MONTH}.zip"
       URL="${BASE_URL}/${FILE_NAME}"
       echo "Downloading ${URL}..."

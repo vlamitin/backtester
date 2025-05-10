@@ -13,11 +13,11 @@ from stock_market_research_kit.db_layer import upsert_trades_to_db, select_close
 from stock_market_research_kit.notifier_strategy import btc_naive_strategy01, NotifierStrategy, \
     thr2024_p70_safe_stops_strategy05, thr2024_strict_strategy03, thr2024_loose_strategy04, \
     btc_naive_p30_safe_stops_strategy_strategy11, thr2024_p30_safe_stops_strategy07, \
-    thr2024_strict_p70_safe_stops_strategy10, thr2024_loose_p70_safe_stops_strategy06
+    thr2024_strict_p70_safe_stops_strategy10, thr2024_loose_p70_safe_stops_strategy06, tdo_thr2024_loose_strategy14
 from stock_market_research_kit.session import get_next_session_mock
 from stock_market_research_kit.session_quantiles import quantile_session_year_thr
 from stock_market_research_kit.session_trade import session_trade_from_json
-from stock_market_research_kit.tg_notifier import post_signal_notification
+from stock_market_research_kit.tg_notifier import post_signal_notification, TelegramThrottler
 from utils.date_utils import to_date_str, log_warn, to_utc_datetime, log_info_ny, log_warn_ny
 
 
@@ -85,8 +85,7 @@ def look_for_new_trade(symbol, time_till: datetime, strategy: NotifierStrategy):
             profiles_map[predict_session][predict_type] = []
         profiles_map[predict_session][predict_type].append(sub_map[predict_session][predict_type])
 
-    new_trades = look_for_entry_backtest([*day_sessions, predicted_session_mock], profiles_map, strategy.slg,
-                                         strategy.tpg)
+    new_trades = look_for_entry_backtest([*day_sessions, predicted_session_mock], days[-1], profiles_map, strategy)
 
     if len(new_trades) == 0:
         log_info_ny(f"no new trades for {symbol} in {predicted_session_mock.name.value} for '{strategy.name[0:3]}...'")
@@ -106,7 +105,7 @@ def look_for_new_trade(symbol, time_till: datetime, strategy: NotifierStrategy):
 
     for i, tr in enumerate([trade]):
         profile = [x for x in sorted_profiles if x['profile'] == tr.entry_profile_key][0]
-        post_signal_notification(f"""New trade #{row_ids[i]}:
+        TelegramThrottler().send_signal_message(f"""New trade #{row_ids[i]}:
 
     Symbol: {symbol},
     Entry time: {tr.entry_time} (UTC),
@@ -230,7 +229,7 @@ def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy
         )
         upsert_trades_to_db(now_year, strategy.name, row_symbol, [closed_trade])
         stats = stat_for_a_closed_trade(strategy.name, row_trade_open_date_utc, row_symbol)
-        post_signal_notification(f"""Close trade #{row_id} with reason '{closed_trade.closes[-1][3]}':
+        TelegramThrottler().send_signal_message(f"""Close trade #{row_id} with reason '{closed_trade.closes[-1][3]}':
 
     Symbol: {row_symbol},
     Time open/close: {closed_trade.entry_time} / {closed_trade.closes[-1][2]} (UTC),
@@ -317,10 +316,12 @@ def run_notifier(symbols_with_strategy):
         dtime(16, 0),  # ny close
     ]
     gen = ny_time_generator(
-        # datetime(2025, 4, 23, 6, 58, tzinfo=ZoneInfo("America/New_York")),
-        datetime.now(ZoneInfo("America/New_York")),
+        datetime(2025, 5, 6, 9, 28, tzinfo=ZoneInfo("America/New_York")),
+        # datetime.now(ZoneInfo("America/New_York")),
         times_of_day
     )
+
+    log_info_ny(f"Notifier starting took {(time.perf_counter() - start_time):.6f} seconds")
 
     while True:
         next_dt_utc = next(gen)
@@ -359,6 +360,18 @@ if __name__ == "__main__":
             ("AAVEUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("AAVEUSDT", 2024))),
             ("AVAXUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("AVAXUSDT", 2024))),
             ("CRVUSDT", thr2024_loose_p70_safe_stops_strategy06(quantile_session_year_thr("CRVUSDT", 2024))),
+            ("BTCUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("BTCUSDT", 2024))),
+            ("AAVEUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("AAVEUSDT", 2024))),
+            ("CRVUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("CRVUSDT", 2024))),
+            ("AVAXUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("AVAXUSDT", 2024))),
+            ("1INCHUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("1INCHUSDT", 2024))),
+            ("COMPUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("COMPUSDT", 2024))),
+            ("LINKUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("LINKUSDT", 2024))),
+            ("LTCUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("LTCUSDT", 2024))),
+            ("SUSHIUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("SUSHIUSDT", 2024))),
+            ("UNIUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("UNIUSDT", 2024))),
+            ("XLMUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("XLMUSDT", 2024))),
+            ("XMRUSDT", tdo_thr2024_loose_strategy14(quantile_session_year_thr("XMRUSDT", 2024))),
         ])
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")

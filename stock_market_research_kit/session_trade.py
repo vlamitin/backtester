@@ -1,9 +1,12 @@
 import json
 from dataclasses import dataclass, asdict
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, TypeAlias, Callable
 
+from stock_market_research_kit.day import Day
 from stock_market_research_kit.session import SessionName, SessionType
+
+TradeFilterer: TypeAlias = Callable[[SessionName, str, Day], bool]  # huntingSession, direction, currentDay
 
 
 @dataclass

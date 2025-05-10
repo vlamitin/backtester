@@ -7,7 +7,7 @@ from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import Session, SessionType, SessionName, SessionImpact
 from stock_market_research_kit.session_thresholds import btc_universal_threshold, impact_thresholds, \
     ThresholdsGetter
-from utils.date_utils import to_utc_datetime, to_date_str, start_of_day
+from utils.date_utils import to_utc_datetime, to_date_str, start_of_day, session_end_time
 
 
 def typify_sessions(days: List[Day], thr_getter: ThresholdsGetter) -> List[Session]:
@@ -160,9 +160,6 @@ def typify_sessions(days: List[Day], thr_getter: ThresholdsGetter) -> List[Sessi
 
     return sessions
 
-
-def session_end_time(as_candle, candles_15m) -> str:
-    return to_date_str(to_utc_datetime(as_candle[5]) + timedelta(minutes=15 * len(candles_15m)) - timedelta(seconds=1))
 
 
 def define_session_impact(session_candles: List[InnerCandle], day_candles: List[InnerCandle],

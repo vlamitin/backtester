@@ -414,16 +414,24 @@ if __name__ == "__main__":
         # res10 = close_from_to('2025-04-01 00:00')
         # cmet = get_actual_cme_open_time()
         for smb in [
-            "BTCUSDT",
-            "AAVEUSDT",
-            "CRVUSDT",
-            "AVAXUSDT",
+            # "BTCUSDT",
+            # "AAVEUSDT",
+            # "CRVUSDT",
+            # "AVAXUSDT",
+            "1INCHUSDT",
+            "COMPUSDT",
+            "LINKUSDT",
+            "LTCUSDT",
+            "SUSHIUSDT",
+            "UNIUSDT",
+            "XLMUSDT",
+            "XMRUSDT",
         ]:
             series_years = [
-                # 2021,
-                # 2022,
-                # 2023,
-                # 2024,
+                2021,
+                2022,
+                2023,
+                2024,
                 2025
             ]
             main(smb, series_years)

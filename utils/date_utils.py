@@ -19,6 +19,10 @@ def is_same_day_or_past_or_future(checked_time_string, current_day_string):
         return 0
 
 
+def session_end_time(candle, candles_15m) -> str:
+    return to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15 * len(candles_15m)) - timedelta(seconds=1))
+
+
 def start_of_day(date: datetime) -> datetime:
     return date.replace(hour=0, minute=0, second=0, microsecond=0)
 

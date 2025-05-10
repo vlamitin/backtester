@@ -85,10 +85,18 @@ if __name__ == "__main__":
     try:
         # update_candle_from_binance("BTCUSDT")
         for smb in [
-            "BTCUSDT",
-            "AAVEUSDT",
-            "CRVUSDT",
-            "AVAXUSDT",
+            # "BTCUSDT",
+            # "AAVEUSDT",
+            # "CRVUSDT",
+            # "AVAXUSDT",
+            "1INCHUSDT",
+            "COMPUSDT",
+            "LINKUSDT",
+            "LTCUSDT",
+            "SUSHIUSDT",
+            "UNIUSDT",
+            "XLMUSDT",
+            "XMRUSDT",
         ]:
             update_candle_from_binance(smb)
             # for series_year in [
