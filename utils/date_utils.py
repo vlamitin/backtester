@@ -1,5 +1,9 @@
+import math
 from datetime import datetime, timedelta
+from typing import Tuple, List
 from zoneinfo import ZoneInfo
+
+from stock_market_research_kit.quarter import YearQuarter, MonthWeek, WeekDay, DayQuarter, Quarter90m
 
 
 # returns -1 if checked time is past, 0 if same day and +1 if future
@@ -70,6 +74,382 @@ def now_utc_datetime() -> datetime:
 
 def now_ny_datetime() -> datetime:
     return datetime.now(ZoneInfo("America/New_York"))
+
+
+def quarters_by_time(date_utc: str) -> Tuple[YearQuarter, MonthWeek, WeekDay, DayQuarter, Quarter90m]:
+    ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
+    yq = YearQuarter.YQ1
+    if ny_date.month in [4, 5, 6]:
+        yq = YearQuarter.YQ2
+    elif ny_date.month in [7, 8, 9]:
+        yq = YearQuarter.YQ3
+    elif ny_date.month in [10, 11, 12]:
+        yq = YearQuarter.YQ4
+
+    mw = MonthWeek(math.ceil((ny_date - timedelta(days=ny_date.weekday())).day / 7))
+    wd = WeekDay(ny_date.isoweekday())
+
+    dq = DayQuarter.DQ2_London
+    if ny_date.hour in [6, 7, 8, 9, 10, 11]:
+        dq = DayQuarter.DQ3_NYAM
+    elif ny_date.hour in [12, 13, 14, 15, 16, 17]:
+        dq = DayQuarter.DQ4_NYPM
+    if ny_date.hour in [18, 19, 20, 21, 22, 23]:
+        dq = DayQuarter.DQ1_Asia
+        wd = WeekDay((wd.value + 1) % 7)
+        mw = MonthWeek(math.ceil(
+            (ny_date + timedelta(hours=6) - timedelta(days=(ny_date + timedelta(hours=6)).weekday())).day / 7))
+
+    start_of_dq = ny_date.replace(hour=(ny_date.hour // 6) * 6, minute=0, second=0, microsecond=0)
+    mins_from_dq_start = (ny_date - start_of_dq).total_seconds() / 60
+
+    q90m = Quarter90m.Q1_90m
+    if 90 <= mins_from_dq_start < 180:
+        q90m = Quarter90m.Q2_90m
+    elif 180 <= mins_from_dq_start < 270:
+        q90m = Quarter90m.Q3_90m
+    elif 270 <= mins_from_dq_start < 360:
+        q90m = Quarter90m.Q4_90m
+
+    return yq, mw, wd, dq, q90m
+
+
+def prev_quarters90m_ranges(date_utc: str) -> List[Tuple[Quarter90m, datetime, datetime]]:
+    res = []
+    q90m = quarters_by_time(date_utc)[4]
+    ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
+
+    seconds_since_midnight = ny_date.hour * 3600 + ny_date.minute * 60 + ny_date.second
+    start_of_q90m = ny_date - timedelta(seconds=seconds_since_midnight % (90 * 60))
+
+    if q90m == Quarter90m.Q1_90m:
+        res.append((
+            Quarter90m.Q4_90m,
+            (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif q90m == Quarter90m.Q2_90m:
+        res.append((
+            Quarter90m.Q1_90m,
+            (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif q90m == Quarter90m.Q3_90m:
+        res.append((
+            Quarter90m.Q1_90m,
+            (start_of_q90m - timedelta(minutes=180)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(minutes=90, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            Quarter90m.Q2_90m,
+            (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif q90m == Quarter90m.Q4_90m:
+        res.append((
+            Quarter90m.Q1_90m,
+            (start_of_q90m - timedelta(minutes=270)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(minutes=180, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            Quarter90m.Q2_90m,
+            (start_of_q90m - timedelta(minutes=180)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(minutes=90, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            Quarter90m.Q3_90m,
+            (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
+            (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+
+    return res
+
+
+def prev_day_quarters_ranges(date_utc: str) -> List[Tuple[DayQuarter, datetime, datetime]]:
+    res = []
+    dq = quarters_by_time(date_utc)[3]
+    ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
+
+    start_of_dq = ny_date.replace(hour=(ny_date.hour // 6) * 6, minute=0, second=0, microsecond=0)
+
+    if dq == DayQuarter.DQ1_Asia:
+        res.append((
+            DayQuarter.DQ4_NYPM,
+            (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif dq == DayQuarter.DQ2_London:
+        res.append((
+            DayQuarter.DQ1_Asia,
+            (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif dq == DayQuarter.DQ3_NYAM:
+        res.append((
+            DayQuarter.DQ1_Asia,
+            (start_of_dq - timedelta(hours=12)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(hours=6, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            DayQuarter.DQ2_London,
+            (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif dq == DayQuarter.DQ4_NYPM:
+        res.append((
+            DayQuarter.DQ1_Asia,
+            (start_of_dq - timedelta(hours=18)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(hours=12, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            DayQuarter.DQ2_London,
+            (start_of_dq - timedelta(hours=12)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(hours=6, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            DayQuarter.DQ3_NYAM,
+            (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
+            (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+
+    return res
+
+
+def prev_weekday_ranges(date_utc: str) -> List[Tuple[WeekDay, datetime, datetime]]:
+    res = []
+    _, _, wd, dq, _ = quarters_by_time(date_utc)
+    ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
+
+    start_of_wd = ny_date.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=6)
+    if dq == DayQuarter.DQ4_NYPM:
+        start_of_wd = ny_date.replace(hour=(ny_date.hour // 6) * 6, minute=0, second=0, microsecond=0)
+
+    if wd == WeekDay.Mon:
+        res.append((
+            WeekDay.Thu,
+            (start_of_wd - timedelta(days=4)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=3, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Fri,
+            (start_of_wd - timedelta(days=3)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=2, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif wd == WeekDay.Tue:
+        res.append((
+            WeekDay.Mon,
+            (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif wd == WeekDay.Wed:
+        res.append((
+            WeekDay.Mon,
+            (start_of_wd - timedelta(days=2)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=1, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Tue,
+            (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif wd == WeekDay.Thu:
+        res.append((
+            WeekDay.Mon,
+            (start_of_wd - timedelta(days=3)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=2, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Tue,
+            (start_of_wd - timedelta(days=2)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=1, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Wed,
+            (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif wd == WeekDay.Fri:
+        res.append((
+            WeekDay.Mon,
+            (start_of_wd - timedelta(days=4)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=3, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Tue,
+            (start_of_wd - timedelta(days=3)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=2, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Wed,
+            (start_of_wd - timedelta(days=2)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=1, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Thu,
+            (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.MonThu,
+            (start_of_wd - timedelta(days=4)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif wd == WeekDay.Sat:
+        res.append((
+            WeekDay.MonThu,
+            (start_of_wd - timedelta(days=5)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=1, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Fri,
+            (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.MonFri,
+            (start_of_wd - timedelta(days=5)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif wd == WeekDay.Sun:
+        res.append((
+            WeekDay.MonThu,
+            (start_of_wd - timedelta(days=6)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=2, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Fri,
+            (start_of_wd - timedelta(days=2)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=1, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.MonFri,
+            (start_of_wd - timedelta(days=6)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(days=1, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Sat,
+            (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
+            (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+
+    return res
+
+
+def prev_month_week_quarters_ranges(date_utc: str) -> List[Tuple[MonthWeek, datetime, datetime]]:
+    res = []
+    mw = quarters_by_time(date_utc)[1]
+    ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
+    start_of_mw = (ny_date - timedelta(days=ny_date.weekday())).replace(hour=0, minute=0, second=0,
+                                                                        microsecond=0) - timedelta(hours=6)
+
+    if mw == MonthWeek.MW1:
+        prev_mw = quarters_by_time(to_date_str((start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC"))))[1]
+        if prev_mw == MonthWeek.MW5:
+            res.append((
+                MonthWeek.MW4,
+                (start_of_mw - timedelta(days=14)).astimezone(ZoneInfo("UTC")),
+                (start_of_mw - timedelta(days=7, seconds=1)).astimezone(ZoneInfo("UTC"))
+            ))
+            res.append((
+                MonthWeek.MW5,
+                (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
+                (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+            ))
+        else:
+            res.append((
+                MonthWeek.MW4,
+                (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
+                (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+            ))
+    elif mw == MonthWeek.MW2:
+        res.append((
+            MonthWeek.MW1,
+            (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif mw == MonthWeek.MW3:
+        res.append((
+            MonthWeek.MW1,
+            (start_of_mw - timedelta(days=14)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(days=7, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            MonthWeek.MW2,
+            (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif mw == MonthWeek.MW4:
+        res.append((
+            MonthWeek.MW1,
+            (start_of_mw - timedelta(days=21)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(days=14, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            MonthWeek.MW2,
+            (start_of_mw - timedelta(days=14)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(days=7, seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            MonthWeek.MW3,
+            (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+    elif mw == MonthWeek.MW5:
+        res.append((
+            MonthWeek.MW4,
+            (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
+            (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+
+    return res
+
+
+def prev_year_quarters_ranges(date_utc: str) -> List[Tuple[YearQuarter, datetime, datetime]]:
+    res = []
+    yq = quarters_by_time(date_utc)[0]
+    utc_date = to_utc_datetime(date_utc)
+
+    if yq == YearQuarter.YQ1:
+        res.append((
+            YearQuarter.YQ4,
+            utc_date.replace(year=utc_date.year - 1, month=10, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+    elif yq == YearQuarter.YQ2:
+        res.append((
+            YearQuarter.YQ1,
+            utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+    elif yq == YearQuarter.YQ3:
+        res.append((
+            YearQuarter.YQ1,
+            utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+        res.append((
+            YearQuarter.YQ2,
+            utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+    elif yq == YearQuarter.YQ4:
+        res.append((
+            YearQuarter.YQ1,
+            utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+        res.append((
+            YearQuarter.YQ2,
+            utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+        res.append((
+            YearQuarter.YQ3,
+            utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=10, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+
+    return res
 
 
 def is_some_prev_day_session(checked_time_string, current_day_string, from_ny, to_ny):
@@ -344,6 +724,86 @@ def is_previous_week(date_to_check: datetime, reference_date: datetime) -> bool:
     return previous_week_start <= date_to_check <= previous_week_end
 
 
+def get_prev_30m_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    from_ = get_current_30m_from_to(date_str)[0] - timedelta(minutes=30)
+    return from_, from_ + timedelta(minutes=29, seconds=59)
+
+
+def get_current_30m_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = date.replace(minute=(date.minute // 30) * 30, second=0, microsecond=0)
+    return from_, from_ + timedelta(minutes=29, seconds=59)
+
+
+def get_prev_1h_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    from_ = get_current_1h_from_to(date_str)[0] - timedelta(hours=1)
+    return from_, from_ + timedelta(minutes=59, seconds=59)
+
+
+def get_current_1h_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = date.replace(minute=0, second=0, microsecond=0)
+    return from_, from_ + timedelta(minutes=59, seconds=59)
+
+
+def get_prev_2h_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    from_ = get_current_2h_from_to(date_str)[0] - timedelta(hours=2)
+    return from_, from_ + timedelta(hours=1, minutes=59, seconds=59)
+
+
+def get_current_2h_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = date.replace(hour=(date.hour // 2) * 2, minute=0, second=0, microsecond=0)
+    return from_, from_ + timedelta(hours=1, minutes=59, seconds=59)
+
+
+def get_prev_4h_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    from_ = get_current_4h_from_to(date_str)[0] - timedelta(hours=4)
+    return from_, from_ + timedelta(hours=3, minutes=59, seconds=59)
+
+
+def get_current_4h_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = date.replace(hour=(date.hour // 4) * 4, minute=0, second=0, microsecond=0)
+    return from_, from_ + timedelta(hours=3, minutes=59, seconds=59)
+
+
+def get_prev_1d_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    from_ = get_current_1d_from_to(date_str)[0] - timedelta(days=1)
+    return from_, from_ + timedelta(hours=23, minutes=59, seconds=59)
+
+
+def get_current_1d_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = date.replace(hour=0, minute=0, second=0, microsecond=0)
+    return from_, from_ + timedelta(hours=23, minutes=59, seconds=59)
+
+
+def get_prev_1w_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    from_ = get_current_1w_from_to(date_str)[0] - timedelta(days=7)
+    return from_, from_ + timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+
+def get_current_1w_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = (date - timedelta(days=date.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    return from_, from_ + timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+
+def get_prev_1month_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    to_ = get_current_1month_from_to(date_str)[0] - timedelta(seconds=1)
+    from_ = to_.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    return from_, to_
+
+
+def get_current_1month_from_to(date_str: str) -> Tuple[datetime, datetime]:
+    date = to_utc_datetime(date_str)
+    from_ = date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    to_ = (from_ + timedelta(days=45)).replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+    return from_, to_
+
+
 if __name__ == "__main__":
     try:
         log_warn("test")
@@ -351,23 +811,39 @@ if __name__ == "__main__":
         #     datetime(2024, 3, 1, 15, 0, tzinfo=ZoneInfo("UTC")),
         #     datetime(2024, 3, 5, 10, 0, tzinfo=ZoneInfo("UTC"))
         # )
-        res = get_second_monday(datetime.now())
-        print('res', res)
+        # print(get_prev_1month_from_to('2025-02-03 11:01'))
+        # print(get_prev_1month_from_to('2025-01-03 10:31'))
+        # print(get_current_1month_from_to('2024-02-03 11:01'))
+        # print(get_current_1month_from_to('2025-01-03 10:31'))
+        # print(quarters_by_time('2025-08-03 21:31'))
+        # print(quarters_by_time('2025-08-03 22:31'))
+        # print(quarters_by_time('2025-08-05 21:31'))
+        # print(quarters_by_time('2025-08-05 22:31'))
+        print(prev_year_quarters_ranges('2024-02-04 11:01'))
+        print(prev_year_quarters_ranges('2024-04-11 11:01'))
+        print(prev_year_quarters_ranges('2024-07-18 11:01'))
+        print(prev_year_quarters_ranges('2024-11-25 11:01'))
 
-        # for smb in [
-        #     "BTCUSDT",
-        #     "AAVEUSDT",
-        #     "CRVUSDT",
-        #     "AVAXUSDT",
-        # ]:
-        #     for series_year in [
-        #         2021,
-        #         2022,
-        #         2023,
-        #         2024,
-        #         2025
-        #     ]:
-        #         fill_year_from_csv(series_year, smb)
+        # get_prev_1month_from_to
+        # get_current_1month_from_to
+        # print(get_prev_2h_open('2025-08-03 10:31'))
+        # print(get_prev_2h_open('2025-08-03 10:31'))
+        # print(get_prev_4h_open('2025-08-03 10:31'))
+        # print(get_prev_1d_open('2025-08-03 10:31'))
+        # print(get_prev_1w_open('2025-08-03 10:31'))
+        # print(get_prev_1month_open('2025-08-03 10:31'))
+        # print(get_prev_1month_open('2025-01-03 10:31'))
+        # print(get_prev_1month_open('2024-02-29 10:31'))
+        # print(get_current_30m_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+        # print(get_current_1h_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+        # print(get_current_2h_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+        # print(get_current_4h_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+        # print(get_current_1d_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+        # print(get_current_1w_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+        # print(get_current_1month_open(to_date_str(datetime.now(tz=ZoneInfo("UTC")))))
+
+        log_warn("done")
+
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
