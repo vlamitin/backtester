@@ -26,7 +26,6 @@ class WeekDay(Enum):
     Fri = 5
     MonFri = 15
     Sat = 6
-    MonSat = 21
     Sun = 7
 
 
