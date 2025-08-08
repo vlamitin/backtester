@@ -41,7 +41,7 @@ class Asset:
     week2: Optional[QuarterLiq]
     week3: Optional[QuarterLiq]
     week4: Optional[QuarterLiq]
-    week5: Optional[QuarterLiq]   # joker week
+    week5: Optional[QuarterLiq]  # joker week
     true_mo: Optional[PriceDate]  # 2nd monday of month, for first uncompleted week well be None
 
     nwog: Optional[Tuple[LiqSwept, LiqSwept]]  # swept status for high, swept status for low
@@ -82,6 +82,11 @@ class Asset:
     current_1w_candle: Optional[InnerCandle]
     prev_1month_candle: InnerCandle
     current_1month_candle: Optional[InnerCandle]
+
+    def plus_15m(self, candle: InnerCandle):
+        self.prev_15m_candle = candle
+        self.snapshot_date_readable = to_date_str(to_utc_datetime(self.prev_15m_candle[5]) + timedelta(minutes=15))
+        # TODO
 
     def populate(self, reverse_15m_gen: Reverse15mGenerator):
         self.prev_15m_candle = next(reverse_15m_gen)
@@ -174,8 +179,6 @@ class Asset:
             self.prev_15m_candle[5]) < prev_1month_to else None
         cum_current_1month_candle = self.prev_15m_candle if current_1month_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_1month_to else None
-
-        print('ea')
 
         while True:
             prev_candle = next(reverse_15m_gen)
@@ -427,46 +430,11 @@ class Asset:
                 if current_1month_from == to_utc_datetime(prev_candle[5]):
                     self.current_1month_candle = cum_current_1month_candle
 
-            # year_q4
-            # year_q1
-            # year_q2
-            # year_q3
-            # prev_month
-            # prev_month_week_4
-            # prev_month_week_5
-            # week1
-            # week2
-            # week3
-            # week4
-            # prev_week_thu
-            # prev_week_fri
-            # nwog
-            # mon
-            # tue
-            # wed
-            # thu
-            # mon_thu
-            # fri
-            # mon_fri
-            # sat
-            # mon_sat
-            # nypm
-            # asia
-            # london
-            # nyam
-            # q4_90m
-            # q1_90m
-            # q2_90m
-            # q3_90m
-
             highest_sweep = max(prev_candle[1], highest_sweep)
             lowest_sweep = min(prev_candle[2], lowest_sweep)
 
             if to_utc_datetime(prev_candle[5]) <= prev_year_from:
                 break
-
-            print('ea')
-        print('ea')
 
 
 def new_empty_asset(symbol: str) -> Asset:
@@ -523,10 +491,7 @@ def new_empty_asset(symbol: str) -> Asset:
     )
 
 
-SMT: TypeAlias = Optional[Tuple[
-    Tuple[TriadAsset, str],  # asset and date when swept
-    Tuple[TriadAsset, str]
-]]
+SMT: TypeAlias = Optional[List[TriadAsset]]  # list of 1-2 assets from triad that swept
 
 PSP: TypeAlias = Optional[Tuple[
     Tuple[TriadAsset, InnerCandle],
@@ -541,59 +506,212 @@ class Triad:
     a2: Asset
     a3: Asset
 
-    prev_year_smt: Tuple[SMT, SMT, SMT]  # high, half, low
+    @staticmethod
+    def calculate_smt(a1_ql, a2_aq, a3_ql: Optional[QuarterLiq]) -> Tuple[SMT, SMT, SMT]:  # high, half, low
+        _, _, _, a1_high, a1_half, a1_low = a1_ql
+        _, _, _, a2_high, a2_half, a2_low = a2_aq
+        _, _, _, a3_high, a3_half, a3_low = a3_ql
+        high = [x[0] for x in
+                [(TriadAsset.A1, a1_high[1]), (TriadAsset.A2, a2_high[1]), (TriadAsset.A3, a3_high[1])] if x[1]]
+        high = None if len(high) == 3 else high
 
-    year_q4_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    year_q1_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    year_q2_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    year_q3_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
+        half = [x[0] for x in
+                [(TriadAsset.A1, a1_half[1]), (TriadAsset.A2, a2_half[1]), (TriadAsset.A3, a3_half[1])] if x[1]]
+        half = None if len(half) == 3 else half
 
-    prev_month_smt: Tuple[SMT, SMT, SMT]  # high, half, low
+        low = [x[0] for x in
+               [(TriadAsset.A1, a1_low[1]), (TriadAsset.A2, a2_low[1]), (TriadAsset.A3, a3_low[1])] if x[1]]
+        low = None if len(low) == 3 else low
 
-    prev_month_week_4_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    prev_month_week_5_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    week1_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    week2_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    week3_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    week4_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
+        return high, half, low
 
-    prev_week_thu_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    prev_week_fri_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    mon_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    tue_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    wed_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    thu_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    mon_thu_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    fri_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    mon_fri_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    sat_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    mon_sat_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
+    def prev_year_smt(self) -> Tuple[SMT, SMT, SMT]:  # high, half, low
+        return Triad.calculate_smt(self.a1.prev_year, self.a2.prev_year, self.a3.prev_year)
 
-    prev_pm_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    asia_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    london_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    nyam_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
+    def year_q1_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.year_q1:
+            return None
+        return Triad.calculate_smt(self.a1.year_q1, self.a2.year_q1, self.a3.year_q1)
 
-    prev_q4_90_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    q1_90_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    q2_90_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
-    q3_90_smt: Optional[Tuple[SMT, SMT, SMT]]  # high, half, low
+    def year_q2_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.year_q2:
+            return None
+        return Triad.calculate_smt(self.a1.year_q2, self.a2.year_q2, self.a3.year_q2)
 
-    prev_15m_candle_psp: PSP
-    prev_30m_candle_psp: PSP
-    current_30m_candle_psp: PSP
-    prev_1h_candle_psp: PSP
-    current_1h_candle_psp: PSP
-    prev_2h_candle_psp: PSP
-    current_2h_candle_psp: PSP
-    prev_4h_candle_psp: PSP
-    current_4h_candle_psp: PSP
-    prev_1d_candle_psp: PSP
-    current_1d_candle_psp: PSP
-    prev_1w_candle_psp: PSP
-    current_1w_candle_psp: PSP
-    prev_1month_candle_psp: PSP
-    current_1month_candle_psp: PSP
+    def year_q3_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.year_q3:
+            return None
+        return Triad.calculate_smt(self.a1.year_q3, self.a2.year_q3, self.a3.year_q3)
+
+    def year_q4_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.year_q4:
+            return None
+        return Triad.calculate_smt(self.a1.year_q4, self.a2.year_q4, self.a3.year_q4)
+
+    def week1_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.week1:
+            return None
+        return Triad.calculate_smt(self.a1.week1, self.a2.week1, self.a3.week1)
+
+    def week2_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.week2:
+            return None
+        return Triad.calculate_smt(self.a1.week2, self.a2.week2, self.a3.week2)
+
+    def week3_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.week3:
+            return None
+        return Triad.calculate_smt(self.a1.week3, self.a2.week3, self.a3.week3)
+
+    def week4_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.week4:
+            return None
+        return Triad.calculate_smt(self.a1.week4, self.a2.week4, self.a3.week4)
+
+    def week5_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.week5:
+            return None
+        return Triad.calculate_smt(self.a1.week5, self.a2.week5, self.a3.week5)
+
+    def mon_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.mon:
+            return None
+        return Triad.calculate_smt(self.a1.mon, self.a2.mon, self.a3.mon)
+
+    def tue_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.tue:
+            return None
+        return Triad.calculate_smt(self.a1.tue, self.a2.tue, self.a3.tue)
+
+    def wed_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.wed:
+            return None
+        return Triad.calculate_smt(self.a1.wed, self.a2.wed, self.a3.wed)
+
+    def thu_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.thu:
+            return None
+        return Triad.calculate_smt(self.a1.thu, self.a2.thu, self.a3.thu)
+
+    def mon_thu_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.mon_thu:
+            return None
+        return Triad.calculate_smt(self.a1.mon_thu, self.a2.mon_thu, self.a3.mon_thu)
+
+    def fri_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.fri:
+            return None
+        return Triad.calculate_smt(self.a1.fri, self.a2.fri, self.a3.fri)
+
+    def mon_fri_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.mon_fri:
+            return None
+        return Triad.calculate_smt(self.a1.mon_fri, self.a2.mon_fri, self.a3.mon_fri)
+
+    def sat_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.sat:
+            return None
+        return Triad.calculate_smt(self.a1.sat, self.a2.sat, self.a3.sat)
+
+    def asia_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.asia:
+            return None
+        return Triad.calculate_smt(self.a1.asia, self.a2.asia, self.a3.asia)
+
+    def london_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.london:
+            return None
+        return Triad.calculate_smt(self.a1.london, self.a2.london, self.a3.london)
+
+    def nyam_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.nyam:
+            return None
+        return Triad.calculate_smt(self.a1.nyam, self.a2.nyam, self.a3.nyam)
+
+    def nypm_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.nypm:
+            return None
+        return Triad.calculate_smt(self.a1.nypm, self.a2.nypm, self.a3.nypm)
+
+    def q1_90_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.q1_90m:
+            return None
+        return Triad.calculate_smt(self.a1.q1_90m, self.a2.q1_90m, self.a3.q1_90m)
+
+    def q2_90_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.q2_90m:
+            return None
+        return Triad.calculate_smt(self.a1.q2_90m, self.a2.q2_90m, self.a3.q2_90m)
+
+    def q3_90_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.q3_90m:
+            return None
+        return Triad.calculate_smt(self.a1.q3_90m, self.a2.q3_90m, self.a3.q3_90m)
+
+    def q4_90_smt(self) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
+        if not self.a1.q4_90m:
+            return None
+        return Triad.calculate_smt(self.a1.q4_90m, self.a2.q4_90m, self.a3.q4_90m)
+
+    @staticmethod
+    def calculate_psp(a1_candle, a2_candle, a3_candle) -> PSP:
+        if not a1_candle:
+            return None
+        green_candles = [x for x in [a1_candle, a2_candle, a3_candle] if x[0] > x[3]]
+        if [0, 3] in len(green_candles):
+            return None
+
+        return (
+            (TriadAsset.A1, a1_candle),
+            (TriadAsset.A2, a2_candle),
+            (TriadAsset.A3, a3_candle)
+        )
+
+    def prev_15m_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_15m_candle, self.a2.prev_15m_candle, self.a3.prev_15m_candle)
+
+    def prev_30m_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_30m_candle, self.a2.prev_30m_candle, self.a3.prev_30m_candle)
+
+    def current_30m_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.current_30m_candle, self.a2.current_30m_candle, self.a3.current_30m_candle)
+
+    def prev_1h_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_1h_candle, self.a2.prev_1h_candle, self.a3.prev_1h_candle)
+
+    def current_1h_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.current_1h_candle, self.a2.current_1h_candle, self.a3.current_1h_candle)
+
+    def prev_2h_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_2h_candle, self.a2.prev_2h_candle, self.a3.prev_2h_candle)
+
+    def current_2h_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.current_2h_candle, self.a2.current_2h_candle, self.a3.current_2h_candle)
+
+    def prev_4h_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_4h_candle, self.a2.prev_4h_candle, self.a3.prev_4h_candle)
+
+    def current_4h_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.current_4h_candle, self.a2.current_4h_candle, self.a3.current_4h_candle)
+
+    def prev_1d_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_1d_candle, self.a2.prev_1d_candle, self.a3.prev_1d_candle)
+
+    def current_1d_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.current_1d_candle, self.a2.current_1d_candle, self.a3.current_1d_candle)
+
+    def prev_1w_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_1w_candle, self.a2.prev_1w_candle, self.a3.prev_1w_candle)
+
+    def current_1w_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.current_1w_candle, self.a2.current_1w_candle, self.a3.current_1w_candle)
+
+    def prev_1month_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(self.a1.prev_1month_candle, self.a2.prev_1month_candle, self.a3.prev_1month_candle)
+
+    def current_1month_candle_psp(self) -> PSP:
+        return Triad.calculate_psp(
+            self.a1.current_1month_candle, self.a2.current_1month_candle, self.a3.current_1month_candle)
 
 
 def new_empty_triad(a1_symbol: str, a2_symbol: str, a3_symbol: str) -> Triad:
@@ -601,52 +719,6 @@ def new_empty_triad(a1_symbol: str, a2_symbol: str, a3_symbol: str) -> Triad:
         a1=new_empty_asset(a1_symbol),
         a2=new_empty_asset(a2_symbol),
         a3=new_empty_asset(a3_symbol),
-        prev_year_smt=(None, None, None),
-        year_q4_smt=None,
-        year_q1_smt=None,
-        year_q2_smt=None,
-        year_q3_smt=None,
-        prev_month_smt=(None, None, None),
-        prev_month_week_4_smt=None,
-        prev_month_week_5_smt=None,
-        week1_smt=None,
-        week2_smt=None,
-        week3_smt=None,
-        week4_smt=None,
-        prev_week_thu_smt=None,
-        prev_week_fri_smt=None,
-        mon_smt=None,
-        tue_smt=None,
-        wed_smt=None,
-        thu_smt=None,
-        mon_thu_smt=None,
-        fri_smt=None,
-        mon_fri_smt=None,
-        sat_smt=None,
-        mon_sat_smt=None,
-        prev_pm_smt=None,
-        asia_smt=None,
-        london_smt=None,
-        nyam_smt=None,
-        prev_q4_90_smt=None,
-        q1_90_smt=None,
-        q2_90_smt=None,
-        q3_90_smt=None,
-        prev_15m_candle_psp=None,
-        prev_30m_candle_psp=None,
-        current_30m_candle_psp=None,
-        prev_1h_candle_psp=None,
-        current_1h_candle_psp=None,
-        prev_2h_candle_psp=None,
-        current_2h_candle_psp=None,
-        prev_4h_candle_psp=None,
-        current_4h_candle_psp=None,
-        prev_1d_candle_psp=None,
-        current_1d_candle_psp=None,
-        prev_1w_candle_psp=None,
-        current_1w_candle_psp=None,
-        prev_1month_candle_psp=None,
-        current_1month_candle_psp=None,
     )
 
 
@@ -662,8 +734,9 @@ def new_triad(symbols_tuple: Tuple[str, str, str],
 
 
 def test_15m_reverse_generator(symbol) -> Reverse15mGenerator:
-    candles = (select_full_days_candles_15m(2024, symbol)
-               + select_full_days_candles_15m(2025, symbol))
+    candles_2024 = select_full_days_candles_15m(2024, symbol)
+    candles_2025 = select_full_days_candles_15m(2025, symbol)
+    candles = candles_2024 + candles_2025[:-1]
 
     index = len(candles) - 1
 
