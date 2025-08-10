@@ -114,7 +114,7 @@ def quarters_by_time(date_utc: str) -> Tuple[YearQuarter, MonthWeek, WeekDay, Da
     return yq, mw, wd, dq, q90m
 
 
-def prev_quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, datetime]], str]:  # ranges, t90m0
+def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, datetime]], str]:  # ranges, t90m0
     res = []
     q90m = quarters_by_time(date_utc)[4]
     ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
@@ -130,12 +130,22 @@ def prev_quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datet
             (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
             (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            Quarter90m.Q1_90m,
+            start_of_q90m.astimezone(ZoneInfo("UTC")),
+            (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
     elif q90m == Quarter90m.Q2_90m:
         t90m0 = start_of_q90m.astimezone(ZoneInfo("UTC"))
         res.append((
             Quarter90m.Q1_90m,
             (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
             t90m0 - timedelta(seconds=1)
+        ))
+        res.append((
+            Quarter90m.Q2_90m,
+            t90m0,
+            t90m0 + timedelta(minutes=90) - timedelta(seconds=1)
         ))
     elif q90m == Quarter90m.Q3_90m:
         t90m0 = (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC"))
@@ -148,6 +158,11 @@ def prev_quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datet
             Quarter90m.Q2_90m,
             t90m0,
             (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            Quarter90m.Q3_90m,
+            start_of_q90m.astimezone(ZoneInfo("UTC")),
+            (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif q90m == Quarter90m.Q4_90m:
         t90m0 = (start_of_q90m - timedelta(minutes=180)).astimezone(ZoneInfo("UTC"))
@@ -166,11 +181,16 @@ def prev_quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datet
             (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
             (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            Quarter90m.Q4_90m,
+            start_of_q90m.astimezone(ZoneInfo("UTC")),
+            (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
 
     return res, "" if t90m0 == "" else to_date_str(t90m0)
 
 
-def prev_day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, datetime, datetime]], str]:  # ranges, tdo
+def day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, datetime, datetime]], str]:  # ranges, tdo
     res = []
     dq = quarters_by_time(date_utc)[3]
     ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
@@ -185,12 +205,22 @@ def prev_day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, date
             (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
             (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            DayQuarter.DQ1_Asia,
+            start_of_dq.astimezone(ZoneInfo("UTC")),
+            (start_of_dq + timedelta(hours=6) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
     elif dq == DayQuarter.DQ2_London:
         tdo = start_of_dq.astimezone(ZoneInfo("UTC"))
         res.append((
             DayQuarter.DQ1_Asia,
             (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
             tdo - timedelta(seconds=1)
+        ))
+        res.append((
+            DayQuarter.DQ2_London,
+            tdo,
+            tdo + timedelta(hours=6) - timedelta(seconds=1)
         ))
     elif dq == DayQuarter.DQ3_NYAM:
         tdo = (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC"))
@@ -203,6 +233,11 @@ def prev_day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, date
             DayQuarter.DQ2_London,
             tdo,
             (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            DayQuarter.DQ3_NYAM,
+            start_of_dq.astimezone(ZoneInfo("UTC")),
+            (start_of_dq + timedelta(hours=6) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif dq == DayQuarter.DQ4_NYPM:
         tdo = (start_of_dq - timedelta(hours=12)).astimezone(ZoneInfo("UTC"))
@@ -221,11 +256,16 @@ def prev_day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, date
             (start_of_dq - timedelta(hours=6)).astimezone(ZoneInfo("UTC")),
             (start_of_dq - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            DayQuarter.DQ4_NYPM,
+            start_of_dq.astimezone(ZoneInfo("UTC")),
+            (start_of_dq + timedelta(hours=6) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
 
     return res, "" if not tdo else to_date_str(tdo)
 
 
-def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, datetime]], str]:  # ranges, two
+def weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, datetime]], str]:  # ranges, two
     res = []
     _, _, wd, dq, _ = quarters_by_time(date_utc)
     ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
@@ -247,12 +287,22 @@ def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, da
             (start_of_wd - timedelta(days=3)).astimezone(ZoneInfo("UTC")),
             (start_of_wd - timedelta(days=2, seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            WeekDay.Mon,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
     elif wd == WeekDay.Tue:
         two = start_of_wd.astimezone(ZoneInfo("UTC"))
         res.append((
             WeekDay.Mon,
             (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
             (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Tue,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif wd == WeekDay.Wed:
         two = (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC"))
@@ -265,6 +315,11 @@ def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, da
             WeekDay.Tue,
             two,
             (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Wed,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif wd == WeekDay.Thu:
         two = (start_of_wd - timedelta(days=2)).astimezone(ZoneInfo("UTC"))
@@ -282,6 +337,11 @@ def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, da
             WeekDay.Wed,
             (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
             (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Thu,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif wd == WeekDay.Fri:
         two = (start_of_wd - timedelta(days=3)).astimezone(ZoneInfo("UTC"))
@@ -310,6 +370,11 @@ def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, da
             (start_of_wd - timedelta(days=4)).astimezone(ZoneInfo("UTC")),
             (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            WeekDay.Fri,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
     elif wd == WeekDay.Sat:
         two = (start_of_wd - timedelta(days=4)).astimezone(ZoneInfo("UTC"))
         res.append((
@@ -326,6 +391,11 @@ def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, da
             WeekDay.MonFri,
             (start_of_wd - timedelta(days=5)).astimezone(ZoneInfo("UTC")),
             (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            WeekDay.Sat,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif wd == WeekDay.Sun:
         two = (start_of_wd - timedelta(days=5)).astimezone(ZoneInfo("UTC"))
@@ -349,11 +419,16 @@ def prev_weekday_ranges(date_utc: str) -> Tuple[List[Tuple[WeekDay, datetime, da
             (start_of_wd - timedelta(days=1)).astimezone(ZoneInfo("UTC")),
             (start_of_wd - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            WeekDay.Sun,
+            start_of_wd.astimezone(ZoneInfo("UTC")),
+            (start_of_wd + timedelta(days=1) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
 
     return res, "" if not two else to_date_str(two)
 
 
-def prev_month_week_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[MonthWeek, datetime, datetime]], str]:
+def month_week_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[MonthWeek, datetime, datetime]], str]:
     res = []
     mw = quarters_by_time(date_utc)[1]
     ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
@@ -381,12 +456,22 @@ def prev_month_week_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[MonthWeek
                 (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
                 (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
             ))
+        res.append((
+            MonthWeek.MW1,
+            start_of_mw.astimezone(ZoneInfo("UTC")),
+            (start_of_mw + timedelta(days=7) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
     elif mw == MonthWeek.MW2:
         tmo = start_of_mw.astimezone(ZoneInfo("UTC"))
         res.append((
             MonthWeek.MW1,
             (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
             (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            MonthWeek.MW2,
+            start_of_mw.astimezone(ZoneInfo("UTC")),
+            (start_of_mw + timedelta(days=7) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif mw == MonthWeek.MW3:
         tmo = (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC"))
@@ -399,6 +484,11 @@ def prev_month_week_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[MonthWeek
             MonthWeek.MW2,
             tmo,
             (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
+        res.append((
+            MonthWeek.MW3,
+            start_of_mw.astimezone(ZoneInfo("UTC")),
+            (start_of_mw + timedelta(days=7) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif mw == MonthWeek.MW4:
         tmo = (start_of_mw - timedelta(days=14)).astimezone(ZoneInfo("UTC"))
@@ -417,6 +507,11 @@ def prev_month_week_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[MonthWeek
             (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
             (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            MonthWeek.MW4,
+            start_of_mw.astimezone(ZoneInfo("UTC")),
+            (start_of_mw + timedelta(days=7) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
     elif mw == MonthWeek.MW5:
         tmo = (start_of_mw - timedelta(days=21)).astimezone(ZoneInfo("UTC"))
         res.append((
@@ -424,11 +519,16 @@ def prev_month_week_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[MonthWeek
             (start_of_mw - timedelta(days=7)).astimezone(ZoneInfo("UTC")),
             (start_of_mw - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
+        res.append((
+            MonthWeek.MW5,
+            start_of_mw.astimezone(ZoneInfo("UTC")),
+            (start_of_mw + timedelta(days=7) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
+        ))
 
     return res, "" if not tmo else to_date_str(tmo)
 
 
-def prev_year_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[YearQuarter, datetime, datetime]], str]:
+def year_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[YearQuarter, datetime, datetime]], str]:
     res = []
     yq = quarters_by_time(date_utc)[0]
     utc_date = to_utc_datetime(date_utc)
@@ -441,12 +541,22 @@ def prev_year_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[YearQuarter, da
             utc_date.replace(year=utc_date.year - 1, month=10, day=1, hour=0, minute=0, second=0, microsecond=0),
             utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
         ))
+        res.append((
+            YearQuarter.YQ1,
+            utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
     elif yq == YearQuarter.YQ2:
         tyo = utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0)
         res.append((
             YearQuarter.YQ1,
             utc_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
             tyo - timedelta(seconds=1)
+        ))
+        res.append((
+            YearQuarter.YQ2,
+            tyo,
+            utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
         ))
     elif yq == YearQuarter.YQ3:
         tyo = utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -459,6 +569,11 @@ def prev_year_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[YearQuarter, da
             YearQuarter.YQ2,
             tyo,
             utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+        res.append((
+            YearQuarter.YQ3,
+            utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(month=10, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
         ))
     elif yq == YearQuarter.YQ4:
         tyo = utc_date.replace(month=4, day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -476,6 +591,12 @@ def prev_year_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[YearQuarter, da
             YearQuarter.YQ3,
             utc_date.replace(month=7, day=1, hour=0, minute=0, second=0, microsecond=0),
             utc_date.replace(month=10, day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+        ))
+        res.append((
+            YearQuarter.YQ4,
+            utc_date.replace(month=10, day=1, hour=0, minute=0, second=0, microsecond=0),
+            utc_date.replace(year=utc_date.year + 1, month=1, day=1, hour=0, minute=0, second=0,
+                             microsecond=0) - timedelta(seconds=1)
         ))
 
     return res, "" if not tyo else to_date_str(tyo)
@@ -858,14 +979,14 @@ if __name__ == "__main__":
         # print(quarters_by_time('2025-08-05 21:31'))
         # print(quarters_by_time('2025-08-05 22:31'))
         # print(quarters_by_time('2025-08-03 23:01'))
-        print(prev_weekday_ranges('2025-05-23 00:00'))
-        print(prev_weekday_ranges('2025-05-22 21:00'))
-        print(prev_weekday_ranges('2025-05-22 18:00'))
-        print(prev_weekday_ranges('2025-05-22 15:00'))
-        print(prev_weekday_ranges('2025-05-22 12:00'))
-        print(prev_weekday_ranges('2025-05-22 09:00'))
-        print(prev_weekday_ranges('2025-05-22 06:00'))
-        print(prev_weekday_ranges('2025-05-22 03:00'))
+        print(weekday_ranges('2025-05-23 00:00'))
+        print(weekday_ranges('2025-05-22 21:00'))
+        print(weekday_ranges('2025-05-22 18:00'))
+        print(weekday_ranges('2025-05-22 15:00'))
+        print(weekday_ranges('2025-05-22 12:00'))
+        print(weekday_ranges('2025-05-22 09:00'))
+        print(weekday_ranges('2025-05-22 06:00'))
+        print(weekday_ranges('2025-05-22 03:00'))
         # print(prev_year_ranges('2025-02-04 11:01'))
 
         # get_prev_1month_from_to
