@@ -187,7 +187,7 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
             (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
 
-    return res, "" if t90m0 == "" else to_date_str(t90m0)
+    return res, "" if not t90m0 else to_date_str(t90m0)
 
 
 def day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, datetime, datetime]], str]:  # ranges, tdo
@@ -611,6 +611,15 @@ def prev_year_ranges(date_utc: str) -> Tuple[datetime, datetime]:
     return start, end
 
 
+def current_year_ranges(date_utc: str) -> Tuple[datetime, datetime]:
+    utc_date = to_utc_datetime(date_utc)
+
+    start = utc_date.replace(year=utc_date.year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = start.replace(year=utc_date.year + 1) - timedelta(seconds=1)
+
+    return start, end
+
+
 def is_some_prev_day_session(checked_time_string, current_day_string, from_ny, to_ny):
     current_day = to_utc_datetime(current_day_string)
     prev_day = current_day - timedelta(days=1)
@@ -979,14 +988,14 @@ if __name__ == "__main__":
         # print(quarters_by_time('2025-08-05 21:31'))
         # print(quarters_by_time('2025-08-05 22:31'))
         # print(quarters_by_time('2025-08-03 23:01'))
-        print(weekday_ranges('2025-05-23 00:00'))
-        print(weekday_ranges('2025-05-22 21:00'))
-        print(weekday_ranges('2025-05-22 18:00'))
-        print(weekday_ranges('2025-05-22 15:00'))
-        print(weekday_ranges('2025-05-22 12:00'))
-        print(weekday_ranges('2025-05-22 09:00'))
-        print(weekday_ranges('2025-05-22 06:00'))
-        print(weekday_ranges('2025-05-22 03:00'))
+        print(quarters90m_ranges('2025-08-08 23:15'))
+        # print(weekday_ranges('2025-05-22 21:00'))
+        # print(weekday_ranges('2025-05-22 18:00'))
+        # print(weekday_ranges('2025-05-22 15:00'))
+        # print(weekday_ranges('2025-05-22 12:00'))
+        # print(weekday_ranges('2025-05-22 09:00'))
+        # print(weekday_ranges('2025-05-22 06:00'))
+        # print(weekday_ranges('2025-05-22 03:00'))
         # print(prev_year_ranges('2025-02-04 11:01'))
 
         # get_prev_1month_from_to

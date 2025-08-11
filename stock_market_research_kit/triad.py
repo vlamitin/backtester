@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, asdict
 from datetime import timedelta
 from enum import Enum
 from typing import TypeAlias, Tuple, Optional, List, Generator
@@ -10,7 +11,8 @@ from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to,
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
     get_current_4h_from_to, get_prev_1d_from_to, get_current_1d_from_to, get_prev_1w_from_to, get_current_1w_from_to, \
     get_prev_1month_from_to, get_current_1month_from_to, quarters90m_ranges, day_quarters_ranges, \
-    prev_year_ranges, weekday_ranges, month_week_quarters_ranges, year_quarters_ranges, quarters_by_time
+    prev_year_ranges, weekday_ranges, month_week_quarters_ranges, year_quarters_ranges, quarters_by_time, \
+    current_year_ranges
 
 LiqSwept: TypeAlias = Tuple[float, bool]  # (price, is_swept)
 # (date_start, date_end, ended, high, half, low)
@@ -28,8 +30,6 @@ class TriadAsset(Enum):
 class Asset:
     symbol: str
     snapshot_date_readable: str
-
-    prev_year: Optional[QuarterLiq]
 
     year_q1: Optional[QuarterLiq]
     year_q2: Optional[QuarterLiq]
@@ -82,6 +82,9 @@ class Asset:
     current_1w_candle: Optional[InnerCandle]
     prev_1month_candle: InnerCandle
     current_1month_candle: Optional[InnerCandle]
+
+    prev_year: Optional[QuarterLiq]
+    current_year_candle: Optional[InnerCandle]
 
     def yq_get(self, yq: YearQuarter) -> Optional[QuarterLiq]:
         match yq:
@@ -235,18 +238,18 @@ class Asset:
                     (new_half, False),
                     (new_low, False)
                 ))
-            else:
+            elif prev_yql:
                 self.yq_set(ranges_yq[i][0], (
                     prev_yql[0], prev_yql[1], prev_yql[2],
-                    (prev_yql[3][0], prev_yql[3][0] < candle[1]),
-                    (prev_yql[4][0], candle[2] <= prev_yql[4][0] <= candle[1]),
-                    (prev_yql[5][0], prev_yql[5][0] > candle[2])
+                    (prev_yql[3][0], prev_yql[3][1] or prev_yql[3][0] < candle[1]),
+                    (prev_yql[4][0], prev_yql[4][1] or candle[2] <= prev_yql[4][0] <= candle[1]),
+                    (prev_yql[5][0], prev_yql[5][1] or prev_yql[5][0] > candle[2])
                 ))
 
         if prev_yq != new_yq:
             if prev_yq == YearQuarter.YQ1:
                 self.year_q4 = None
-                self.true_yo = (candle[4], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
+                self.true_yo = (candle[3], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
             elif prev_yq == YearQuarter.YQ4:
                 self.year_q1 = None
                 self.year_q2 = None
@@ -268,19 +271,19 @@ class Asset:
                     (new_half, False),
                     (new_low, False)
                 ))
-            else:
+            elif prev_mwl:
                 self.mw_set(ranges_mw[i][0], (
                     prev_mwl[0], prev_mwl[1], prev_mwl[2],
-                    (prev_mwl[3][0], prev_mwl[3][0] < candle[1]),
-                    (prev_mwl[4][0], candle[2] <= prev_mwl[4][0] <= candle[1]),
-                    (prev_mwl[5][0], prev_mwl[5][0] > candle[2])
+                    (prev_mwl[3][0], prev_mwl[3][1] or prev_mwl[3][0] < candle[1]),
+                    (prev_mwl[4][0], prev_mwl[4][1] or candle[2] <= prev_mwl[4][0] <= candle[1]),
+                    (prev_mwl[5][0], prev_mwl[5][1] or prev_mwl[5][0] > candle[2])
                 ))
 
         if prev_mw != new_mw:
             if prev_mw == MonthWeek.MW1:
                 self.week4 = None
                 self.week5 = None
-                self.true_mo = (candle[4], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
+                self.true_mo = (candle[3], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
             elif prev_mw == MonthWeek.MW4:
                 if new_mw != MonthWeek.MW5:
                     self.week1 = None
@@ -308,19 +311,19 @@ class Asset:
                     (new_half, False),
                     (new_low, False)
                 ))
-            else:
+            elif prev_wdl:
                 self.wd_set(ranges_wd[i][0], (
                     prev_wdl[0], prev_wdl[1], prev_wdl[2],
-                    (prev_wdl[3][0], prev_wdl[3][0] < candle[1]),
-                    (prev_wdl[4][0], candle[2] <= prev_wdl[4][0] <= candle[1]),
-                    (prev_wdl[5][0], prev_wdl[5][0] > candle[2])
+                    (prev_wdl[3][0], prev_wdl[3][1] or prev_wdl[3][0] < candle[1]),
+                    (prev_wdl[4][0], prev_wdl[4][1] or candle[2] <= prev_wdl[4][0] <= candle[1]),
+                    (prev_wdl[5][0], prev_wdl[5][1] or prev_wdl[5][0] > candle[2])
                 ))
 
         if prev_wd != new_wd:
             if prev_wd == WeekDay.Mon:
                 self.thu = None
                 self.fri = None
-                self.true_wo = (candle[4], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
+                self.true_wo = (candle[3], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
             elif prev_wd == WeekDay.Fri:
                 self.mon = None
                 self.tue = None
@@ -346,18 +349,18 @@ class Asset:
                     (new_half, False),
                     (new_low, False)
                 ))
-            else:
+            elif prev_dql:
                 self.dq_set(ranges_dq[i][0], (
                     prev_dql[0], prev_dql[1], prev_dql[2],
-                    (prev_dql[3][0], prev_dql[3][0] < candle[1]),
-                    (prev_dql[4][0], candle[2] <= prev_dql[4][0] <= candle[1]),
-                    (prev_dql[5][0], prev_dql[5][0] > candle[2])
+                    (prev_dql[3][0], prev_dql[3][1] or prev_dql[3][0] < candle[1]),
+                    (prev_dql[4][0], prev_dql[4][1] or candle[2] <= prev_dql[4][0] <= candle[1]),
+                    (prev_dql[5][0], prev_dql[5][1] or prev_dql[5][0] > candle[2])
                 ))
 
         if prev_dq != new_dq:
             if prev_dq == DayQuarter.DQ1_Asia:
                 self.nypm = None
-                self.true_do = (candle[4], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
+                self.true_do = (candle[3], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
             elif prev_dq == DayQuarter.DQ4_NYPM:
                 self.asia = None
                 self.london = None
@@ -379,18 +382,18 @@ class Asset:
                     (new_half, False),
                     (new_low, False)
                 ))
-            else:
+            elif prev_q90ml:
                 self.q90m_set(ranges_q90m[i][0], (
                     prev_q90ml[0], prev_q90ml[1], prev_q90ml[2],
-                    (prev_q90ml[3][0], prev_q90ml[3][0] < candle[1]),
-                    (prev_q90ml[4][0], candle[2] <= prev_q90ml[4][0] <= candle[1]),
-                    (prev_q90ml[5][0], prev_q90ml[5][0] > candle[2])
+                    (prev_q90ml[3][0], prev_q90ml[3][1] or prev_q90ml[3][0] < candle[1]),
+                    (prev_q90ml[4][0], prev_q90ml[4][1] or candle[2] <= prev_q90ml[4][0] <= candle[1]),
+                    (prev_q90ml[5][0], prev_q90ml[5][1] or prev_q90ml[5][0] > candle[2])
                 ))
 
         if prev_q90m != new_q90m:
             if prev_q90m == Quarter90m.Q1_90m:
                 self.q4_90m = None
-                self.true_90m_open = (candle[4], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
+                self.true_90m_open = (candle[3], to_date_str(to_utc_datetime(candle[5]) + timedelta(minutes=15)))
             elif prev_q90m == Quarter90m.Q4_90m:
                 self.q1_90m = None
                 self.q2_90m = None
@@ -421,6 +424,9 @@ class Asset:
         current_1w_from, current_1w_to = get_current_1w_from_to(self.snapshot_date_readable)
         prev_1month_from, prev_1month_to = get_prev_1month_from_to(self.snapshot_date_readable)
         current_1month_from, current_1month_to = get_current_1month_from_to(self.snapshot_date_readable)
+
+        prev_year_from, prev_year_to = prev_year_ranges(self.snapshot_date_readable)
+        current_year_from, current_year_to = current_year_ranges(self.snapshot_date_readable)
 
         if current_30m_from <= to_utc_datetime(candle[5]) < current_30m_to:
             if not self.current_30m_candle:
@@ -492,6 +498,29 @@ class Asset:
                 self.prev_1month_candle = as_1_candle([self.current_1month_candle, candle])
                 self.current_1month_candle = None
 
+        if current_year_from <= to_utc_datetime(candle[5]) < current_year_to:
+            if not self.current_year_candle:
+                self.current_year_candle = candle
+            else:
+                self.current_year_candle = as_1_candle([self.current_year_candle, candle])
+
+            self.prev_year = (
+                self.prev_year[0], self.prev_year[1], self.prev_year[2],
+                (self.prev_year[3][0], self.prev_year[3][1] or self.prev_year[3][0] < candle[1]),
+                (self.prev_year[4][0], self.prev_year[4][1] or candle[2] <= self.prev_year[4][0] <= candle[1]),
+                (self.prev_year[5][0], self.prev_year[5][1] or self.prev_year[5][0] > candle[2])
+            )
+        elif prev_year_from <= to_utc_datetime(candle[5]) < prev_year_to:
+            if to_utc_datetime(self.current_year_candle[5]) != current_year_from:
+                current_year = as_1_candle([self.current_year_candle, candle])
+                self.prev_year = (
+                    to_date_str(prev_year_from), to_date_str(prev_year_to), True,
+                    (current_year[1], False),
+                    ((current_year[1] + current_year[2]) / 2, False),
+                    (current_year[2], False)
+                )
+                self.current_year_candle = None
+
     def populate(self, reverse_15m_gen: Reverse15mGenerator):
         self.prev_15m_candle = next(reverse_15m_gen)
 
@@ -515,77 +544,112 @@ class Asset:
         prev_1month_from, prev_1month_to = get_prev_1month_from_to(self.snapshot_date_readable)
         current_1month_from, current_1month_to = get_current_1month_from_to(self.snapshot_date_readable)
 
+        prev_year_from, prev_year_to = prev_year_ranges(self.snapshot_date_readable)
+        current_year_from, current_year_to = current_year_ranges(self.snapshot_date_readable)
+
         ranges_90m, t90m0 = quarters90m_ranges(self.snapshot_date_readable)
-        sweeps_90m = [(highest_sweep, lowest_sweep) for _ in ranges_90m]
+        sweeps_90m = []
         cum_90m_quarters = []
         for rng_90m in ranges_90m:
-            cum_90m_quarters.append(self.prev_15m_candle if rng_90m[1] <= to_utc_datetime(
-                self.prev_15m_candle[5]) < rng_90m[2] else None)
+            if rng_90m[1] <= to_utc_datetime(self.prev_15m_candle[5]) < rng_90m[2]:
+                sweeps_90m.append(None)
+                cum_90m_quarters.append(self.prev_15m_candle)
+            else:
+                cum_90m_quarters.append(None)
+                sweeps_90m.append((highest_sweep, lowest_sweep))
 
         ranges_dq, tdo = day_quarters_ranges(self.snapshot_date_readable)
-        sweeps_dq = [(highest_sweep, lowest_sweep) for _ in ranges_dq]
+        sweeps_dq = []
         cum_dq_quarters = []
         for rng_dq in ranges_dq:
-            cum_dq_quarters.append(self.prev_15m_candle if rng_dq[1] <= to_utc_datetime(
-                self.prev_15m_candle[5]) < rng_dq[2] else None)
+            if rng_dq[1] <= to_utc_datetime(self.prev_15m_candle[5]) < rng_dq[2]:
+                sweeps_dq.append(None)
+                cum_dq_quarters.append(self.prev_15m_candle)
+            else:
+                cum_dq_quarters.append(None)
+                sweeps_dq.append((highest_sweep, lowest_sweep))
 
         ranges_wd, two = weekday_ranges(self.snapshot_date_readable)
-        sweeps_wd = [(highest_sweep, lowest_sweep) for _ in ranges_wd]
+        sweeps_wd = []
         cum_wd_quarters = []
         for rng_wd in ranges_wd:
-            cum_wd_quarters.append(self.prev_15m_candle if rng_wd[1] <= to_utc_datetime(
-                self.prev_15m_candle[5]) < rng_wd[2] else None)
+            if rng_wd[1] <= to_utc_datetime(self.prev_15m_candle[5]) < rng_wd[2]:
+                sweeps_wd.append(None)
+                cum_wd_quarters.append(self.prev_15m_candle)
+            else:
+                cum_wd_quarters.append(None)
+                sweeps_wd.append((highest_sweep, lowest_sweep))
 
         ranges_mw, tmo = month_week_quarters_ranges(self.snapshot_date_readable)
-        sweeps_mw = [(highest_sweep, lowest_sweep) for _ in ranges_mw]
+        sweeps_mw = []
         cum_mw_quarters = []
         for rng_mw in ranges_mw:
-            cum_mw_quarters.append(self.prev_15m_candle if rng_mw[1] <= to_utc_datetime(
-                self.prev_15m_candle[5]) < rng_mw[2] else None)
+            if rng_mw[1] <= to_utc_datetime(self.prev_15m_candle[5]) < rng_mw[2]:
+                sweeps_mw.append(None)
+                cum_mw_quarters.append(self.prev_15m_candle)
+            else:
+                cum_mw_quarters.append(None)
+                sweeps_mw.append((highest_sweep, lowest_sweep))
 
         ranges_yq, tyo = year_quarters_ranges(self.snapshot_date_readable)
-        sweeps_yq = [(highest_sweep, lowest_sweep) for _ in ranges_yq]
+        sweeps_yq = []
         cum_yq_quarters = []
         for rng_yq in ranges_yq:
-            cum_yq_quarters.append(self.prev_15m_candle if rng_yq[1] <= to_utc_datetime(
-                self.prev_15m_candle[5]) < rng_yq[2] else None)
+            if rng_yq[1] <= to_utc_datetime(self.prev_15m_candle[5]) < rng_yq[2]:
+                sweeps_yq.append(None)
+                cum_yq_quarters.append(self.prev_15m_candle)
+            else:
+                cum_yq_quarters.append(None)
+                sweeps_yq.append((highest_sweep, lowest_sweep))
 
-        prev_year_from, prev_year_to = prev_year_ranges(self.snapshot_date_readable)
-        prev_year_high_sweep, prev_year_low_sweep = highest_sweep, lowest_sweep
-        cum_prev_year = self.prev_15m_candle if prev_year_from <= to_utc_datetime(
-            self.prev_15m_candle[5]) < prev_year_to else None
-
-        cum_prev_30m_candle = self.prev_15m_candle if prev_30m_from <= to_utc_datetime(
+        self.prev_30m_candle = self.prev_15m_candle if prev_30m_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_30m_to else None
-        cum_current_30m_candle = self.prev_15m_candle if current_30m_from <= to_utc_datetime(
+        self.current_30m_candle = self.prev_15m_candle if current_30m_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_30m_to else None
-        cum_prev_1h_candle = self.prev_15m_candle if prev_1h_from <= to_utc_datetime(
+
+        self.prev_1h_candle = self.prev_15m_candle if prev_1h_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_1h_to else None
-        cum_current_1h_candle = self.prev_15m_candle if current_1h_from <= to_utc_datetime(
+        self.current_1h_candle = self.prev_15m_candle if current_1h_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_1h_to else None
-        cum_prev_2h_candle = self.prev_15m_candle if prev_2h_from <= to_utc_datetime(
+
+        self.prev_2h_candle = self.prev_15m_candle if prev_2h_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_2h_to else None
-        cum_current_2h_candle = self.prev_15m_candle if current_2h_from <= to_utc_datetime(
+        self.current_2h_candle = self.prev_15m_candle if current_2h_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_2h_to else None
-        cum_prev_4h_candle = self.prev_15m_candle if prev_4h_from <= to_utc_datetime(
+
+        self.prev_4h_candle = self.prev_15m_candle if prev_4h_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_4h_to else None
-        cum_current_4h_candle = self.prev_15m_candle if current_4h_from <= to_utc_datetime(
+        self.current_4h_candle = self.prev_15m_candle if current_4h_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_4h_to else None
-        cum_prev_1d_candle = self.prev_15m_candle if prev_1d_from <= to_utc_datetime(
+
+        self.prev_1d_candle = self.prev_15m_candle if prev_1d_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_1d_to else None
-        cum_current_1d_candle = self.prev_15m_candle if current_1d_from <= to_utc_datetime(
+        self.current_1d_candle = self.prev_15m_candle if current_1d_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_1d_to else None
-        cum_prev_1w_candle = self.prev_15m_candle if prev_1w_from <= to_utc_datetime(
+
+        self.prev_1w_candle = self.prev_15m_candle if prev_1w_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_1w_to else None
-        cum_current_1w_candle = self.prev_15m_candle if current_1w_from <= to_utc_datetime(
+        self.current_1w_candle = self.prev_15m_candle if current_1w_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_1w_to else None
-        cum_prev_1month_candle = self.prev_15m_candle if prev_1month_from <= to_utc_datetime(
+
+        self.prev_1month_candle = self.prev_15m_candle if prev_1month_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < prev_1month_to else None
-        cum_current_1month_candle = self.prev_15m_candle if current_1month_from <= to_utc_datetime(
+        self.current_1month_candle = self.prev_15m_candle if current_1month_from <= to_utc_datetime(
             self.prev_15m_candle[5]) < current_1month_to else None
+
+        if prev_year_from <= to_utc_datetime(self.prev_15m_candle[5]) < prev_year_to:
+            prev_year_sweeps = None
+            cum_prev_year = self.prev_15m_candle
+        else:
+            prev_year_sweeps = (highest_sweep, lowest_sweep)
+            cum_prev_year = None
+
+        self.current_year_candle = self.prev_15m_candle if current_year_from <= to_utc_datetime(
+            self.prev_15m_candle[5]) < current_year_to else None
 
         while True:
             prev_candle = next(reverse_15m_gen)
+            pc_date = to_utc_datetime(prev_candle[5])
 
             if prev_candle[5] == t90m0:
                 self.true_90m_open = (prev_candle[0], t90m0)
@@ -598,237 +662,177 @@ class Asset:
             if prev_candle[5] == tyo:
                 self.true_yo = (prev_candle[0], tyo)
 
-            for i in range(len(ranges_90m)):
-                res_rng = None
-                if ranges_90m[i][1] <= to_utc_datetime(prev_candle[5]) < ranges_90m[i][2]:
-                    if not cum_90m_quarters[i]:
+            if pc_date >= ranges_90m[0][1]:
+                for i in range(len(ranges_90m)):
+                    if pc_date > ranges_90m[i][2]:
                         sweeps_90m[i] = (highest_sweep, lowest_sweep)
-                        cum_90m_quarters[i] = prev_candle
-                    else:
-                        cum_90m_quarters[i] = as_1_candle([prev_candle, cum_90m_quarters[i]])
-                    if ranges_90m[i][1] == to_utc_datetime(prev_candle[5]):
-                        half = (cum_90m_quarters[i][1] + cum_90m_quarters[i][2]) / 2
-                        res_rng = (
-                            cum_90m_quarters[i][5], to_date_str(ranges_90m[i][2]),
-                            ranges_90m[i][2] < to_utc_datetime(self.snapshot_date_readable),
-                            (cum_90m_quarters[i][1], cum_90m_quarters[i][1] < sweeps_90m[i][0]),
-                            (half, sweeps_90m[i][1] <= half <= sweeps_90m[i][0]),
-                            (cum_90m_quarters[i][2], cum_90m_quarters[i][2] > sweeps_90m[i][1])
-                        )
-                if res_rng and ranges_90m[i][0] == Quarter90m.Q1_90m:
-                    self.q1_90m = res_rng
-                elif res_rng and ranges_90m[i][0] == Quarter90m.Q2_90m:
-                    self.q2_90m = res_rng
-                elif res_rng and ranges_90m[i][0] == Quarter90m.Q3_90m:
-                    self.q3_90m = res_rng
-                elif res_rng and ranges_90m[i][0] == Quarter90m.Q4_90m:
-                    self.q4_90m = res_rng
+                    if ranges_90m[i][1] <= pc_date < ranges_90m[i][2]:
+                        cum_90m_quarters[i] = prev_candle if not cum_90m_quarters[i] else as_1_candle(
+                            [prev_candle, cum_90m_quarters[i]])
+                        if ranges_90m[i][1] == pc_date:
+                            half = (cum_90m_quarters[i][1] + cum_90m_quarters[i][2]) / 2
+                            self.q90m_set(ranges_90m[i][0], (
+                                cum_90m_quarters[i][5], to_date_str(ranges_90m[i][2]),
+                                ranges_90m[i][2] < to_utc_datetime(self.snapshot_date_readable),
+                                (cum_90m_quarters[i][1],
+                                 False if not sweeps_90m[i] else cum_90m_quarters[i][1] < sweeps_90m[i][0]),
+                                (half, False if not sweeps_90m[i] else sweeps_90m[i][1] <= half <= sweeps_90m[i][0]),
+                                (cum_90m_quarters[i][2],
+                                 False if not sweeps_90m[i] else cum_90m_quarters[i][2] > sweeps_90m[i][1])
+                            ))
 
-            for i in range(len(ranges_dq)):
-                res_rng = None
-                if ranges_dq[i][1] <= to_utc_datetime(prev_candle[5]) < ranges_dq[i][2]:
-                    if not cum_dq_quarters[i]:
+            if pc_date >= ranges_dq[0][1]:
+                for i in range(len(ranges_dq)):
+                    if pc_date > ranges_dq[i][2]:
                         sweeps_dq[i] = (highest_sweep, lowest_sweep)
-                        cum_dq_quarters[i] = prev_candle
-                    else:
-                        cum_dq_quarters[i] = as_1_candle([prev_candle, cum_dq_quarters[i]])
-                    if ranges_dq[i][1] == to_utc_datetime(prev_candle[5]):
-                        half = (cum_dq_quarters[i][1] + cum_dq_quarters[i][2]) / 2
-                        res_rng = (
-                            cum_dq_quarters[i][5], to_date_str(ranges_dq[i][2]),
-                            ranges_dq[i][2] < to_utc_datetime(self.snapshot_date_readable),
-                            (cum_dq_quarters[i][1], cum_dq_quarters[i][1] < sweeps_dq[i][0]),
-                            (half, sweeps_dq[i][1] <= half <= sweeps_dq[i][0]),
-                            (cum_dq_quarters[i][2], cum_dq_quarters[i][2] > sweeps_dq[i][1])
-                        )
-                if res_rng and ranges_dq[i][0] == DayQuarter.DQ1_Asia:
-                    self.asia = res_rng
-                elif res_rng and ranges_dq[i][0] == DayQuarter.DQ2_London:
-                    self.london = res_rng
-                elif res_rng and ranges_dq[i][0] == DayQuarter.DQ3_NYAM:
-                    self.nyam = res_rng
-                elif res_rng and ranges_dq[i][0] == DayQuarter.DQ4_NYPM:
-                    self.nypm = res_rng
+                    if ranges_dq[i][1] <= pc_date < ranges_dq[i][2]:
+                        cum_dq_quarters[i] = prev_candle if not cum_dq_quarters[i] else as_1_candle(
+                            [prev_candle, cum_dq_quarters[i]])
+                        if ranges_dq[i][1] == pc_date:
+                            half = (cum_dq_quarters[i][1] + cum_dq_quarters[i][2]) / 2
+                            self.dq_set(ranges_dq[i][0], (
+                                cum_dq_quarters[i][5], to_date_str(ranges_dq[i][2]),
+                                ranges_dq[i][2] < to_utc_datetime(self.snapshot_date_readable),
+                                (cum_dq_quarters[i][1],
+                                 False if not sweeps_dq[i] else cum_dq_quarters[i][1] < sweeps_dq[i][0]),
+                                (half, False if not sweeps_dq[i] else sweeps_dq[i][1] <= half <= sweeps_dq[i][0]),
+                                (cum_dq_quarters[i][2],
+                                 False if not sweeps_dq[i] else cum_dq_quarters[i][2] > sweeps_dq[i][1])
+                            ))
 
-            for i in range(len(ranges_wd)):
-                res_rng = None
-                if ranges_wd[i][1] <= to_utc_datetime(prev_candle[5]) < ranges_wd[i][2]:
-                    if not cum_wd_quarters[i]:
+            if pc_date >= ranges_wd[0][1]:
+                for i in range(len(ranges_wd)):
+                    if pc_date > ranges_wd[i][2]:
                         sweeps_wd[i] = (highest_sweep, lowest_sweep)
-                        cum_wd_quarters[i] = prev_candle
-                    else:
-                        cum_wd_quarters[i] = as_1_candle([prev_candle, cum_wd_quarters[i]])
-                    if ranges_wd[i][1] == to_utc_datetime(prev_candle[5]):
-                        half = (cum_wd_quarters[i][1] + cum_wd_quarters[i][2]) / 2
-                        res_rng = (
-                            cum_wd_quarters[i][5], to_date_str(ranges_wd[i][2]),
-                            ranges_wd[i][2] < to_utc_datetime(self.snapshot_date_readable),
-                            (cum_wd_quarters[i][1], cum_wd_quarters[i][1] < sweeps_wd[i][0]),
-                            (half, sweeps_wd[i][1] <= half <= sweeps_wd[i][0]),
-                            (cum_wd_quarters[i][2], cum_wd_quarters[i][2] > sweeps_wd[i][1])
-                        )
-                if res_rng and ranges_wd[i][0] == WeekDay.Mon:
-                    self.mon = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.Tue:
-                    self.tue = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.Wed:
-                    self.wed = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.Thu:
-                    self.thu = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.MonThu:
-                    self.mon_thu = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.Fri:
-                    self.fri = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.MonFri:
-                    self.mon_fri = res_rng
-                elif res_rng and ranges_wd[i][0] == WeekDay.Sat:
-                    self.sat = res_rng
+                    if ranges_wd[i][1] <= pc_date < ranges_wd[i][2]:
+                        cum_wd_quarters[i] = prev_candle if not cum_wd_quarters[i] else as_1_candle(
+                            [prev_candle, cum_wd_quarters[i]])
+                        if ranges_wd[i][1] == pc_date:
+                            half = (cum_wd_quarters[i][1] + cum_wd_quarters[i][2]) / 2
+                            self.wd_set(ranges_wd[i][0], (
+                                cum_wd_quarters[i][5], to_date_str(ranges_wd[i][2]),
+                                ranges_wd[i][2] < to_utc_datetime(self.snapshot_date_readable),
+                                (cum_wd_quarters[i][1],
+                                 False if not sweeps_wd[i] else cum_wd_quarters[i][1] < sweeps_wd[i][0]),
+                                (half, False if not sweeps_wd[i] else sweeps_wd[i][1] <= half <= sweeps_wd[i][0]),
+                                (cum_wd_quarters[i][2],
+                                 False if not sweeps_wd[i] else cum_wd_quarters[i][2] > sweeps_wd[i][1])
+                            ))
 
-            for i in range(len(ranges_mw)):
-                res_rng = None
-                if ranges_mw[i][1] <= to_utc_datetime(prev_candle[5]) < ranges_mw[i][2]:
-                    if not cum_mw_quarters[i]:
+            if pc_date >= ranges_mw[0][1]:
+                for i in range(len(ranges_mw)):
+                    if pc_date > ranges_mw[i][2]:
                         sweeps_mw[i] = (highest_sweep, lowest_sweep)
-                        cum_mw_quarters[i] = prev_candle
-                    else:
-                        cum_mw_quarters[i] = as_1_candle([prev_candle, cum_mw_quarters[i]])
-                    if ranges_mw[i][1] == to_utc_datetime(prev_candle[5]):
-                        half = (cum_mw_quarters[i][1] + cum_mw_quarters[i][2]) / 2
-                        res_rng = (
-                            cum_mw_quarters[i][5], to_date_str(ranges_mw[i][2]),
-                            ranges_mw[i][2] < to_utc_datetime(self.snapshot_date_readable),
-                            (cum_mw_quarters[i][1], cum_mw_quarters[i][1] < sweeps_mw[i][0]),
-                            (half, sweeps_mw[i][1] <= half <= sweeps_mw[i][0]),
-                            (cum_mw_quarters[i][2], cum_mw_quarters[i][2] > sweeps_mw[i][1])
-                        )
-                if res_rng and ranges_mw[i][0] == MonthWeek.MW1:
-                    self.week1 = res_rng
-                elif res_rng and ranges_mw[i][0] == MonthWeek.MW2:
-                    self.week2 = res_rng
-                elif res_rng and ranges_mw[i][0] == MonthWeek.MW3:
-                    self.week3 = res_rng
-                elif res_rng and ranges_mw[i][0] == MonthWeek.MW4:
-                    self.week4 = res_rng
-                elif res_rng and ranges_mw[i][0] == MonthWeek.MW5:
-                    self.week5 = res_rng
+                    if ranges_mw[i][1] <= pc_date < ranges_mw[i][2]:
+                        cum_mw_quarters[i] = prev_candle if not cum_mw_quarters[i] else as_1_candle(
+                            [prev_candle, cum_mw_quarters[i]])
+                        if ranges_mw[i][1] == pc_date:
+                            half = (cum_mw_quarters[i][1] + cum_mw_quarters[i][2]) / 2
+                            self.mw_set(ranges_mw[i][0], (
+                                cum_mw_quarters[i][5], to_date_str(ranges_mw[i][2]),
+                                ranges_mw[i][2] < to_utc_datetime(self.snapshot_date_readable),
+                                (cum_mw_quarters[i][1],
+                                 False if not sweeps_mw[i] else cum_mw_quarters[i][1] < sweeps_mw[i][0]),
+                                (half, False if not sweeps_mw[i] else sweeps_mw[i][1] <= half <= sweeps_mw[i][0]),
+                                (cum_mw_quarters[i][2],
+                                 False if not sweeps_mw[i] else cum_mw_quarters[i][2] > sweeps_mw[i][1])
+                            ))
 
-            for i in range(len(ranges_yq)):
-                if ranges_yq[i][1] <= to_utc_datetime(prev_candle[5]) < ranges_yq[i][2]:
-                    if not cum_yq_quarters[i]:
+            if pc_date >= ranges_yq[0][1]:
+                for i in range(len(ranges_yq)):
+                    if pc_date > ranges_yq[i][2]:
                         sweeps_yq[i] = (highest_sweep, lowest_sweep)
-                        cum_yq_quarters[i] = prev_candle
-                    else:
-                        cum_yq_quarters[i] = as_1_candle([prev_candle, cum_yq_quarters[i]])
-                    if ranges_yq[i][1] == to_utc_datetime(prev_candle[5]):
-                        half = (cum_yq_quarters[i][1] + cum_yq_quarters[i][2]) / 2
-                        self.yq_set(ranges_yq[i][0], (
-                            cum_yq_quarters[i][5], to_date_str(ranges_yq[i][2]),
-                            ranges_yq[i][2] < to_utc_datetime(self.snapshot_date_readable),
-                            (cum_yq_quarters[i][1], cum_yq_quarters[i][1] < sweeps_yq[i][0]),
-                            (half, sweeps_yq[i][1] <= half <= sweeps_yq[i][0]),
-                            (cum_yq_quarters[i][2], cum_yq_quarters[i][2] > sweeps_yq[i][1])
-                        ))
+                    if ranges_yq[i][1] <= pc_date < ranges_yq[i][2]:
+                        cum_yq_quarters[i] = prev_candle if not cum_yq_quarters[i] else as_1_candle(
+                            [prev_candle, cum_yq_quarters[i]])
+                        if ranges_yq[i][1] == pc_date:
+                            half = (cum_yq_quarters[i][1] + cum_yq_quarters[i][2]) / 2
+                            self.yq_set(ranges_yq[i][0], (
+                                cum_yq_quarters[i][5], to_date_str(ranges_yq[i][2]),
+                                ranges_yq[i][2] < to_utc_datetime(self.snapshot_date_readable),
+                                (cum_yq_quarters[i][1],
+                                 False if not sweeps_yq[i] else cum_yq_quarters[i][1] < sweeps_yq[i][0]),
+                                (half, False if not sweeps_yq[i] else sweeps_yq[i][1] <= half <= sweeps_yq[i][0]),
+                                (cum_yq_quarters[i][2],
+                                 False if not sweeps_yq[i] else cum_yq_quarters[i][2] > sweeps_yq[i][1])
+                            ))
 
-            if not self.prev_year and prev_year_from <= to_utc_datetime(prev_candle[5]) < prev_year_to:
-                if not cum_prev_year:
-                    prev_year_high_sweep, prev_year_low_sweep = highest_sweep, lowest_sweep
-                    cum_prev_year = prev_candle
-                else:
-                    cum_prev_year = as_1_candle([prev_candle, cum_prev_year])
+            if pc_date >= prev_1month_from:
+                if prev_30m_from <= pc_date < prev_30m_to:
+                    self.prev_30m_candle = prev_candle if not self.prev_30m_candle else as_1_candle(
+                        [prev_candle, self.prev_30m_candle])
+                if current_30m_from <= pc_date < current_30m_to:
+                    self.current_30m_candle = prev_candle if not self.current_30m_candle else as_1_candle(
+                        [prev_candle, self.current_30m_candle])
 
-                if prev_year_from == to_utc_datetime(prev_candle[5]):
+                if prev_1h_from <= pc_date < prev_1h_to:
+                    self.prev_1h_candle = prev_candle if not self.prev_1h_candle else as_1_candle(
+                        [prev_candle, self.prev_1h_candle])
+                if current_1h_from <= pc_date < current_1h_to:
+                    self.current_1h_candle = prev_candle if not self.current_1h_candle else as_1_candle(
+                        [prev_candle, self.current_1h_candle])
+
+                if prev_2h_from <= pc_date < prev_2h_to:
+                    self.prev_2h_candle = prev_candle if not self.prev_2h_candle else as_1_candle(
+                        [prev_candle, self.prev_2h_candle])
+                if current_2h_from <= pc_date < current_2h_to:
+                    self.current_2h_candle = prev_candle if not self.current_2h_candle else as_1_candle(
+                        [prev_candle, self.current_2h_candle])
+
+                if prev_4h_from <= pc_date < prev_4h_to:
+                    self.prev_4h_candle = prev_candle if not self.prev_4h_candle else as_1_candle(
+                        [prev_candle, self.prev_4h_candle])
+                if current_4h_from <= pc_date < current_4h_to:
+                    self.current_4h_candle = prev_candle if not self.current_4h_candle else as_1_candle(
+                        [prev_candle, self.current_4h_candle])
+
+                if prev_1d_from <= pc_date < prev_1d_to:
+                    self.prev_1d_candle = prev_candle if not self.prev_1d_candle else as_1_candle(
+                        [prev_candle, self.prev_1d_candle])
+                if current_1d_from <= pc_date < current_1d_to:
+                    self.current_1d_candle = prev_candle if not self.current_1d_candle else as_1_candle(
+                        [prev_candle, self.current_1d_candle])
+
+                if prev_1w_from <= pc_date < prev_1w_to:
+                    self.prev_1w_candle = prev_candle if not self.prev_1w_candle else as_1_candle(
+                        [prev_candle, self.prev_1w_candle])
+                if current_1w_from <= pc_date < current_1w_to:
+                    self.current_1w_candle = prev_candle if not self.current_1w_candle else as_1_candle(
+                        [prev_candle, self.current_1w_candle])
+
+                if prev_1month_from <= to_utc_datetime(
+                        prev_candle[5]) < prev_1month_to:
+                    self.prev_1month_candle = prev_candle if not self.prev_1month_candle else as_1_candle(
+                        [prev_candle, self.prev_1month_candle])
+                if current_1month_from <= to_utc_datetime(
+                        prev_candle[5]) < current_1month_to:
+                    self.current_1month_candle = prev_candle if not self.current_1month_candle else as_1_candle(
+                        [prev_candle, self.current_1month_candle])
+
+            if current_year_from <= to_utc_datetime(
+                    prev_candle[5]) < current_year_to:
+                self.current_year_candle = prev_candle if not self.current_year_candle else as_1_candle(
+                    [prev_candle, self.current_year_candle])
+
+            if pc_date > prev_year_to:
+                prev_year_sweeps = (highest_sweep, lowest_sweep)
+            if prev_year_from <= pc_date < prev_year_to:
+                cum_prev_year = prev_candle if not cum_prev_year else as_1_candle([prev_candle, cum_prev_year])
+
+                if prev_year_from == pc_date:
                     half = (cum_prev_year[1] + cum_prev_year[2]) / 2
                     self.prev_year = (
                         to_date_str(prev_year_from), to_date_str(prev_year_to),
                         prev_year_to < to_utc_datetime(self.snapshot_date_readable),
-                        (cum_prev_year[1], cum_prev_year[1] < prev_year_high_sweep),
-                        (half, prev_year_low_sweep <= half <= prev_year_high_sweep),
-                        (cum_prev_year[2], cum_prev_year[2] > prev_year_low_sweep)
+                        (cum_prev_year[1], False if not prev_year_sweeps else cum_prev_year[1] < prev_year_sweeps[0]),
+                        (half, False if not prev_year_sweeps else prev_year_sweeps[1] <= half <= prev_year_sweeps[0]),
+                        (cum_prev_year[2], False if not prev_year_sweeps else cum_prev_year[2] > prev_year_sweeps[1])
                     )
-
-            if self.prev_30m_candle[5] == "" and prev_30m_from <= to_utc_datetime(prev_candle[5]) < prev_30m_to:
-                cum_prev_30m_candle = prev_candle if not cum_prev_30m_candle else as_1_candle(
-                    [prev_candle, cum_prev_30m_candle])
-                if prev_30m_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_30m_candle = cum_prev_30m_candle
-            if not self.current_30m_candle and current_30m_from <= to_utc_datetime(prev_candle[5]) < current_30m_to:
-                cum_current_30m_candle = prev_candle if not cum_current_30m_candle else as_1_candle(
-                    [prev_candle, cum_current_30m_candle])
-                if current_30m_from == to_utc_datetime(prev_candle[5]):
-                    self.current_30m_candle = cum_current_30m_candle
-
-            if self.prev_1h_candle[5] == "" and prev_1h_from <= to_utc_datetime(prev_candle[5]) < prev_1h_to:
-                cum_prev_1h_candle = prev_candle if not cum_prev_1h_candle else as_1_candle(
-                    [prev_candle, cum_prev_1h_candle])
-                if prev_1h_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_1h_candle = cum_prev_1h_candle
-            if not self.current_1h_candle and current_1h_from <= to_utc_datetime(prev_candle[5]) < current_1h_to:
-                cum_current_1h_candle = prev_candle if not cum_current_1h_candle else as_1_candle(
-                    [prev_candle, cum_current_1h_candle])
-                if current_1h_from == to_utc_datetime(prev_candle[5]):
-                    self.current_1h_candle = cum_current_1h_candle
-
-            if self.prev_2h_candle[5] == "" and prev_2h_from <= to_utc_datetime(prev_candle[5]) < prev_2h_to:
-                cum_prev_2h_candle = prev_candle if not cum_prev_2h_candle else as_1_candle(
-                    [prev_candle, cum_prev_2h_candle])
-                if prev_2h_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_2h_candle = cum_prev_2h_candle
-            if not self.current_2h_candle and current_2h_from <= to_utc_datetime(prev_candle[5]) < current_2h_to:
-                cum_current_2h_candle = prev_candle if not cum_current_2h_candle else as_1_candle(
-                    [prev_candle, cum_current_2h_candle])
-                if current_2h_from == to_utc_datetime(prev_candle[5]):
-                    self.current_2h_candle = cum_current_2h_candle
-
-            if self.prev_4h_candle[5] == "" and prev_4h_from <= to_utc_datetime(prev_candle[5]) < prev_4h_to:
-                cum_prev_4h_candle = prev_candle if not cum_prev_4h_candle else as_1_candle(
-                    [prev_candle, cum_prev_4h_candle])
-                if prev_4h_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_4h_candle = cum_prev_4h_candle
-            if not self.current_4h_candle and current_4h_from <= to_utc_datetime(prev_candle[5]) < current_4h_to:
-                cum_current_4h_candle = prev_candle if not cum_current_4h_candle else as_1_candle(
-                    [prev_candle, cum_current_4h_candle])
-                if current_4h_from == to_utc_datetime(prev_candle[5]):
-                    self.current_4h_candle = cum_current_4h_candle
-
-            if self.prev_1d_candle[5] == "" and prev_1d_from <= to_utc_datetime(prev_candle[5]) < prev_1d_to:
-                cum_prev_1d_candle = prev_candle if not cum_prev_1d_candle else as_1_candle(
-                    [prev_candle, cum_prev_1d_candle])
-                if prev_1d_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_1d_candle = cum_prev_1d_candle
-            if not self.current_1d_candle and current_1d_from <= to_utc_datetime(prev_candle[5]) < current_1d_to:
-                cum_current_1d_candle = prev_candle if not cum_current_1d_candle else as_1_candle(
-                    [prev_candle, cum_current_1d_candle])
-                if current_1d_from == to_utc_datetime(prev_candle[5]):
-                    self.current_1d_candle = cum_current_1d_candle
-
-            if self.prev_1w_candle[5] == "" and prev_1w_from <= to_utc_datetime(prev_candle[5]) < prev_1w_to:
-                cum_prev_1w_candle = prev_candle if not cum_prev_1w_candle else as_1_candle(
-                    [prev_candle, cum_prev_1w_candle])
-                if prev_1w_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_1w_candle = cum_prev_1w_candle
-            if not self.current_1w_candle and current_1w_from <= to_utc_datetime(prev_candle[5]) < current_1w_to:
-                cum_current_1w_candle = prev_candle if not cum_current_1w_candle else as_1_candle(
-                    [prev_candle, cum_current_1w_candle])
-                if current_1w_from == to_utc_datetime(prev_candle[5]):
-                    self.current_1w_candle = cum_current_1w_candle
-
-            if self.prev_1month_candle[5] == "" and prev_1month_from <= to_utc_datetime(
-                    prev_candle[5]) < prev_1month_to:
-                cum_prev_1month_candle = prev_candle if not cum_prev_1month_candle else as_1_candle(
-                    [prev_candle, cum_prev_1month_candle])
-                if prev_1month_from == to_utc_datetime(prev_candle[5]):
-                    self.prev_1month_candle = cum_prev_1month_candle
-            if not self.current_1month_candle and current_1month_from <= to_utc_datetime(
-                    prev_candle[5]) < current_1month_to:
-                cum_current_1month_candle = prev_candle if not cum_current_1month_candle else as_1_candle(
-                    [prev_candle, cum_current_1month_candle])
-                if current_1month_from == to_utc_datetime(prev_candle[5]):
-                    self.current_1month_candle = cum_current_1month_candle
 
             highest_sweep = max(prev_candle[1], highest_sweep)
             lowest_sweep = min(prev_candle[2], lowest_sweep)
 
-            if to_utc_datetime(prev_candle[5]) <= prev_year_from:
+            if pc_date <= prev_year_from:
                 break
 
 
@@ -883,6 +887,7 @@ def new_empty_asset(symbol: str) -> Asset:
         current_1w_candle=None,
         prev_1month_candle=(-1, -1, -1, -1, -1, ""),
         current_1month_candle=None,
+        current_year_candle=None,
     )
 
 
@@ -902,23 +907,23 @@ class Triad:
     a3: Asset
 
     @staticmethod
-    def calculate_smt(a1_ql, a2_aq, a3_ql: Optional[QuarterLiq]) -> Tuple[SMT, SMT, SMT]:  # high, half, low
+    def calculate_smt(a1_ql, a2_aq, a3_ql: Optional[QuarterLiq]) -> Optional[Tuple[SMT, SMT, SMT]]:  # high, half, low
         _, _, _, a1_high, a1_half, a1_low = a1_ql
         _, _, _, a2_high, a2_half, a2_low = a2_aq
         _, _, _, a3_high, a3_half, a3_low = a3_ql
         high = [x[0] for x in
                 [(TriadAsset.A1, a1_high[1]), (TriadAsset.A2, a2_high[1]), (TriadAsset.A3, a3_high[1])] if x[1]]
-        high = None if len(high) == 3 else high
+        high = None if len(high) in [0, 3] else high
 
         half = [x[0] for x in
                 [(TriadAsset.A1, a1_half[1]), (TriadAsset.A2, a2_half[1]), (TriadAsset.A3, a3_half[1])] if x[1]]
-        half = None if len(half) == 3 else half
+        half = None if len(half) in [0, 3] else half
 
         low = [x[0] for x in
                [(TriadAsset.A1, a1_low[1]), (TriadAsset.A2, a2_low[1]), (TriadAsset.A3, a3_low[1])] if x[1]]
-        low = None if len(low) == 3 else low
+        low = None if len(low) in [0, 3] else low
 
-        return high, half, low
+        return None if not high and not half and not low else (high, half, low)
 
     def prev_year_smt(self) -> Tuple[SMT, SMT, SMT]:  # high, half, low
         return Triad.calculate_smt(self.a1.prev_year, self.a2.prev_year, self.a3.prev_year)
@@ -1053,7 +1058,7 @@ class Triad:
         if not a1_candle:
             return None
         green_candles = [x for x in [a1_candle, a2_candle, a3_candle] if x[0] > x[3]]
-        if [0, 3] in len(green_candles):
+        if len(green_candles) in [0, 3]:
             return None
 
         return (
@@ -1108,6 +1113,53 @@ class Triad:
         return Triad.calculate_psp(
             self.a1.current_1month_candle, self.a2.current_1month_candle, self.a3.current_1month_candle)
 
+    def actual_smt_psp(self):
+        result = {
+            'smt 1. prev_year': self.prev_year_smt(),
+            'smt 2.1 year_q1': self.year_q1_smt(),
+            'smt 2.2 year_q2': self.year_q2_smt(),
+            'smt 2.3 year_q3': self.year_q3_smt(),
+            'smt 2.4 year_q4': self.year_q4_smt(),
+            'smt 3.1 week1': self.week1_smt(),
+            'smt 3.2 week2': self.week2_smt(),
+            'smt 3.3 week3': self.week3_smt(),
+            'smt 3.4 week4': self.week4_smt(),
+            'smt 3.5 week5': self.week5_smt(),
+            'smt 4.1 mon': self.mon_smt(),
+            'smt 4.2 tue': self.tue_smt(),
+            'smt 4.3 wed': self.wed_smt(),
+            'smt 4.4 thu': self.thu_smt(),
+            'smt 4.4.1 mon_thu': self.mon_thu_smt(),
+            'smt 4.5 fri': self.fri_smt(),
+            'smt 4.5.1 mon_fri': self.mon_fri_smt(),
+            'smt 4.6 sat': self.sat_smt(),
+            'smt 5.1 asia': self.asia_smt(),
+            'smt 5.2 london': self.london_smt(),
+            'smt 5.3 nyam': self.nyam_smt(),
+            'smt 5.4 nypm': self.nypm_smt(),
+            'smt 6.1 q1_90': self.q1_90_smt(),
+            'smt 6.2 q2_90': self.q2_90_smt(),
+            'smt 6.3q3_90': self.q3_90_smt(),
+            'smt 6.4 q4_90': self.q4_90_smt(),
+            'psp 1.1 prev_15m_candle': self.prev_15m_candle_psp(),
+            'psp 2.1 prev_30m_candle': self.prev_30m_candle_psp(),
+            'psp 2.2 current_30m_candle': self.current_30m_candle_psp(),
+            'psp 3.1 prev_1h_candle': self.prev_1h_candle_psp(),
+            'psp 3.2 current_1h_candle': self.current_1h_candle_psp(),
+            'psp 4.1 prev_2h_candle': self.prev_2h_candle_psp(),
+            'psp 4.2 current_2h_candle': self.current_2h_candle_psp(),
+            'psp 5.1 prev_4h_candle': self.prev_4h_candle_psp(),
+            'psp 5.2 current_4h_candle': self.current_4h_candle_psp(),
+            'psp 6.1 prev_1d_candle': self.prev_1d_candle_psp(),
+            'psp 6.2 current_1d_candle': self.current_1d_candle_psp(),
+            'psp 7.1 prev_1w_candle': self.prev_1w_candle_psp(),
+            'psp 7.2 current_1w_candle': self.current_1w_candle_psp(),
+            'psp 8.1 prev_1month_candle': self.prev_1month_candle_psp(),
+            'psp 8.2 current_1month_candle': self.current_1month_candle_psp(),
+        }
+
+        return result
+
 
 def new_empty_triad(a1_symbol: str, a2_symbol: str, a3_symbol: str) -> Triad:
     return Triad(
@@ -1128,29 +1180,16 @@ def new_triad(symbols_tuple: Tuple[str, str, str],
     return res
 
 
-def test_15m_reverse_generator(symbol) -> Reverse15mGenerator:
-    candles_2024 = select_full_days_candles_15m(2024, symbol)
-    candles_2025 = select_full_days_candles_15m(2025, symbol)
-    candles = candles_2024 + candles_2025[:-1]
-
-    index = len(candles) - 1
-
-    while True:
-        yield candles[index]
-        index = index - 1
+def triad_decoder(dct):
+    if "a1" in dct:
+        return Triad(**dct)
+    if "snapshot_date_readable" in dct:
+        return Asset(**dct)
 
 
-if __name__ == "__main__":
-    try:
-        triad = new_triad(
-            ("BTCUSDT", "AVAXUSDT", "CRVUSDT"),
-            (
-                test_15m_reverse_generator("BTCUSDT"),
-                test_15m_reverse_generator("AVAXUSDT"),
-                test_15m_reverse_generator("CRVUSDT"),
-            )
-        )
+def triad_from_json(json_str):
+    return json.loads(json_str, object_hook=triad_decoder)
 
-    except KeyboardInterrupt:
-        print(f"KeyboardInterrupt, exiting ...")
-        quit(0)
+
+def json_from_triad(triad: Triad):
+    return json.dumps(asdict(triad), indent=2)

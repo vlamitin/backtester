@@ -18,4 +18,4 @@ def as_1_candle(candles: List[InnerCandle]) -> InnerCandle:
         if l <= low or low == -1:
             low = l
 
-    return open_, high, low, close, volume, date
+    return open_, high, low, close, round(volume, 3), date
