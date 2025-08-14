@@ -109,6 +109,26 @@ def select_full_days_candles_15m(year, symbol) -> List[InnerCandle]:
     return [(x[0], x[1], x[2], x[3], x[4], x[5]) for x in rows_15m]
 
 
+def select_candles_15m(year: int, symbol: str, from_date: str, to_date: str) -> List[InnerCandle]:
+    conn = connect_to_db(year)
+    c = conn.cursor()
+    # TODO will only work with 15m candles because of 85500!!
+    c.execute("""
+    SELECT open, high, low, close, volume, date_ts FROM raw_candles
+    WHERE symbol = ? AND period = ?
+        AND strftime('%s', date_ts) + 0 >= strftime('%s', ?) + 0
+        AND strftime('%s', date_ts) + 0 < strftime('%s', ?) + 0
+    ORDER BY strftime('%s', date_ts)""", (symbol, "15m", from_date, to_date))
+    rows_15m = c.fetchall()
+    conn.close()
+
+    if len(rows_15m) == 0:
+        print(f"Symbol {symbol} 15m not found in DB")
+        return []
+
+    return [(x[0], x[1], x[2], x[3], x[4], x[5]) for x in rows_15m]
+
+
 def raw_candle_to_db_format(symbol, period, inner_candle):
     return (symbol, inner_candle[5], period,
             inner_candle[0], inner_candle[1], inner_candle[2], inner_candle[3], inner_candle[4])
@@ -180,7 +200,8 @@ RETURNING ROWID""",
             rows
         )
         conn.commit()
-        print(f"Success inserting {len(session_trades)} notifier_trades for symbol {symbol} for strategy {strategy_name[0:2]}...")
+        print(
+            f"Success inserting {len(session_trades)} notifier_trades for symbol {symbol} for strategy {strategy_name[0:2]}...")
         c.execute("""SELECT ROWID FROM notifier_trades ORDER BY ROWID DESC LIMIT ?""", (len(session_trades),))
         result = c.fetchall()
         return [x[0] for x in result]
@@ -257,9 +278,11 @@ WHERE strftime('%s', date_ts) + 0 BETWEEN (SELECT start_time_sec FROM time_range
 
 if __name__ == "__main__":
     try:
-        res_btc = select_sorted_profiles(
-            "#2 Same as #1, but sessions thresholds are now calculated per-session based on quantiles for 2024 year",
-            "BTCUSDT"
+        res_btc = select_candles_15m(
+            2025,
+            "BTCUSDT",
+            '2025-07-24 11:45',
+            '2025-07-24 13:45',
         )
         print(res_btc)
     except KeyboardInterrupt:

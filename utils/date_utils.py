@@ -5,6 +5,9 @@ from zoneinfo import ZoneInfo
 
 from stock_market_research_kit.quarter import YearQuarter, MonthWeek, WeekDay, DayQuarter, Quarter90m
 
+utc_zone = ZoneInfo("UTC")
+ny_zone = ZoneInfo("America/New_York")
+
 
 # returns -1 if checked time is past, 0 if same day and +1 if future
 def is_same_day_or_past_or_future(checked_time_string, current_day_string):
@@ -671,6 +674,10 @@ def to_utc_datetime(date_str: str) -> datetime:
     return datetime.strptime(date_str, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo("UTC"))
 
 
+def to_ny_datetime(date_str: str) -> datetime:
+    return datetime.strptime(date_str, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo("America/New_York"))
+
+
 def to_date_str(date: datetime) -> str:
     return date.strftime("%Y-%m-%d %H:%M")
 
@@ -970,6 +977,8 @@ def get_current_1month_from_to(date_str: str) -> Tuple[datetime, datetime]:
     from_ = date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     to_ = (from_ + timedelta(days=45)).replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
     return from_, to_
+
+
 
 
 if __name__ == "__main__":
