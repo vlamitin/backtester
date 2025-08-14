@@ -29,7 +29,9 @@ def load_from_csv(symbol, period, year):
 
     timeseries_data = []
     for filename, data in all_data:
-        for row in data[1:]:
+        for row in data:
+            if not row[0].isdigit():
+                continue
             timeseries_data.append(to_inner_candle(row))
 
     return timeseries_data
@@ -85,30 +87,30 @@ if __name__ == "__main__":
     try:
         # update_candle_from_binance("BTCUSDT")
         for smb in [
-            "1INCHUSDT",
-            "AAVEUSDT",
-            "AVAXUSDT",
+            # "1INCHUSDT",
+            # "AAVEUSDT",
+            # "AVAXUSDT",
             "BTCUSDT",
-            "COMPUSDT",
-            "CRVUSDT",
-            "ETHUSDT",
-            "LINKUSDT",
-            "LTCUSDT",
-            "SOLUSDT",
-            "SUSHIUSDT",
-            "UNIUSDT",
-            "XLMUSDT",
-            "XMRUSDT",
+            # "COMPUSDT",
+            # "CRVUSDT",
+            # "ETHUSDT",
+            # "LINKUSDT",
+            # "LTCUSDT",
+            # "SOLUSDT",
+            # "SUSHIUSDT",
+            # "UNIUSDT",
+            # "XLMUSDT",
+            # "XMRUSDT",
         ]:
             update_candle_from_binance(smb)
-            # for series_year in [
-            #     # 2021,
-            #     # 2022,
-            #     # 2023,
-            #     # 2024,
-            #     2025
-            # ]:
-            #     fill_year_from_csv(series_year, smb)
+            for series_year in [
+                # 2021,
+                # 2022,
+                # 2023,
+                2024,
+                # 2025
+            ]:
+                fill_year_from_csv(series_year, smb)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
