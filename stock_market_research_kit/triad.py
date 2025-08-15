@@ -7,14 +7,14 @@ from enum import Enum
 from typing import TypeAlias, Tuple, Optional, List, Generator, Deque
 
 from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle, as_1month_candles, as_1w_candles, \
-    as_1d_candles
+    as_1d_candles, as_4h_candles, as_2h_candles, as_1h_candles, as_30m_candles, AsCandles
 from stock_market_research_kit.quarter import Quarter90m, DayQuarter, WeekDay, MonthWeek, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
     get_current_4h_from_to, get_prev_1d_from_to, get_current_1d_from_to, get_prev_1w_from_to, get_current_1w_from_to, \
     get_prev_1month_from_to, get_current_1month_from_to, quarters90m_ranges, day_quarters_ranges, \
     prev_year_ranges, weekday_ranges, month_week_quarters_ranges, year_quarters_ranges, quarters_by_time, \
-    current_year_ranges
+    current_year_ranges, GetDateRange
 
 LiqSwept: TypeAlias = Tuple[float, bool]  # (price, is_swept)
 # (date_start, date_end, ended, high, half, low)
@@ -107,7 +107,7 @@ class Asset:
         if segments_15m < 1:
             return []
 
-        first_index = math.floor((from_date - first_date).total_seconds() / (15 * 60)) - 1
+        first_index = math.floor((from_date - first_date).total_seconds() / (15 * 60))
         if first_index < 0:
             return []
 
@@ -940,6 +940,12 @@ class SMT:
     a2q: QuarterLiq
     a3q: QuarterLiq
 
+    type: str  # 'high' 'low' 'half_high' or 'half_low'
+
+    a1_sweep_candles_15m: List[InnerCandle]
+    a2_sweep_candles_15m: List[InnerCandle]
+    a3_sweep_candles_15m: List[InnerCandle]
+
     psps_15m: Optional[List[PSP]]
     psps_30m: Optional[List[PSP]]
     psps_1h: Optional[List[PSP]]
@@ -955,6 +961,10 @@ def new_empty_smt(a1q, a2q, a3q) -> SMT:
         a1q=a1q,
         a2q=a2q,
         a3q=a3q,
+        type='',
+        a1_sweep_candles_15m=[],
+        a2_sweep_candles_15m=[],
+        a3_sweep_candles_15m=[],
         psps_15m=None,
         psps_30m=None,
         psps_1h=None,
@@ -972,618 +982,812 @@ class Triad:
     a2: Asset
     a3: Asset
 
-    def high_month_psps(self, q_next_tick: str) -> List[PSP]:
-        psps = []
-        a1_candles_15m = self.a1.get_15m_candles_range(q_next_tick, self.a1.snapshot_date_readable)
-        a2_candles_15m = self.a2.get_15m_candles_range(q_next_tick, self.a2.snapshot_date_readable)
-        a3_candles_15m = self.a3.get_15m_candles_range(q_next_tick, self.a3.snapshot_date_readable)
-
-        prev_month_range = get_prev_1month_from_to(q_next_tick)
-        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
-            to_date_str(prev_month_range[0]), to_date_str(prev_month_range[1])
-        ))
-        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
-            to_date_str(prev_month_range[0]), to_date_str(prev_month_range[1])
-        ))
-        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
-            to_date_str(prev_month_range[0]), to_date_str(prev_month_range[1])
-        ))
-
-        a1_candles = as_1month_candles(a1_candles_15m)
-        a2_candles = as_1month_candles(a2_candles_15m)
-        a3_candles = as_1month_candles(a3_candles_15m)
-
-        for i in range(len(a1_candles)):
-            if len(psps) > 0:
-                if psps[-1].a1_candle[1] > a1_candles[i][1] \
-                        or psps[-1].a2_candle[1] > a2_candles[i][1] \
-                        or psps[-1].a3_candle[1] > a3_candles[i][1]:
-                    end = get_current_1month_from_to(a1_candles[i][5])[1]
-                    if end < to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1):
-                        psps[-1].confirmed = True
-
-            for j in range(len(psps)):
-                if not psps[j].swept_from_to:
-
-                    if psps[j].a1_candle[1] < a1_candles[i][1] \
-                            or psps[j].a2_candle[1] < a2_candles[i][1] \
-                            or psps[j].a3_candle[1] < a3_candles[i][1]:
-                        end = get_current_1month_from_to(a1_candles[i][5])[1]
-                        psps[j].swept_from_to = (
-                            a1_candles[i][5],
-                            to_date_str(min(
-                                end, to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)))
-                        )
-
-            if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
-                continue
-
-            if i == 0:
-                if a1_candles[i][1] < a1_prev_candle[1] \
-                        and a2_candles[i][1] < a2_prev_candle[1] \
-                        and a3_candles[i][1] < a3_prev_candle[1]:
-                    continue
-            else:
-                if a1_candles[i][1] < a1_candles[i - 1][1] \
-                        and a2_candles[i][1] < a2_candles[i - 1][1] \
-                        and a3_candles[i][1] < a3_candles[i - 1][1]:
-                    continue
-
-            psps.append(PSP(
-                a1_candle=a1_candles[i],
-                a2_candle=a2_candles[i],
-                a3_candle=a3_candles[i],
-                confirmed=False,
-                swept_from_to=None
-            ))
-
-        return psps
-
-    def low_month_psps(self, q_next_tick: str) -> List[PSP]:
-        psps = []
-        a1_candles_15m = self.a1.get_15m_candles_range(q_next_tick, self.a1.snapshot_date_readable)
-        a2_candles_15m = self.a2.get_15m_candles_range(q_next_tick, self.a2.snapshot_date_readable)
-        a3_candles_15m = self.a3.get_15m_candles_range(q_next_tick, self.a3.snapshot_date_readable)
-
-        prev_month_range = get_prev_1month_from_to(q_next_tick)
-        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
-            to_date_str(prev_month_range[0]), to_date_str(prev_month_range[1])
-        ))
-        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
-            to_date_str(prev_month_range[0]), to_date_str(prev_month_range[1])
-        ))
-        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
-            to_date_str(prev_month_range[0]), to_date_str(prev_month_range[1])
-        ))
-
-        a1_candles = as_1month_candles(a1_candles_15m)
-        a2_candles = as_1month_candles(a2_candles_15m)
-        a3_candles = as_1month_candles(a3_candles_15m)
-
-        for i in range(len(a1_candles)):
-            if len(psps) > 0:
-                if psps[-1].a1_candle[2] < a1_candles[i][2] \
-                        or psps[-1].a2_candle[2] < a2_candles[i][2] \
-                        or psps[-1].a3_candle[2] < a3_candles[i][2]:
-                    end = get_current_1month_from_to(a1_candles[i][5])[1]
-                    if end < to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1):
-                        psps[-1].confirmed = True
-
-            for j in range(len(psps)):
-                if not psps[j].swept_from_to:
-
-                    if psps[j].a1_candle[2] > a1_candles[i][2] \
-                            or psps[j].a2_candle[2] > a2_candles[i][2] \
-                            or psps[j].a3_candle[2] > a3_candles[i][2]:
-                        end = get_current_1month_from_to(a1_candles[i][5])[1]
-                        psps[j].swept_from_to = (
-                            a1_candles[i][5],
-                            to_date_str(min(
-                                end, to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)))
-                        )
-
-            if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
-                continue
-
-            if i == 0:
-                if a1_candles[i][2] > a1_prev_candle[2] \
-                        and a2_candles[i][2] > a2_prev_candle[2] \
-                        and a3_candles[i][2] > a3_prev_candle[2]:
-                    continue
-            else:
-                if a1_candles[i][2] > a1_candles[i - 1][2] \
-                        and a2_candles[i][2] > a2_candles[i - 1][2] \
-                        and a3_candles[i][2] > a3_candles[i - 1][2]:
-                    continue
-
-            psps.append(PSP(
-                a1_candle=a1_candles[i],
-                a2_candle=a2_candles[i],
-                a3_candle=a3_candles[i],
-                confirmed=False,
-                swept_from_to=None
-            ))
-
-        return psps
-
-    def high_week_psps(self, q_next_tick: str) -> List[PSP]:
-        psps = []
-        a1_candles_15m = self.a1.get_15m_candles_range(q_next_tick, self.a1.snapshot_date_readable)
-        a2_candles_15m = self.a2.get_15m_candles_range(q_next_tick, self.a2.snapshot_date_readable)
-        a3_candles_15m = self.a3.get_15m_candles_range(q_next_tick, self.a3.snapshot_date_readable)
-
-        prev_week_range = get_prev_1w_from_to(q_next_tick)
-        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
-            to_date_str(prev_week_range[0]), to_date_str(prev_week_range[1])
-        ))
-        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
-            to_date_str(prev_week_range[0]), to_date_str(prev_week_range[1])
-        ))
-        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
-            to_date_str(prev_week_range[0]), to_date_str(prev_week_range[1])
-        ))
-
-        a1_candles = as_1w_candles(a1_candles_15m)
-        a2_candles = as_1w_candles(a2_candles_15m)
-        a3_candles = as_1w_candles(a3_candles_15m)
-
-        for i in range(len(a1_candles)):
-            if len(psps) > 0:
-                if psps[-1].a1_candle[1] > a1_candles[i][1] \
-                        or psps[-1].a2_candle[1] > a2_candles[i][1] \
-                        or psps[-1].a3_candle[1] > a3_candles[i][1]:
-                    end = get_current_1w_from_to(a1_candles[i][5])[1]
-                    if end < to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1):
-                        psps[-1].confirmed = True
-
-            for j in range(len(psps)):
-                if not psps[j].swept_from_to:
-
-                    if psps[j].a1_candle[1] < a1_candles[i][1] \
-                            or psps[j].a2_candle[1] < a2_candles[i][1] \
-                            or psps[j].a3_candle[1] < a3_candles[i][1]:
-                        end = get_current_1w_from_to(a1_candles[i][5])[1]
-                        psps[j].swept_from_to = (
-                            a1_candles[i][5],
-                            to_date_str(min(
-                                end, to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)))
-                        )
-
-            if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
-                continue
-
-            if i == 0:
-                if a1_candles[i][1] < a1_prev_candle[1] \
-                        and a2_candles[i][1] < a2_prev_candle[1] \
-                        and a3_candles[i][1] < a3_prev_candle[1]:
-                    continue
-            else:
-                if a1_candles[i][1] < a1_candles[i - 1][1] \
-                        and a2_candles[i][1] < a2_candles[i - 1][1] \
-                        and a3_candles[i][1] < a3_candles[i - 1][1]:
-                    continue
-
-            psps.append(PSP(
-                a1_candle=a1_candles[i],
-                a2_candle=a2_candles[i],
-                a3_candle=a3_candles[i],
-                confirmed=False,
-                swept_from_to=None
-            ))
-
-        return psps
-
-    def low_week_psps(self, q_next_tick: str) -> List[PSP]:
-        psps = []
-        a1_candles_15m = self.a1.get_15m_candles_range(q_next_tick, self.a1.snapshot_date_readable)
-        a2_candles_15m = self.a2.get_15m_candles_range(q_next_tick, self.a2.snapshot_date_readable)
-        a3_candles_15m = self.a3.get_15m_candles_range(q_next_tick, self.a3.snapshot_date_readable)
-
-        prev_week_range = get_prev_1w_from_to(q_next_tick)
-        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
-            to_date_str(prev_week_range[0]), to_date_str(prev_week_range[1])
-        ))
-        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
-            to_date_str(prev_week_range[0]), to_date_str(prev_week_range[1])
-        ))
-        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
-            to_date_str(prev_week_range[0]), to_date_str(prev_week_range[1])
-        ))
-
-        a1_candles = as_1w_candles(a1_candles_15m)
-        a2_candles = as_1w_candles(a2_candles_15m)
-        a3_candles = as_1w_candles(a3_candles_15m)
-
-        for i in range(len(a1_candles)):
-            if len(psps) > 0:
-                if psps[-1].a1_candle[2] < a1_candles[i][2] \
-                        or psps[-1].a2_candle[2] < a2_candles[i][2] \
-                        or psps[-1].a3_candle[2] < a3_candles[i][2]:
-                    end = get_current_1w_from_to(a1_candles[i][5])[1]
-                    if end < to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1):
-                        psps[-1].confirmed = True
-
-            for j in range(len(psps)):
-                if not psps[j].swept_from_to:
-
-                    if psps[j].a1_candle[2] > a1_candles[i][2] \
-                            or psps[j].a2_candle[2] > a2_candles[i][2] \
-                            or psps[j].a3_candle[2] > a3_candles[i][2]:
-                        end = get_current_1w_from_to(a1_candles[i][5])[1]
-                        psps[j].swept_from_to = (
-                            a1_candles[i][5],
-                            to_date_str(min(
-                                end, to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)))
-                        )
-
-            if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
-                continue
-
-            if i == 0:
-                if a1_candles[i][2] > a1_prev_candle[2] \
-                        and a2_candles[i][2] > a2_prev_candle[2] \
-                        and a3_candles[i][2] > a3_prev_candle[2]:
-                    continue
-            else:
-                if a1_candles[i][2] > a1_candles[i - 1][2] \
-                        and a2_candles[i][2] > a2_candles[i - 1][2] \
-                        and a3_candles[i][2] > a3_candles[i - 1][2]:
-                    continue
-
-            psps.append(PSP(
-                a1_candle=a1_candles[i],
-                a2_candle=a2_candles[i],
-                a3_candle=a3_candles[i],
-                confirmed=False,
-                swept_from_to=None
-            ))
-
-        return psps
-
-    def high_day_psps(self, q_next_tick: str) -> List[PSP]:
-        psps = []
-        a1_candles_15m = self.a1.get_15m_candles_range(q_next_tick, self.a1.snapshot_date_readable)
-        a2_candles_15m = self.a2.get_15m_candles_range(q_next_tick, self.a2.snapshot_date_readable)
-        a3_candles_15m = self.a3.get_15m_candles_range(q_next_tick, self.a3.snapshot_date_readable)
-
-        prev_day_range = get_prev_1d_from_to(q_next_tick)
-        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
-            to_date_str(prev_day_range[0]), to_date_str(prev_day_range[1])
-        ))
-        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
-            to_date_str(prev_day_range[0]), to_date_str(prev_day_range[1])
-        ))
-        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
-            to_date_str(prev_day_range[0]), to_date_str(prev_day_range[1])
-        ))
-
-        a1_candles = as_1d_candles(a1_candles_15m)
-        a2_candles = as_1d_candles(a2_candles_15m)
-        a3_candles = as_1d_candles(a3_candles_15m)
-
-        for i in range(len(a1_candles)):
-            if len(psps) > 0:
-                if psps[-1].a1_candle[1] > a1_candles[i][1] \
-                        or psps[-1].a2_candle[1] > a2_candles[i][1] \
-                        or psps[-1].a3_candle[1] > a3_candles[i][1]:
-                    end = get_current_1d_from_to(a1_candles[i][5])[1]
-                    if end < to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1):
-                        psps[-1].confirmed = True
-
-            for j in range(len(psps)):
-                if not psps[j].swept_from_to:
-
-                    if psps[j].a1_candle[1] < a1_candles[i][1] \
-                            or psps[j].a2_candle[1] < a2_candles[i][1] \
-                            or psps[j].a3_candle[1] < a3_candles[i][1]:
-                        end = get_current_1d_from_to(a1_candles[i][5])[1]
-                        psps[j].swept_from_to = (
-                            a1_candles[i][5],
-                            to_date_str(min(
-                                end, to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)))
-                        )
-
-            if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
-                continue
-
-            if i == 0:
-                if a1_candles[i][1] < a1_prev_candle[1] \
-                        and a2_candles[i][1] < a2_prev_candle[1] \
-                        and a3_candles[i][1] < a3_prev_candle[1]:
-                    continue
-            else:
-                if a1_candles[i][1] < a1_candles[i - 1][1] \
-                        and a2_candles[i][1] < a2_candles[i - 1][1] \
-                        and a3_candles[i][1] < a3_candles[i - 1][1]:
-                    continue
-
-            psps.append(PSP(
-                a1_candle=a1_candles[i],
-                a2_candle=a2_candles[i],
-                a3_candle=a3_candles[i],
-                confirmed=False,
-                swept_from_to=None
-            ))
-
-        return psps
-
-    def low_day_psps(self, q_next_tick: str) -> List[PSP]:
-        psps = []
-        a1_candles_15m = self.a1.get_15m_candles_range(q_next_tick, self.a1.snapshot_date_readable)
-        a2_candles_15m = self.a2.get_15m_candles_range(q_next_tick, self.a2.snapshot_date_readable)
-        a3_candles_15m = self.a3.get_15m_candles_range(q_next_tick, self.a3.snapshot_date_readable)
-
-        prev_day_range = get_prev_1d_from_to(q_next_tick)
-        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
-            to_date_str(prev_day_range[0]), to_date_str(prev_day_range[1])
-        ))
-        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
-            to_date_str(prev_day_range[0]), to_date_str(prev_day_range[1])
-        ))
-        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
-            to_date_str(prev_day_range[0]), to_date_str(prev_day_range[1])
-        ))
-
-        a1_candles = as_1d_candles(a1_candles_15m)
-        a2_candles = as_1d_candles(a2_candles_15m)
-        a3_candles = as_1d_candles(a3_candles_15m)
-
-        for i in range(len(a1_candles)):
-            if len(psps) > 0:
-                if psps[-1].a1_candle[2] < a1_candles[i][2] \
-                        or psps[-1].a2_candle[2] < a2_candles[i][2] \
-                        or psps[-1].a3_candle[2] < a3_candles[i][2]:
-                    end = get_current_1d_from_to(a1_candles[i][5])[1]
-                    if end < to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1):
-                        psps[-1].confirmed = True
-
-            for j in range(len(psps)):
-                if not psps[j].swept_from_to:
-
-                    if psps[j].a1_candle[2] > a1_candles[i][2] \
-                            or psps[j].a2_candle[2] > a2_candles[i][2] \
-                            or psps[j].a3_candle[2] > a3_candles[i][2]:
-                        end = get_current_1d_from_to(a1_candles[i][5])[1]
-                        psps[j].swept_from_to = (
-                            a1_candles[i][5],
-                            to_date_str(min(
-                                end, to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)))
-                        )
-
-            if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
-                continue
-
-            if i == 0:
-                if a1_candles[i][2] > a1_prev_candle[2] \
-                        and a2_candles[i][2] > a2_prev_candle[2] \
-                        and a3_candles[i][2] > a3_prev_candle[2]:
-                    continue
-            else:
-                if a1_candles[i][2] > a1_candles[i - 1][2] \
-                        and a2_candles[i][2] > a2_candles[i - 1][2] \
-                        and a3_candles[i][2] > a3_candles[i - 1][2]:
-                    continue
-
-            psps.append(PSP(
-                a1_candle=a1_candles[i],
-                a2_candle=a2_candles[i],
-                a3_candle=a3_candles[i],
-                confirmed=False,
-                swept_from_to=None
-            ))
-
-        return psps
-
-    def prev_year_smt2(self) -> Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]:  # high, half, low
-        return None, None, None
-
-    def year_q1_smt2(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
-        if not self.a1.year_q1:
-            return None
-
-        is_high, is_half, is_low = Triad.is_smt(self.a1.year_q1, self.a2.year_q1, self.a3.year_q1)
-        high_smt = new_empty_smt(self.a1.year_q1, self.a2.year_q1, self.a3.year_q1) if is_high else None
-        q_next_tick = to_date_str(to_utc_datetime(self.a1.year_q1[1]) + timedelta(minutes=1))
-        if is_high:
-            high_smt.psps_1_month = self.high_month_psps(q_next_tick)
-            high_smt.psps_1_week = self.high_week_psps(q_next_tick)
-            high_smt.psps_1d = self.high_day_psps(q_next_tick)
-        if is_half:  # TODO half на 2 надо разделить в зависимости от quarter close - сверху идём к half или снизу
-            print('bla')
-        return high_smt, None, None
-
-    @staticmethod
-    def is_smt(a1_ql, a2_aq, a3_ql: Optional[QuarterLiq]) -> Tuple[bool, bool, bool]:  # high, half, low
+    def new_smt(
+            self, next_tick: str, a1_ql, a2_aq, a3_ql: QuarterLiq
+    ) -> Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]:
         _, _, _, a1_high, a1_half, a1_low = a1_ql
         _, _, _, a2_high, a2_half, a2_low = a2_aq
         _, _, _, a3_high, a3_half, a3_low = a3_ql
-        high = [x[0] for x in
-                [(TriadAsset.A1, a1_high[1]), (TriadAsset.A2, a2_high[1]), (TriadAsset.A3, a3_high[1])] if x[1]]
-        high = len(high) not in [0, 3]
 
-        half = [x[0] for x in
-                [(TriadAsset.A1, a1_half[1]), (TriadAsset.A2, a2_half[1]), (TriadAsset.A3, a3_half[1])] if x[1]]
-        half = len(half) not in [0, 3]
+        next_candle_end = to_date_str(to_utc_datetime(next_tick) + timedelta(minutes=15))
 
-        low = [x[0] for x in
-               [(TriadAsset.A1, a1_low[1]), (TriadAsset.A2, a2_low[1]), (TriadAsset.A3, a3_low[1])] if x[1]]
-        low = len(low) not in [0, 3]
+        next_candles_a1 = self.a1.get_15m_candles_range(next_tick, next_candle_end)
+        next_candles_a2 = self.a2.get_15m_candles_range(next_tick, next_candle_end)
+        next_candles_a3 = self.a3.get_15m_candles_range(next_tick, next_candle_end)
+        a1_q_close = None if len(next_candles_a1) == 0 else next_candles_a1[0][0]
+        a2_q_close = None if len(next_candles_a2) == 0 else next_candles_a2[0][0]
+        a3_q_close = None if len(next_candles_a3) == 0 else next_candles_a3[0][0]
 
-        return high, half, low
+        is_high = len([x for x in [a1_high[1], a2_high[1], a3_high[1]] if x]) not in [0, 3]
+        high_smt = new_empty_smt(a1_ql, a2_aq, a3_ql) if is_high else None
+        if high_smt:
+            high_smt.type = 'high'
 
-    def prev_year_smt(self) -> Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]:  # high, half, low
-        return Triad.deprecated_calculate_smt(self.a1.prev_year, self.a2.prev_year, self.a3.prev_year)
+        is_low = len([x for x in [a1_low[1], a2_low[1], a3_low[1]] if x]) not in [0, 3]
+        low_smt = new_empty_smt(a1_ql, a2_aq, a3_ql) if is_low else None
+        if low_smt:
+            low_smt.type = 'low'
 
-    def year_q1_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        is_half_swept = len([x for x in [a1_half[1], a2_half[1], a3_half[1]] if x]) not in [0, 3]
+        is_half_low = a1_q_close and (a1_low[0] <= a1_q_close < a1_half[0] and
+                                      a2_low[0] <= a2_q_close < a2_half[0] and
+                                      a3_low[0] <= a3_q_close < a3_half[0])
+        is_half_high = a1_q_close and (a1_half[0] < a1_q_close <= a1_high[0] and
+                                       a2_half[0] < a2_q_close <= a2_high[0] and
+                                       a3_half[0] < a3_q_close <= a3_high[0])
+
+        half_smt = new_empty_smt(self.a1.year_q1, self.a2.year_q1, self.a3.year_q1) \
+            if is_half_swept and (is_half_low or is_half_high) else None
+        if half_smt and is_half_high:
+            half_smt.type = 'half_high'
+        elif half_smt and is_half_low:
+            half_smt.type = 'half_low'
+
+        return high_smt, half_smt, low_smt
+
+    def calculate_psps(
+            self,
+            next_tick: str,
+            prev_candle_range: Tuple[datetime, datetime],
+            current_candle_range_getter: GetDateRange,
+            as_candles: AsCandles,
+            smt: SMT
+    ) -> List[PSP]:
+        psps = []
+
+        if len(smt.a1_sweep_candles_15m) == 0:
+            smt.a1_sweep_candles_15m = self.a1.get_15m_candles_range(next_tick, self.a1.snapshot_date_readable)
+            smt.a2_sweep_candles_15m = self.a2.get_15m_candles_range(next_tick, self.a2.snapshot_date_readable)
+            smt.a3_sweep_candles_15m = self.a3.get_15m_candles_range(next_tick, self.a3.snapshot_date_readable)
+
+        # prev_candle_range = get_prev_1d_from_to(next_tick)
+        a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
+            to_date_str(prev_candle_range[0]), to_date_str(prev_candle_range[1])
+        ))
+        a2_prev_candle = as_1_candle(self.a2.get_15m_candles_range(
+            to_date_str(prev_candle_range[0]), to_date_str(prev_candle_range[1])
+        ))
+        a3_prev_candle = as_1_candle(self.a3.get_15m_candles_range(
+            to_date_str(prev_candle_range[0]), to_date_str(prev_candle_range[1])
+        ))
+
+        a1_candles = as_candles(smt.a1_sweep_candles_15m)
+        a2_candles = as_candles(smt.a2_sweep_candles_15m)
+        a3_candles = as_candles(smt.a3_sweep_candles_15m)
+
+        a1_min, a1_max = a1_candles[0][2], a1_candles[0][1]
+        a2_min, a2_max = a2_candles[0][2], a2_candles[0][1]
+        a3_min, a3_max = a3_candles[0][2], a3_candles[0][1]
+
+        for i in range(len(a1_candles)):
+            for j in range(len(psps)):
+                c_end = current_candle_range_getter(a1_candles[i][5])[1]
+                snap_end = to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)
+                if not psps[j].swept_from_to:
+                    if smt.type in ['high', 'half_high']:
+                        if psps[j].a1_candle[1] < a1_candles[i][1] \
+                                or psps[j].a2_candle[1] < a2_candles[i][1] \
+                                or psps[j].a3_candle[1] < a3_candles[i][1]:
+                            psps[j].swept_from_to = (
+                                a1_candles[i][5],
+                                to_date_str(min(c_end, snap_end))
+                            )
+                    elif smt.type in ['low', 'half_low']:
+                        if psps[j].a1_candle[2] > a1_candles[i][2] \
+                                or psps[j].a2_candle[2] > a2_candles[i][2] \
+                                or psps[j].a3_candle[2] > a3_candles[i][2]:
+                            psps[j].swept_from_to = (
+                                a1_candles[i][5],
+                                to_date_str(min(c_end, snap_end))
+                            )
+            try:
+                # check if different colors
+                if len([x for x in [a1_candles[i], a2_candles[i], a3_candles[i]] if x[0] > x[3]]) in [0, 3]:
+                    continue
+
+                # check if this candle sweeps
+                if smt.type == 'high':
+                    if a1_candles[i][1] < smt.a1q[3][0] \
+                            and a2_candles[i][1] < smt.a2q[3][0] \
+                            and a3_candles[i][1] < smt.a3q[3][0]:
+                        continue
+
+                if smt.type == 'low':
+                    if a1_candles[i][2] > smt.a1q[5][0] \
+                            and a2_candles[i][2] > smt.a2q[5][0] \
+                            and a3_candles[i][2] > smt.a3q[5][0]:
+                        continue
+
+                if smt.type == 'half_high':
+                    if a1_candles[i][1] < smt.a1q[4][0] \
+                            and a2_candles[i][1] < smt.a2q[4][0] \
+                            and a3_candles[i][1] < smt.a3q[4][0]:
+                        continue
+
+                if smt.type == 'half_low':
+                    if a1_candles[i][2] > smt.a1q[4][0] \
+                            and a2_candles[i][2] > smt.a2q[4][0] \
+                            and a3_candles[i][2] > smt.a3q[4][0]:
+                        continue
+
+                # check if swing
+                if i == 0:
+                    if smt.type in ['high', 'half_high']:
+                        if a1_candles[i][1] < a1_prev_candle[1] \
+                                and a2_candles[i][1] < a2_prev_candle[1] \
+                                and a3_candles[i][1] < a3_prev_candle[1]:
+                            continue
+                    elif smt.type in ['low', 'half_low']:
+                        if a1_candles[i][2] > a1_prev_candle[2] \
+                                and a2_candles[i][2] > a2_prev_candle[2] \
+                                and a3_candles[i][2] > a3_prev_candle[2]:
+                            continue
+                else:
+                    if smt.type in ['high', 'half_high']:
+                        if a1_candles[i][1] <= a1_max \
+                                and a2_candles[i][1] <= a2_max \
+                                and a3_candles[i][1] <= a3_max:
+                            continue
+                    elif smt.type in ['low', 'half_low']:
+                        if a1_candles[i][2] >= a1_min \
+                                and a2_candles[i][2] >= a2_min \
+                                and a3_candles[i][2] >= a3_min:
+                            continue
+
+                confirmed = False
+                if i != len(a1_candles) - 1:
+                    next_c_end = current_candle_range_getter(a1_candles[i + 1][5])[1]
+                    next_c_ended = next_c_end < to_utc_datetime(self.a1.snapshot_date_readable)
+                    if next_c_ended:
+                        if smt.type in ['high', 'half_high']:
+                            if a1_candles[i][1] > a1_candles[i + 1][1] \
+                                    or a2_candles[i][1] > a2_candles[i + 1][1] \
+                                    or a3_candles[i][1] > a3_candles[i + 1][1]:
+                                confirmed = True
+                        elif smt.type in ['low', 'half_low']:
+                            if a1_candles[i][2] < a1_candles[i + 1][2] \
+                                    or a2_candles[i][2] < a2_candles[i + 1][2] \
+                                    or a3_candles[i][2] < a3_candles[i + 1][2]:
+                                confirmed = True
+
+                psps.append(PSP(
+                    a1_candle=a1_candles[i],
+                    a2_candle=a2_candles[i],
+                    a3_candle=a3_candles[i],
+                    confirmed=confirmed,
+                    swept_from_to=None
+                ))
+            finally:
+                a1_min, a1_max = min(a1_min, a1_candles[i][2]), max(a1_max, a1_candles[i][1])
+                a2_min, a2_max = min(a2_min, a2_candles[i][2]), max(a2_max, a2_candles[i][1])
+                a3_min, a3_max = min(a3_min, a3_candles[i][2]), max(a3_max, a3_candles[i][1])
+
+        return psps
+
+    def with_15m_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with 15m PSPs
+        smt.psps_15m = self.calculate_psps(
+            next_tick,
+            (to_utc_datetime(next_tick) - timedelta(minutes=15), to_utc_datetime(next_tick)),
+            lambda x: (to_utc_datetime(x), to_utc_datetime(x) + timedelta(minutes=14)),
+            lambda candles: candles,
+            smt
+        )
+        return smt
+
+    def with_30m_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with 30m PSPs
+        smt.psps_30m = self.calculate_psps(
+            next_tick,
+            get_prev_30m_from_to(next_tick),
+            get_current_30m_from_to,
+            as_30m_candles,
+            smt
+        )
+        return smt
+
+    def with_1h_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with 1h PSPs
+        smt.psps_1h = self.calculate_psps(
+            next_tick,
+            get_prev_1h_from_to(next_tick),
+            get_current_1h_from_to,
+            as_1h_candles,
+            smt
+        )
+        return smt
+
+    def with_2h_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with 2h PSPs
+        smt.psps_2h = self.calculate_psps(
+            next_tick,
+            get_prev_2h_from_to(next_tick),
+            get_current_2h_from_to,
+            as_2h_candles,
+            smt
+        )
+        return smt
+
+    def with_4h_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with 4h PSPs
+        smt.psps_4h = self.calculate_psps(
+            next_tick,
+            get_prev_4h_from_to(next_tick),
+            get_current_4h_from_to,
+            as_4h_candles,
+            smt
+        )
+        return smt
+
+    def with_day_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with day PSPs
+        smt.psps_1d = self.calculate_psps(
+            next_tick,
+            get_prev_1d_from_to(next_tick),
+            get_current_1d_from_to,
+            as_1d_candles,
+            smt
+        )
+        return smt
+
+    def with_week_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with week PSPs
+        smt.psps_1_week = self.calculate_psps(
+            next_tick,
+            get_prev_1w_from_to(next_tick),
+            get_current_1w_from_to,
+            as_1w_candles,
+            smt
+        )
+        return smt
+
+    def with_month_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with week PSPs
+        smt.psps_1_month = self.calculate_psps(
+            next_tick,
+            get_prev_1month_from_to(next_tick),
+            get_current_1month_from_to,
+            as_1month_candles,
+            smt
+        )
+        return smt
+
+    def prev_year_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+        if not self.a1.prev_year:
+            return None
+
+        next_tick = to_date_str(to_utc_datetime(self.a1.prev_year[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.prev_year, self.a2.prev_year, self.a3.prev_year
+        )
+        if high_smt:
+            high_smt = self.with_day_psps(next_tick, high_smt)
+            high_smt = self.with_week_psps(next_tick, high_smt)
+            high_smt = self.with_month_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_day_psps(next_tick, half_smt)
+            half_smt = self.with_week_psps(next_tick, half_smt)
+            half_smt = self.with_month_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_day_psps(next_tick, low_smt)
+            low_smt = self.with_week_psps(next_tick, low_smt)
+            low_smt = self.with_month_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def year_q1_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.year_q1:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.year_q1, self.a2.year_q1, self.a3.year_q1)
 
-    def year_q2_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.year_q1[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.year_q1, self.a2.year_q1, self.a3.year_q1
+        )
+        if high_smt:
+            high_smt = self.with_day_psps(next_tick, high_smt)
+            high_smt = self.with_week_psps(next_tick, high_smt)
+            high_smt = self.with_month_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_day_psps(next_tick, half_smt)
+            half_smt = self.with_week_psps(next_tick, half_smt)
+            half_smt = self.with_month_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_day_psps(next_tick, low_smt)
+            low_smt = self.with_week_psps(next_tick, low_smt)
+            low_smt = self.with_month_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def year_q2_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.year_q2:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.year_q2, self.a2.year_q2, self.a3.year_q2)
 
-    def year_q3_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.year_q2[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.year_q2, self.a2.year_q2, self.a3.year_q2
+        )
+        if high_smt:
+            high_smt = self.with_day_psps(next_tick, high_smt)
+            high_smt = self.with_week_psps(next_tick, high_smt)
+            high_smt = self.with_month_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_day_psps(next_tick, half_smt)
+            half_smt = self.with_week_psps(next_tick, half_smt)
+            half_smt = self.with_month_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_day_psps(next_tick, low_smt)
+            low_smt = self.with_week_psps(next_tick, low_smt)
+            low_smt = self.with_month_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def year_q3_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.year_q3:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.year_q3, self.a2.year_q3, self.a3.year_q3)
 
-    def year_q4_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.year_q3[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.year_q3, self.a2.year_q3, self.a3.year_q3
+        )
+        if high_smt:
+            high_smt = self.with_day_psps(next_tick, high_smt)
+            high_smt = self.with_week_psps(next_tick, high_smt)
+            high_smt = self.with_month_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_day_psps(next_tick, half_smt)
+            half_smt = self.with_week_psps(next_tick, half_smt)
+            half_smt = self.with_month_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_day_psps(next_tick, low_smt)
+            low_smt = self.with_week_psps(next_tick, low_smt)
+            low_smt = self.with_month_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def year_q4_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.year_q4:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.year_q4, self.a2.year_q4, self.a3.year_q4)
 
-    def week1_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.year_q4[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.year_q4, self.a2.year_q4, self.a3.year_q4
+        )
+        if high_smt:
+            high_smt = self.with_day_psps(next_tick, high_smt)
+            high_smt = self.with_week_psps(next_tick, high_smt)
+            high_smt = self.with_month_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_day_psps(next_tick, half_smt)
+            half_smt = self.with_week_psps(next_tick, half_smt)
+            half_smt = self.with_month_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_day_psps(next_tick, low_smt)
+            low_smt = self.with_week_psps(next_tick, low_smt)
+            low_smt = self.with_month_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def week1_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.week1:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.week1, self.a2.week1, self.a3.week1)
 
-    def week2_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.week1[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.week1, self.a2.week1, self.a3.week1
+        )
+        if high_smt:
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+            high_smt = self.with_day_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+            half_smt = self.with_day_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+            low_smt = self.with_day_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def week2_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.week2:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.week2, self.a2.week2, self.a3.week2)
 
-    def week3_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.week2[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.week2, self.a2.week2, self.a3.week2
+        )
+        if high_smt:
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+            high_smt = self.with_day_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+            half_smt = self.with_day_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+            low_smt = self.with_day_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def week3_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.week3:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.week3, self.a2.week3, self.a3.week3)
 
-    def week4_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.week3[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.week3, self.a2.week3, self.a3.week3
+        )
+        if high_smt:
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+            high_smt = self.with_day_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+            half_smt = self.with_day_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+            low_smt = self.with_day_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def week4_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.week4:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.week4, self.a2.week4, self.a3.week4)
 
-    def week5_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.week4[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.week4, self.a2.week4, self.a3.week4
+        )
+        if high_smt:
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+            high_smt = self.with_day_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+            half_smt = self.with_day_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+            low_smt = self.with_day_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def week5_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.week5:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.week5, self.a2.week5, self.a3.week5)
 
-    def mon_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.week5[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.week5, self.a2.week5, self.a3.week5
+        )
+        if high_smt:
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+            high_smt = self.with_day_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+            half_smt = self.with_day_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+            low_smt = self.with_day_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def mon_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.mon:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.mon, self.a2.mon, self.a3.mon)
 
-    def tue_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.mon[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.mon, self.a2.mon, self.a3.mon
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def tue_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.tue:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.tue, self.a2.tue, self.a3.tue)
 
-    def wed_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.tue[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.tue, self.a2.tue, self.a3.tue
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def wed_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.wed:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.wed, self.a2.wed, self.a3.wed)
 
-    def thu_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.wed[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.wed, self.a2.wed, self.a3.wed
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def thu_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.thu:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.thu, self.a2.thu, self.a3.thu)
 
-    def mon_thu_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.thu[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.thu, self.a2.thu, self.a3.thu
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def mon_thu_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.mon_thu:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.mon_thu, self.a2.mon_thu, self.a3.mon_thu)
 
-    def fri_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.mon_thu[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.mon_thu, self.a2.mon_thu, self.a3.mon_thu
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def fri_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.fri:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.fri, self.a2.fri, self.a3.fri)
 
-    def mon_fri_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.fri[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.fri, self.a2.fri, self.a3.fri
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def mon_fri_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.mon_fri:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.mon_fri, self.a2.mon_fri, self.a3.mon_fri)
 
-    def sat_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.mon_fri[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.mon_fri, self.a2.mon_fri, self.a3.mon_fri
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def sat_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.sat:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.sat, self.a2.sat, self.a3.sat)
 
-    def asia_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.sat[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.sat, self.a2.sat, self.a3.sat
+        )
+        if high_smt:
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+            high_smt = self.with_4h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+            half_smt = self.with_4h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+            low_smt = self.with_4h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def asia_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.asia:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.asia, self.a2.asia, self.a3.asia)
 
-    def london_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.asia[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.asia, self.a2.asia, self.a3.asia
+        )
+        if high_smt:
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def london_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.london:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.london, self.a2.london, self.a3.london)
 
-    def nyam_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.london[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.london, self.a2.london, self.a3.london
+        )
+        if high_smt:
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def nyam_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.nyam:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.nyam, self.a2.nyam, self.a3.nyam)
 
-    def nypm_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.nyam[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.nyam, self.a2.nyam, self.a3.nyam
+        )
+        if high_smt:
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def nypm_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.nypm:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.nypm, self.a2.nypm, self.a3.nypm)
 
-    def q1_90_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.nypm[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.nypm, self.a2.nypm, self.a3.nypm
+        )
+        if high_smt:
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+            high_smt = self.with_1h_psps(next_tick, high_smt)
+            high_smt = self.with_2h_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+            half_smt = self.with_1h_psps(next_tick, half_smt)
+            half_smt = self.with_2h_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+            low_smt = self.with_1h_psps(next_tick, low_smt)
+            low_smt = self.with_2h_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def q1_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.q1_90m:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.q1_90m, self.a2.q1_90m, self.a3.q1_90m)
 
-    def q2_90_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.q1_90m[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.q1_90m, self.a2.q1_90m, self.a3.q1_90m
+        )
+        if high_smt:
+            high_smt = self.with_15m_psps(next_tick, high_smt)
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_15m_psps(next_tick, half_smt)
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_15m_psps(next_tick, low_smt)
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def q2_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.q2_90m:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.q2_90m, self.a2.q2_90m, self.a3.q2_90m)
 
-    def q3_90_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.q2_90m[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.q2_90m, self.a2.q2_90m, self.a3.q2_90m
+        )
+        if high_smt:
+            high_smt = self.with_15m_psps(next_tick, high_smt)
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_15m_psps(next_tick, half_smt)
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_15m_psps(next_tick, low_smt)
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def q3_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.q3_90m:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.q3_90m, self.a2.q3_90m, self.a3.q3_90m)
 
-    def q4_90_smt(self) -> Optional[Tuple[deprecated_SMT, deprecated_SMT, deprecated_SMT]]:  # high, half, low
+        next_tick = to_date_str(to_utc_datetime(self.a1.q3_90m[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.q3_90m, self.a2.q3_90m, self.a3.q3_90m
+        )
+        if high_smt:
+            high_smt = self.with_15m_psps(next_tick, high_smt)
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_15m_psps(next_tick, half_smt)
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_15m_psps(next_tick, low_smt)
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
+
+    def q4_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
         if not self.a1.q4_90m:
             return None
-        return Triad.deprecated_calculate_smt(self.a1.q4_90m, self.a2.q4_90m, self.a3.q4_90m)
 
-    def prev_15m_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_15m_candle, self.a2.prev_15m_candle, self.a3.prev_15m_candle)
-
-    def prev_30m_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_30m_candle, self.a2.prev_30m_candle, self.a3.prev_30m_candle)
-
-    def current_30m_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.current_30m_candle, self.a2.current_30m_candle, self.a3.current_30m_candle)
-
-    def prev_1h_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_1h_candle, self.a2.prev_1h_candle, self.a3.prev_1h_candle)
-
-    def current_1h_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.current_1h_candle, self.a2.current_1h_candle, self.a3.current_1h_candle)
-
-    def prev_2h_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_2h_candle, self.a2.prev_2h_candle, self.a3.prev_2h_candle)
-
-    def current_2h_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.current_2h_candle, self.a2.current_2h_candle, self.a3.current_2h_candle)
-
-    def prev_4h_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_4h_candle, self.a2.prev_4h_candle, self.a3.prev_4h_candle)
-
-    def current_4h_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.current_4h_candle, self.a2.current_4h_candle, self.a3.current_4h_candle)
-
-    def prev_1d_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_1d_candle, self.a2.prev_1d_candle, self.a3.prev_1d_candle)
-
-    def current_1d_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.current_1d_candle, self.a2.current_1d_candle, self.a3.current_1d_candle)
-
-    def prev_1w_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_1w_candle, self.a2.prev_1w_candle, self.a3.prev_1w_candle)
-
-    def current_1w_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.current_1w_candle, self.a2.current_1w_candle, self.a3.current_1w_candle)
-
-    def prev_1month_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(self.a1.prev_1month_candle, self.a2.prev_1month_candle, self.a3.prev_1month_candle)
-
-    def current_1month_candle_psp(self) -> deprecated_PSP:
-        return Triad.is_psp(
-            self.a1.current_1month_candle, self.a2.current_1month_candle, self.a3.current_1month_candle)
+        next_tick = to_date_str(to_utc_datetime(self.a1.q4_90m[1]) + timedelta(minutes=1))
+        high_smt, half_smt, low_smt = self.new_smt(
+            next_tick, self.a1.q4_90m, self.a2.q4_90m, self.a3.q4_90m
+        )
+        if high_smt:
+            high_smt = self.with_15m_psps(next_tick, high_smt)
+            high_smt = self.with_30m_psps(next_tick, high_smt)
+        if half_smt:
+            half_smt = self.with_15m_psps(next_tick, half_smt)
+            half_smt = self.with_30m_psps(next_tick, half_smt)
+        if low_smt:
+            low_smt = self.with_15m_psps(next_tick, low_smt)
+            low_smt = self.with_30m_psps(next_tick, low_smt)
+        return high_smt, half_smt, low_smt
 
     def actual_smt_psp(self):
         result = {
@@ -1613,21 +1817,6 @@ class Triad:
             'smt 6.2 q2_90': self.q2_90_smt(),
             'smt 6.3q3_90': self.q3_90_smt(),
             'smt 6.4 q4_90': self.q4_90_smt(),
-            'psp 1.1 prev_15m_candle': self.prev_15m_candle_psp(),
-            'psp 2.1 prev_30m_candle': self.prev_30m_candle_psp(),
-            'psp 2.2 current_30m_candle': self.current_30m_candle_psp(),
-            'psp 3.1 prev_1h_candle': self.prev_1h_candle_psp(),
-            'psp 3.2 current_1h_candle': self.current_1h_candle_psp(),
-            'psp 4.1 prev_2h_candle': self.prev_2h_candle_psp(),
-            'psp 4.2 current_2h_candle': self.current_2h_candle_psp(),
-            'psp 5.1 prev_4h_candle': self.prev_4h_candle_psp(),
-            'psp 5.2 current_4h_candle': self.current_4h_candle_psp(),
-            'psp 6.1 prev_1d_candle': self.prev_1d_candle_psp(),
-            'psp 6.2 current_1d_candle': self.current_1d_candle_psp(),
-            'psp 7.1 prev_1w_candle': self.prev_1w_candle_psp(),
-            'psp 7.2 current_1w_candle': self.current_1w_candle_psp(),
-            'psp 8.1 prev_1month_candle': self.prev_1month_candle_psp(),
-            'psp 8.2 current_1month_candle': self.current_1month_candle_psp(),
         }
 
         return result

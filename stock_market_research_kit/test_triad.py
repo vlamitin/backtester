@@ -66,7 +66,7 @@ def test_09_aug_2025_smt():
     candles_2025_sol = select_full_days_candles_15m(2025, "SOLUSDT")
     triad_23_15 = triad_from_snapshot(snapshot_triad_23_15)
 
-    year_q1_smt = triad_23_15.year_q1_smt2()
+    actual_smt = triad_23_15.actual_smt_psp()
 
     triad_23_30 = triad_from_snapshot(snapshot_triad_23_30)
 

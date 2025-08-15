@@ -1,4 +1,4 @@
-from typing import TypeAlias, Tuple, List
+from typing import TypeAlias, Tuple, List, Callable
 
 from utils.date_utils import to_utc_datetime, get_current_30m_from_to, get_current_1h_from_to, get_current_2h_from_to, \
     get_current_4h_from_to, get_current_1d_from_to, get_current_1w_from_to, get_current_1month_from_to
@@ -6,6 +6,8 @@ from utils.date_utils import to_utc_datetime, get_current_30m_from_to, get_curre
 InnerCandle: TypeAlias = Tuple[float, float, float, float, float, str]
 
 PriceDate: TypeAlias = Tuple[float, str]
+
+AsCandles: TypeAlias = Callable[[List[InnerCandle]], List[InnerCandle]]
 
 
 def as_1_candle(candles: List[InnerCandle]) -> InnerCandle:
@@ -29,18 +31,28 @@ def as_30m_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
         return []
 
     result = []
-    for candle in candles_15m:
-        if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_30m_from_to(candle[5])
+    idx_start_of_30m = next(
+        (i for i, x in enumerate(candles_15m) if get_current_30m_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        None
+    )
+    if idx_start_of_30m != 0:
+        result.append(as_1_candle(candles_15m[0:idx_start_of_30m]))
+    for i in range(idx_start_of_30m, len(candles_15m), 2):
+        result.append(as_1_candle(candles_15m[i:i+2]))
 
-            if curr_range[0] <= prev_date < curr_range[1]:
-                result[-1] = as_1_candle([result[-1], candle])
-            else:
-                result.append(candle)
-        else:
-            result.append(candle)
-
+    # result = []
+    # for candle in candles_15m:
+    #     if len(result) > 0:
+    #         prev_date = to_utc_datetime(result[-1][5])
+    #         curr_range = get_current_30m_from_to(candle[5])
+    #
+    #         if curr_range[0] <= prev_date < curr_range[1]:
+    #             result[-1] = as_1_candle([result[-1], candle])
+    #         else:
+    #             result.append(candle)
+    #     else:
+    #         result.append(candle)
+    #
     return result
 
 
@@ -49,18 +61,28 @@ def as_1h_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
         return []
 
     result = []
-    for candle in candles_15m:
-        if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_1h_from_to(candle[5])
+    idx_start_of_1h = next(
+        (i for i, x in enumerate(candles_15m) if get_current_1h_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        None
+    )
+    if idx_start_of_1h != 0:
+        result.append(as_1_candle(candles_15m[0:idx_start_of_1h]))
+    for i in range(idx_start_of_1h, len(candles_15m), 4):
+        result.append(as_1_candle(candles_15m[i:i+4]))
 
-            if curr_range[0] <= prev_date < curr_range[1]:
-                result[-1] = as_1_candle([result[-1], candle])
-            else:
-                result.append(candle)
-        else:
-            result.append(candle)
-
+    # result = []
+    # for candle in candles_15m:
+    #     if len(result) > 0:
+    #         prev_date = to_utc_datetime(result[-1][5])
+    #         curr_range = get_current_1h_from_to(candle[5])
+    #
+    #         if curr_range[0] <= prev_date < curr_range[1]:
+    #             result[-1] = as_1_candle([result[-1], candle])
+    #         else:
+    #             result.append(candle)
+    #     else:
+    #         result.append(candle)
+    #
     return result
 
 
@@ -69,18 +91,28 @@ def as_2h_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
         return []
 
     result = []
-    for candle in candles_15m:
-        if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_2h_from_to(candle[5])
+    idx_start_of_2h = next(
+        (i for i, x in enumerate(candles_15m) if get_current_2h_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        None
+    )
+    if idx_start_of_2h != 0:
+        result.append(as_1_candle(candles_15m[0:idx_start_of_2h]))
+    for i in range(idx_start_of_2h, len(candles_15m), 8):
+        result.append(as_1_candle(candles_15m[i:i+8]))
 
-            if curr_range[0] <= prev_date < curr_range[1]:
-                result[-1] = as_1_candle([result[-1], candle])
-            else:
-                result.append(candle)
-        else:
-            result.append(candle)
-
+    # result = []
+    # for candle in candles_15m:
+    #     if len(result) > 0:
+    #         prev_date = to_utc_datetime(result[-1][5])
+    #         curr_range = get_current_2h_from_to(candle[5])
+    #
+    #         if curr_range[0] <= prev_date < curr_range[1]:
+    #             result[-1] = as_1_candle([result[-1], candle])
+    #         else:
+    #             result.append(candle)
+    #     else:
+    #         result.append(candle)
+    #
     return result
 
 
@@ -89,17 +121,27 @@ def as_4h_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
         return []
 
     result = []
-    for candle in candles_15m:
-        if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_4h_from_to(candle[5])
+    idx_start_of_4h = next(
+        (i for i, x in enumerate(candles_15m) if get_current_4h_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        None
+    )
+    if idx_start_of_4h != 0:
+        result.append(as_1_candle(candles_15m[0:idx_start_of_4h]))
+    for i in range(idx_start_of_4h, len(candles_15m), 16):
+        result.append(as_1_candle(candles_15m[i:i+16]))
 
-            if curr_range[0] <= prev_date < curr_range[1]:
-                result[-1] = as_1_candle([result[-1], candle])
-            else:
-                result.append(candle)
-        else:
-            result.append(candle)
+    # result = []
+    # for candle in candles_15m:
+    #     if len(result) > 0:
+    #         prev_date = to_utc_datetime(result[-1][5])
+    #         curr_range = get_current_4h_from_to(candle[5])
+    #
+    #         if curr_range[0] <= prev_date < curr_range[1]:
+    #             result[-1] = as_1_candle([result[-1], candle])
+    #         else:
+    #             result.append(candle)
+    #     else:
+    #         result.append(candle)
 
     return result
 
@@ -109,17 +151,27 @@ def as_1d_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
         return []
 
     result = []
-    for candle in candles_15m:
-        if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_1d_from_to(candle[5])
+    idx_start_of_day = next(
+        (i for i, x in enumerate(candles_15m) if get_current_1d_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        None
+    )
+    if idx_start_of_day != 0:
+        result.append(as_1_candle(candles_15m[0:idx_start_of_day]))
+    for i in range(idx_start_of_day, len(candles_15m), 96):
+        result.append(as_1_candle(candles_15m[i:i+96]))
 
-            if curr_range[0] <= prev_date < curr_range[1]:
-                result[-1] = as_1_candle([result[-1], candle])
-            else:
-                result.append(candle)
-        else:
-            result.append(candle)
+    # result = []
+    # for candle in candles_15m:
+    #     if len(result) > 0:
+    #         prev_date = to_utc_datetime(result[-1][5])
+    #         curr_range = get_current_1d_from_to(candle[5])
+    #
+    #         if curr_range[0] <= prev_date < curr_range[1]:
+    #             result[-1] = as_1_candle([result[-1], candle])
+    #         else:
+    #             result.append(candle)
+    #     else:
+    #         result.append(candle)
 
     return result
 
@@ -129,17 +181,27 @@ def as_1w_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
         return []
 
     result = []
-    for candle in candles_15m:
-        if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_1w_from_to(candle[5])
+    idx_start_of_1w = next(
+        (i for i, x in enumerate(candles_15m) if get_current_1w_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        None
+    )
+    if idx_start_of_1w != 0:
+        result.append(as_1_candle(candles_15m[0:idx_start_of_1w]))
+    for i in range(idx_start_of_1w, len(candles_15m), 672):
+        result.append(as_1_candle(candles_15m[i:i+672]))
 
-            if curr_range[0] <= prev_date < curr_range[1]:
-                result[-1] = as_1_candle([result[-1], candle])
-            else:
-                result.append(candle)
-        else:
-            result.append(candle)
+    # result = []
+    # for candle in candles_15m:
+    #     if len(result) > 0:
+    #         prev_date = to_utc_datetime(result[-1][5])
+    #         curr_range = get_current_1w_from_to(candle[5])
+    #
+    #         if curr_range[0] <= prev_date < curr_range[1]:
+    #             result[-1] = as_1_candle([result[-1], candle])
+    #         else:
+    #             result.append(candle)
+    #     else:
+    #         result.append(candle)
 
     return result
 
@@ -151,10 +213,7 @@ def as_1month_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
     result = []
     for candle in candles_15m:
         if len(result) > 0:
-            prev_date = to_utc_datetime(result[-1][5])
-            curr_range = get_current_1month_from_to(candle[5])
-
-            if curr_range[0] <= prev_date < curr_range[1]:
+            if candle[5][0:7] == result[-1][5][0:7]:
                 result[-1] = as_1_candle([result[-1], candle])
             else:
                 result.append(candle)

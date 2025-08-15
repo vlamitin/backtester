@@ -1,6 +1,6 @@
 import math
 from datetime import datetime, timedelta
-from typing import Tuple, List
+from typing import Tuple, List, TypeAlias, Callable
 from zoneinfo import ZoneInfo
 
 from stock_market_research_kit.quarter import YearQuarter, MonthWeek, WeekDay, DayQuarter, Quarter90m
@@ -899,6 +899,9 @@ def is_previous_week(date_to_check: datetime, reference_date: datetime) -> bool:
     return previous_week_start <= date_to_check <= previous_week_end
 
 
+GetDateRange: TypeAlias = Callable[[str], Tuple[datetime, datetime]]
+
+
 def get_prev_30m_from_to(date_str: str) -> Tuple[datetime, datetime]:
     from_ = get_current_30m_from_to(date_str)[0] - timedelta(minutes=30)
     return from_, from_ + timedelta(minutes=29, seconds=59)
@@ -977,8 +980,6 @@ def get_current_1month_from_to(date_str: str) -> Tuple[datetime, datetime]:
     from_ = date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     to_ = (from_ + timedelta(days=45)).replace(day=1, hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
     return from_, to_
-
-
 
 
 if __name__ == "__main__":
