@@ -1024,9 +1024,6 @@ def smt_dict_old_smt_cancelled(
 
         high_old, half_old, low_old = smt_tuple_old
         if not smt_tuple_new:
-            for smt in [high_old, half_old, low_old]:
-                if smt:
-                    result.append((key, smt))
             continue
 
         high_new, half_new, low_new = smt_tuple_new

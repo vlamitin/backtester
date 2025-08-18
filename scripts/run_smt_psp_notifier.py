@@ -30,9 +30,9 @@ def handle_new_candle(triad: Triad):
     smt_psp = triad.actual_smt_psp()
 
     new_smts = smt_dict_new_smt_found(prev_smt_psp, smt_psp)
-    old_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
+    cancelled_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
     psp_changed = smt_dict_psp_changed(prev_smt_psp, smt_psp)
-    if len(new_smts) == 0 and len(psp_changed) == 0 and len(old_smts) == 0:
+    if len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0:
         return
 
     snap_date, candle_date = to_ny_date_str(triad.a1.snapshot_date_readable), to_ny_date_str(triad.a1.prev_15m_candle[5])
@@ -42,9 +42,9 @@ def handle_new_candle(triad: Triad):
             message += f"\nNew {smt_readable(smt, key, triad)}"
         message += "\n"
 
-    if len(old_smts) > 0:
-        for key, smt in old_smts:
-            message += f"\nCancelled prev {smt_readable(smt, key, triad)}"
+    if len(cancelled_smts) > 0:
+        for key, smt in cancelled_smts:
+            message += f"\nCancelled prev {smt.type.capitalize()} {key}"
         message += "\n"
 
     for p_change in psp_changed:
