@@ -7,7 +7,7 @@ from scripts.run_series_raw_loader import update_candle_from_binance
 from stock_market_research_kit.db_layer import last_candle_15m, select_full_days_candles_15m, select_candles_15m
 from stock_market_research_kit.tg_notifier import TelegramThrottler
 from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, Triad, smt_dict_new_smt_found, \
-    smt_dict_psp_changed, smt_dict_readable, smt_readable
+    smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled
 from utils.date_utils import log_info_ny, now_ny_datetime, now_utc_datetime, to_ny_datetime, to_utc_datetime, \
     to_date_str, ny_zone, to_ny_date_str
 
@@ -19,32 +19,32 @@ def update_candles(symbols, last_date_utc):
 
 def handle_new_candle(triad: Triad):
     prev_smt_psp = triad.actual_smt_psp()
-    last_date = to_utc_datetime(triad.a1.snapshot_date_readable)
-    last_a1_candle = last_candle_15m(last_date.year, triad.a1.symbol)  # TODO проверить при смене года
-    last_a2_candle = last_candle_15m(last_date.year, triad.a2.symbol)
-    last_a3_candle = last_candle_15m(last_date.year, triad.a3.symbol)
+    last_date_utc = to_utc_datetime(triad.a1.snapshot_date_readable)
+    last_a1_candle = last_candle_15m(last_date_utc.year, triad.a1.symbol)  # TODO проверить при смене года
+    last_a2_candle = last_candle_15m(last_date_utc.year, triad.a2.symbol)
+    last_a3_candle = last_candle_15m(last_date_utc.year, triad.a3.symbol)
 
     triad.a1.plus_15m(last_a1_candle)
     triad.a2.plus_15m(last_a2_candle)
     triad.a3.plus_15m(last_a3_candle)
     smt_psp = triad.actual_smt_psp()
 
-    new_smt_d = smt_dict_new_smt_found(prev_smt_psp, smt_psp)
+    new_smts = smt_dict_new_smt_found(prev_smt_psp, smt_psp)
+    old_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
     psp_changed = smt_dict_psp_changed(prev_smt_psp, smt_psp)
-    if len(new_smt_d) == 0 and len(psp_changed) == 0:
+    if len(new_smts) == 0 and len(psp_changed) == 0 and len(old_smts) == 0:
         return
 
     snap_date, candle_date = to_ny_date_str(triad.a1.snapshot_date_readable), to_ny_date_str(triad.a1.prev_15m_candle[5])
     message = f"Now <b>{snap_date}</b> (last 15m candle is {candle_date})*\n"
-    if len(new_smt_d) > 0:
-        for key in new_smt_d:
-            smt_tuple = new_smt_d.get(key, None)
-            if smt_tuple is None:
-                continue
-            high, half, low = smt_tuple
-            for smt in [high, half, low]:
-                if smt is not None:
-                    message += f"\nNew {smt_readable(smt, key, triad)}"
+    if len(new_smts) > 0:
+        for key, smt in new_smts:
+            message += f"\nNew {smt_readable(smt, key, triad)}"
+        message += "\n"
+
+    if len(old_smts) > 0:
+        for key, smt in old_smts:
+            message += f"\nCancelled prev {smt_readable(smt, key, triad)}"
         message += "\n"
 
     for p_change in psp_changed:

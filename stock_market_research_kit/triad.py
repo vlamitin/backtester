@@ -20,6 +20,7 @@ class PSP:
     a3_candle: InnerCandle
 
     confirmed: bool  # next candle didn't sweep it
+    closed: bool
     swept_from_to: Optional[List[Tuple[str, str, str]]]  # symbol, from, to_date
 
 
@@ -174,9 +175,9 @@ class Triad:
         a3_min, a3_max = a3_candles[0][2], a3_candles[0][1]
 
         for i in range(len(a1_candles)):
+            c_end = current_candle_range_getter(a1_candles[i][5])[1]
+            snap_end = to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)
             for j in range(len(psps)):
-                c_end = current_candle_range_getter(a1_candles[i][5])[1]
-                snap_end = to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)
                 if not psps[j].swept_from_to:
                     if smt.type in ['high', 'half_high']:
                         if psps[j].a1_candle[1] < a1_candles[i][1] \
@@ -269,6 +270,7 @@ class Triad:
                     a2_candle=a2_candles[i],
                     a3_candle=a3_candles[i],
                     confirmed=confirmed,
+                    closed=c_end <= snap_end,
                     swept_from_to=None
                 ))
             finally:
@@ -984,8 +986,8 @@ class Triad:
 def smt_dict_new_smt_found(
         d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
         d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
-) -> Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]]:
-    result = {}
+) -> List[Tuple[str, SMT]]:
+    result = []
 
     for key in d_new:
         smt_tuple_new = d_new.get(key, None)
@@ -995,13 +997,42 @@ def smt_dict_new_smt_found(
 
         high_new, half_new, low_new = smt_tuple_new
         if not smt_tuple_old:
-            if high_new or half_new or low_new:
-                result[key] = smt_tuple_new
+            for smt in [high_new, half_new, low_new]:
+                if smt:
+                    result.append((key, smt))
             continue
 
         high_old, half_old, low_old = smt_tuple_old
-        if (high_new and not high_old) or (half_new and not half_old) or (low_new and not low_old):
-            result[key] = smt_tuple_new
+        for smts in [(high_new, high_old), (half_new, half_old), (low_new, low_old)]:
+            if smts[0] and not smts[1]:
+                result.append((key, smts[0]))
+
+    return result
+
+
+def smt_dict_old_smt_cancelled(
+        d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
+        d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
+) -> List[Tuple[str, SMT]]:
+    result = []
+
+    for key in d_new:
+        smt_tuple_new = d_new.get(key, None)
+        smt_tuple_old = d_old.get(key, None)
+        if not smt_tuple_old:
+            continue
+
+        high_old, half_old, low_old = smt_tuple_old
+        if not smt_tuple_new:
+            for smt in [high_old, half_old, low_old]:
+                if smt:
+                    result.append((key, smt))
+            continue
+
+        high_new, half_new, low_new = smt_tuple_new
+        for smts in [(high_old, high_new), (half_old, half_new), (low_old, low_new)]:
+            if smts[0] and not smts[1]:
+                result.append((key, smts[0]))
 
     return result
 
@@ -1009,7 +1040,7 @@ def smt_dict_new_smt_found(
 def smt_dict_psp_changed(
         d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
         d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
-) -> List[Tuple[str, str, str, str, str]]:  # (smt_key, smt_type, psp_key, psp_date, new|confirmed|swept)
+) -> List[Tuple[str, str, str, str, str]]:  # (smt_key, smt_type, psp_key, psp_date, possible|closed|confirmed|swept)
     result = []
     for key in d_new:
         smt_tuple_new = d_new.get(key, None)
@@ -1072,16 +1103,21 @@ def smt_dict_psp_changed(
 
 def psps_changed(
         psps_old: Optional[List[PSP]], psps_new: Optional[List[PSP]]
-) -> List[Tuple[str, str]]:  # psp_date, new|confirmed|swept
+) -> List[Tuple[str, str]]:  # psp_date, possible|closed|confirmed|swept
     result = []
     if not psps_new:
         return []
     for i in range(len(psps_new)):
         if not psps_old or len(psps_old) < i + 1:
-            result.append((psps_new[i].a1_candle[5], 'new'))
+            result.append((psps_new[i].a1_candle[5], 'possible'))
+            continue
+        if not psps_old[i].closed and psps_new[i].closed:
+            if not psps_new[i].swept_from_to:
+                result.append((psps_new[i].a1_candle[5], 'closed'))
             continue
         if not psps_old[i].confirmed and psps_new[i].confirmed:
-            result.append((psps_new[i].a1_candle[5], 'confirmed'))
+            if not psps_new[i].swept_from_to:
+                result.append((psps_new[i].a1_candle[5], 'confirmed'))
             continue
         if not psps_old[i].swept_from_to and psps_new[i].swept_from_to:
             result.append((psps_new[i].a1_candle[5], 'swept'))
@@ -1152,7 +1188,7 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
         for p in psps:
             if p.swept_from_to:
                 continue
-            conf = 'Confirmed' if p.confirmed else 'Unconfirmed'
+            status = 'Confirmed' if p.confirmed else 'Closed' if p.closed else 'Possible'
             psp_ago = humanize_timedelta(to_utc_datetime(triad.a1.snapshot_date_readable) -
                                          to_utc_datetime(p.a1_candle[5]))
             edge = ""
@@ -1167,7 +1203,7 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
                 c3_diff = round(100 * ((p.a3_candle[2] - triad.a3.prev_15m_candle[3]) / triad.a3.prev_15m_candle[3]), 3)
                 edge += f"low {p.a1_candle[2]}({c1_diff}%), {p.a2_candle[2]}({c2_diff}%), {p.a3_candle[2]}({c3_diff}%)"
             result += f"""
-    {conf} {label} PSP {to_ny_date_str(p.a1_candle[5])} (<b>{psp_ago} ago</b>) with {edge}"""
+    {status} {label} PSP {to_ny_date_str(p.a1_candle[5])} (<b>{psp_ago} ago</b>) with {edge}"""
 
     plus_psps(smt.psps_1_month, '1M')
     plus_psps(smt.psps_1_week, '1W')
