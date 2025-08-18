@@ -35,36 +35,25 @@ def start_of_day(date: datetime) -> datetime:
 
 
 def end_of_day(date: datetime) -> datetime:
-    return date.replace(hour=23, minute=59, second=59, microsecond=999000)
+    return start_of_day(date) + timedelta(days=1) - timedelta(microseconds=1)
 
 
 # it returns start_date, end_date and all days with 0:00 in between
 def get_all_days_between(start_date: datetime, end_date: datetime):
-    if start_date.date() == end_date.date():
-        return [end_date]
+    if start_date >= end_date:
+        return []
     days = [start_date]
     current_date = start_of_day(start_date + timedelta(days=1))
 
-    while current_date < end_date and current_date != start_of_day(end_date):
+    while current_date < end_date:
         days.append(current_date)
         current_date += timedelta(days=1)
-
-    days.append(end_date)
 
     return days
 
 
-def to_timestamp(date_str: str) -> int:
-    if date_str == "":
-        return -1
-
-    return int(to_utc_datetime(date_str).timestamp() * 1000)
-
-
-def get_previous_candle_15m_close() -> datetime:
-    now = datetime.now(ZoneInfo("UTC"))
-    rounded = now.replace(minute=(now.minute // 15) * 15, second=0, microsecond=0)
-    return rounded
+def to_timestamp(date: datetime) -> int:
+    return int(date.timestamp() * 1000)
 
 
 def now_ts() -> int:
@@ -99,7 +88,7 @@ def quarters_by_time(date_utc: str) -> Tuple[YearQuarter, MonthWeek, WeekDay, Da
         dq = DayQuarter.DQ4_NYPM
     if ny_date.hour in [18, 19, 20, 21, 22, 23]:
         dq = DayQuarter.DQ1_Asia
-        wd = WeekDay((wd.value + 1) % 7)
+        wd = WeekDay((wd.value + 1) % 7 or 7)
         mw = MonthWeek(math.ceil(
             (ny_date + timedelta(hours=6) - timedelta(days=(ny_date + timedelta(hours=6)).weekday())).day / 7))
 
@@ -682,16 +671,41 @@ def to_date_str(date: datetime) -> str:
     return date.strftime("%Y-%m-%d %H:%M")
 
 
+def to_ny_date_str(date_str: str) -> str:
+    return to_date_str(to_utc_datetime(date_str).astimezone(ny_zone))
+
+
+def humanize_timedelta(td: timedelta) -> str:
+    total_seconds = int(td.total_seconds())
+
+    days, seconds = divmod(total_seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    months, days = divmod(days, 30)
+
+    parts = []
+    if months:
+        parts.append(f"{months}M")
+    if days:
+        parts.append(f"{days}D")
+    if hours:
+        parts.append(f"{hours}H")
+    if minutes:
+        parts.append(f"{minutes}m")
+
+    return "0m" if not parts else " ".join(parts)
+
+
 def log_warn(message: str):
-    print(f"WARN at {to_date_str(now_utc_datetime())} utc: {message}")
+    print(f"WARN at {to_date_str(now_utc_datetime())} UTC: {message}")
 
 
 def log_warn_ny(message: str):
-    print(f"WARN at {to_date_str(now_ny_datetime())} ny: {message}")
+    print(f"WARN at {to_date_str(now_ny_datetime())} NY: {message}")
 
 
 def log_info_ny(message: str):
-    print(f"INFO at {to_date_str(now_ny_datetime())} ny: {message}")
+    print(f"INFO at {to_date_str(now_ny_datetime())} NY: {message}")
 
 
 def cme_open_from_to(day_string) -> (str, str):
@@ -984,11 +998,11 @@ def get_current_1month_from_to(date_str: str) -> Tuple[datetime, datetime]:
 
 if __name__ == "__main__":
     try:
+        res1 = get_all_days_between(to_utc_datetime('2024-03-01 15:01'), to_utc_datetime('2024-03-05 10:01'))
+        res2 = get_all_days_between(to_utc_datetime('2025-08-09 23:00'), to_utc_datetime('2025-08-09 22:45'))
+        res3 = get_all_days_between(to_utc_datetime('2025-08-09 22:45'), to_utc_datetime('2025-08-09 23:00'))
+        res4 = get_all_days_between(to_utc_datetime('2025-08-09 22:45'), to_utc_datetime('2025-08-09 22:59'))
         log_warn("test")
-        # res = get_all_days_between(
-        #     datetime(2024, 3, 1, 15, 0, tzinfo=ZoneInfo("UTC")),
-        #     datetime(2024, 3, 5, 10, 0, tzinfo=ZoneInfo("UTC"))
-        # )
         # print(get_prev_1month_from_to('2025-02-03 11:01'))
         # print(get_prev_1month_from_to('2025-01-03 10:31'))
         # print(get_current_1month_from_to('2024-02-03 11:01'))

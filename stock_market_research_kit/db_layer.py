@@ -161,7 +161,7 @@ def update_stock_data(year: int, inner_candles, symbol, period):
         conn.close()
 
 
-def last_candle_15m(year, symbol) -> Optional[InnerCandle]:
+def last_candle_15m(year: int, symbol: str) -> Optional[InnerCandle]:
     connection = connect_to_db(year)
     c = connection.cursor()
 

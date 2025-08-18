@@ -2,7 +2,8 @@ import copy
 from datetime import timedelta
 
 from stock_market_research_kit.db_layer import select_full_days_candles_15m, select_candles_15m
-from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, triad_from_json, json_from_triad, Triad
+from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, triad_from_json, json_from_triad, Triad, \
+    smt_dict_readable
 from utils.date_utils import to_utc_datetime
 
 snapshot_triad_23_15 = open("stock_market_research_kit/test_snapshots/triad_btc-eth-sol_08_08_2025_23_15.json", "r",
@@ -72,22 +73,26 @@ def test_09_aug_2025_smt():
 
 
 def test_09_aug_2025_snapshot_diff():
-    triad_23_15 = triad_from_json(snapshot_triad_23_15)
-    smt_psp_23_15 = triad_23_15.actual_smt_psp()
+    # triad_23_15 = triad_from_snapshot(snapshot_triad_23_15)
+    # smt_psp_23_15 = triad_23_15.actual_smt_psp()
+    #
+    # triad_23_30 = triad_from_snapshot(snapshot_triad_23_30)
+    # smt_psp_23_30 = triad_23_30.actual_smt_psp()
 
-    triad_23_30 = triad_from_json(snapshot_triad_23_30)
-    smt_psp_23_30 = triad_23_30.actual_smt_psp()
+    # diff_23_30 = Triad.diff_smt_psp(smt_psp_23_15, smt_psp_23_30)
 
-    diff_23_30 = Triad.diff_smt_psp(smt_psp_23_15, smt_psp_23_30)
+    # triad_23_45 = triad_from_snapshot(snapshot_triad_23_45)
+    # smt_psp_23_45 = triad_23_45.actual_smt_psp()
 
-    triad_23_45 = triad_from_json(snapshot_triad_23_45)
-    smt_psp_23_45 = triad_23_45.actual_smt_psp()
-
-    triad_00_00 = triad_from_json(snapshot_triad_00_00)
+    triad_00_00 = triad_from_snapshot(snapshot_triad_00_00)
     smt_psp_00_00 = triad_00_00.actual_smt_psp()
+    smt_dict_msg_00_00 = smt_dict_readable(smt_psp_00_00, triad_00_00)
 
-    triad_00_15 = triad_from_json(snapshot_triad_00_15)
+    triad_00_15 = triad_from_snapshot(snapshot_triad_00_15)
     smt_psp_00_15 = triad_00_15.actual_smt_psp()
+    smt_dict_msg_00_15 = smt_dict_readable(smt_psp_00_15, triad_00_15)
+
+    print('finish')
 
 
 def test_09_aug_2025():
@@ -99,7 +104,7 @@ def test_09_aug_2025():
             reverse_09_aug_2025_test_generator("SOLUSDT"),
         )
     )  # TODO
-    # triad = triad_from_json(snapshot_triad_1)
+    # triad = triad_from_snapshot(snapshot_triad_1)
     # triad.a1.candles_15m = select_candles_15m(2024, triad.a1.symbol, "2024-01-01 00:00",
     #                                           triad.a1.snapshot_date_readable)
     # smt_psp = triad.actual_smt_psp()

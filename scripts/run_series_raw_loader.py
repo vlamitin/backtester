@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from stock_market_research_kit.binance_fetcher import fetch_15m_candles
 from stock_market_research_kit.db_layer import update_stock_data, last_candle_15m
-from utils.date_utils import to_utc_datetime, to_date_str, to_timestamp, get_previous_candle_15m_close, \
+from utils.date_utils import to_utc_datetime, to_date_str, to_timestamp, \
     get_all_days_between, end_of_day
 
 
@@ -55,8 +55,8 @@ def fill_year_from_csv(year, symbol):
     print(f"done loading {year} year for {symbol}")
 
 
-def update_candle_from_binance(symbol):
-    now_year = datetime.now(ZoneInfo("UTC")).year  # TODO не будет работать при смене года
+def update_candle_from_binance(symbol, last_date_utc: datetime):
+    now_year = last_date_utc.year  # TODO не будет работать при смене года
 
     last_15m_candle = last_candle_15m(now_year, symbol)
     if not last_15m_candle:
@@ -65,19 +65,18 @@ def update_candle_from_binance(symbol):
 
     iteration_days = get_all_days_between(
         to_utc_datetime(last_15m_candle[5]) + timedelta(minutes=15),
-        get_previous_candle_15m_close()
+        last_date_utc
     )
 
     if len(iteration_days) > 32:
         raise ValueError("More than a month passed! Download a CSV!")
 
     for i, date in enumerate(iteration_days):
-        if i == len(iteration_days) - 1:
-            start_time = to_timestamp(last_15m_candle[5])
-            end_time = to_timestamp(to_date_str(date)) - 1
-        else:
-            start_time = to_timestamp(to_date_str(date))
-            end_time = int(end_of_day(date).timestamp() * 1000)
+        start_time = to_timestamp(date)
+        end_time = min(to_timestamp(end_of_day(date)), to_timestamp(last_date_utc) - 1)
+
+        if start_time >= end_time:
+            continue
 
         candles_15m = [to_inner_candle(x) for x in fetch_15m_candles(symbol, start_time, end_time)]
         update_stock_data(now_year, candles_15m, symbol, "15m")
@@ -93,24 +92,24 @@ if __name__ == "__main__":
             "BTCUSDT",
             # "COMPUSDT",
             # "CRVUSDT",
-            # "ETHUSDT",
+            "ETHUSDT",
             # "LINKUSDT",
             # "LTCUSDT",
-            # "SOLUSDT",
+            "SOLUSDT",
             # "SUSHIUSDT",
             # "UNIUSDT",
             # "XLMUSDT",
             # "XMRUSDT",
         ]:
-            update_candle_from_binance(smb)
-            for series_year in [
-                # 2021,
-                # 2022,
-                # 2023,
-                2024,
-                # 2025
-            ]:
-                fill_year_from_csv(series_year, smb)
+            update_candle_from_binance(smb, datetime.now(ZoneInfo("UTC")))
+            # for series_year in [
+            #     # 2021,
+            #     # 2022,
+            #     # 2023,
+            #     2024,
+            #     # 2025
+            # ]:
+            #     fill_year_from_csv(series_year, smb)
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)

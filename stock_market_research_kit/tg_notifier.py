@@ -50,6 +50,7 @@ class TelegramThrottler:
             response = requests.post(TG_URL, json={
                 "chat_id": SESSIONS_SIGNALS_CHANNEL_ID,
                 "text": text,
+                "parse_mode": "HTML",
                 "disable_notification": True
             }, headers={
                 "Content-Type": "application/json"
