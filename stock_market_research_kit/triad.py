@@ -148,10 +148,17 @@ class Triad:
         return result
 
     def long_targets(self) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
-        return self.ql_long_targets(self.actual_prev_qls())
+        return sorted(
+            self.ql_long_targets(self.actual_prev_qls()),
+            key=lambda t: t[1][1]
+        )
 
     def short_targets(self) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
-        return self.ql_short_targets(self.actual_prev_qls())
+        return sorted(
+            self.ql_short_targets(self.actual_prev_qls()),
+            key=lambda t: t[1][1],
+            reverse=True
+        )
 
     def actual_prev_qls(self) -> List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]:
         result = []
