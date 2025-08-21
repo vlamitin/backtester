@@ -7,7 +7,8 @@ from scripts.run_series_raw_loader import update_candle_from_binance
 from stock_market_research_kit.db_layer import last_candle_15m, select_full_days_candles_15m, select_candles_15m
 from stock_market_research_kit.tg_notifier import TelegramThrottler
 from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, Triad, smt_dict_new_smt_found, \
-    smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled
+    smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled, \
+    targets_readable, targets_reached
 from utils.date_utils import log_info_ny, now_ny_datetime, now_utc_datetime, to_ny_datetime, to_utc_datetime, \
     to_date_str, ny_zone, to_ny_date_str
 
@@ -19,6 +20,8 @@ def update_candles(symbols, last_date_utc):
 
 def handle_new_candle(triad: Triad):
     prev_smt_psp = triad.actual_smt_psp()
+    prev_long_targets = triad.long_targets()
+    prev_short_targets = triad.short_targets()
     last_date_utc = to_utc_datetime(triad.a1.snapshot_date_readable)
     last_a1_candle = last_candle_15m(last_date_utc.year, triad.a1.symbol)  # TODO проверить при смене года
     last_a2_candle = last_candle_15m(last_date_utc.year, triad.a2.symbol)
@@ -29,38 +32,111 @@ def handle_new_candle(triad: Triad):
     triad.a3.plus_15m(last_a3_candle)
     smt_psp = triad.actual_smt_psp()
 
+    long_targets = triad.long_targets()
+    short_targets = triad.short_targets()
+
     new_smts = smt_dict_new_smt_found(prev_smt_psp, smt_psp)
     cancelled_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
     psp_changed = smt_dict_psp_changed(prev_smt_psp, smt_psp)
-    if len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0:
+    reached_short_targets = targets_reached(
+        (triad.a1.prev_15m_candle, triad.a2.prev_15m_candle, triad.a3.prev_15m_candle),
+        prev_short_targets, short_targets)
+    reached_long_targets = targets_reached(
+        (triad.a1.prev_15m_candle, triad.a2.prev_15m_candle, triad.a3.prev_15m_candle),
+        prev_long_targets, long_targets)
+    nothing_changed = (len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0 and
+                       len(reached_short_targets) == 0 and len(reached_long_targets) == 0)
+    if nothing_changed:
         return
 
-    snap_date, candle_date = to_ny_date_str(triad.a1.snapshot_date_readable), to_ny_date_str(triad.a1.prev_15m_candle[5])
-    message = f"Now <b>{snap_date}</b> (last 15m candle is {candle_date})*\n"
+    snap_date, candle_date = to_ny_date_str(
+        triad.a1.snapshot_date_readable), to_ny_date_str(triad.a1.prev_15m_candle[5])
+    header = f"Now <b>{snap_date}</b> (last 15m candle is {candle_date})*\n"
+
+    symbols = [triad.a1.symbol, triad.a2.symbol, triad.a3.symbol]
+    if len(reached_long_targets) > 0:
+        for target_label, asset_index, price in reached_long_targets:
+            header += f"\n✅↗{symbols[asset_index]} {target_label} ({round(price, 3)}) target reached"
+        header += "\n"
+
+    if len(reached_short_targets) > 0:
+        for target_label, asset_index, price in reached_short_targets:
+            header += f"\n✅↘{symbols[asset_index]} {target_label} ({round(price, 3)}) target reached"
+        header += "\n"
+
+    smt_emoji_dict = {
+        'high': '↘',
+        'half_high': '↘',
+        'low': '↗️',
+        'half_low': '↗️'
+    }
     if len(new_smts) > 0:
         for key, smt in new_smts:
-            message += f"\nNew {smt_readable(smt, key, triad)}"
-        message += "\n"
+            header += f"\n🆕{smt_emoji_dict[smt.type]} New {smt_readable(smt, key, triad)}"
+        header += "\n"
 
     if len(cancelled_smts) > 0:
         for key, smt in cancelled_smts:
-            message += f"\nCancelled prev {smt.type.capitalize()} {key}"
-        message += "\n"
+            header += f"\n🚫{smt_emoji_dict[smt.type]} Cancelled {smt.type.capitalize()} {key}"
+        header += "\n"
 
-    for p_change in psp_changed:
-        dt = to_ny_date_str(p_change[3])
-        message += f"\n{p_change[4].capitalize()} {p_change[2]} PSP on {dt} for {p_change[1]} {p_change[0]}"
     if len(psp_changed) > 0:
-        message += "\n"
+        for smt_key, smt_type, psp_key, psp_date, change in psp_changed:
+            dt = to_ny_date_str(psp_date)
+            psp_emoji_dict = {
+                'possible': '❓',
+                'closed': '❗',
+                'confirmed': '‼️',
+                'swept': '🛑'
+            }
+            header += f"\n{psp_emoji_dict[change]}{smt_emoji_dict[smt_type]} {change.capitalize()} {psp_key} PSP on {dt} for {smt_type} {smt_key}"
+        header += "\n"
 
-    message += f"""
-<blockquote>{smt_dict_readable(smt_psp, triad)}</blockquote>
+    smt_short, smt_long = smt_dict_readable(smt_psp, triad)
+    short_msg = f"""<blockquote><b>↘ Possible short</b>
 
+🎯 <b>Short targets</b> for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
+{targets_readable(short_targets)}
+
+🔀 <b>Short SMTs:</b>
+{smt_short}</blockquote>"""
+
+    long_msg = f"""<blockquote><b>↗ Possible long</b>
+
+🎯 Long targets for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
+{targets_readable(long_targets)}
+
+🔀 <b>Long SMTs:</b> 
+{smt_long}</blockquote>"""
+
+    footer = """
 * <code>all time here and below is in NY timezone</code>
-"""
+    """
 
-    print('TODO diff!')
-    TelegramThrottler().send_signal_message(message)
+    messages = [""]
+    messages[-1] += header
+
+    if len(messages[-1]) + len(short_msg) > 4096 - 8:
+        messages.append("")
+    else:
+        messages[-1] += "\n"
+    messages[-1] += short_msg
+
+    if len(messages[-1]) + len(long_msg) > 4096 - 8:
+        messages.append("")
+    else:
+        messages[-1] += "\n"
+        messages[-1] += "\n"
+    messages[-1] += long_msg
+
+    if len(messages[-1]) + len(footer) > 4096 - 8:
+        messages.append("")
+    else:
+        messages[-1] += "\n"
+    messages[-1] += footer
+
+    for msg in messages:
+        TelegramThrottler().send_signal_message(msg)
 
 
 def time_15m_generator(start_date: datetime) -> Generator[datetime, None, None]:
@@ -70,7 +146,10 @@ def time_15m_generator(start_date: datetime) -> Generator[datetime, None, None]:
         now_utc = now_utc_datetime()
 
         if current_date > now_utc:
-            time.sleep((current_date - now_utc).total_seconds())
+            sleep_seconds = (current_date - now_utc).total_seconds()
+            log_info_ny(
+                f"Sleeping {sleep_seconds} seconds until {to_date_str(current_date)} UTC ({to_ny_date_str(to_date_str(current_date))} NY)")
+            time.sleep(sleep_seconds)
         yield current_date
 
 

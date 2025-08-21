@@ -3,14 +3,16 @@ from dataclasses import dataclass, asdict
 from datetime import timedelta, datetime
 from typing import Tuple, Optional, List, Dict
 
-from stock_market_research_kit.asset import QuarterLiq, Asset, new_empty_asset, Reverse15mGenerator
+from stock_market_research_kit.asset import QuarterLiq, Asset, new_empty_asset, Reverse15mGenerator, TargetPercent
 from stock_market_research_kit.candle import InnerCandle, as_1_candle, as_1month_candles, as_1w_candles, \
     as_1d_candles, as_4h_candles, as_2h_candles, as_1h_candles, as_30m_candles, AsCandles
+from stock_market_research_kit.quarter import MonthWeek, DayQuarter, WeekDay, Quarter90m, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
     get_current_4h_from_to, get_prev_1d_from_to, get_current_1d_from_to, get_prev_1w_from_to, get_current_1w_from_to, \
     get_prev_1month_from_to, get_current_1month_from_to, GetDateRange, humanize_timedelta, \
-    to_ny_date_str
+    to_ny_date_str, quarters_by_time, month_week_quarters_ranges, weekday_ranges, day_quarters_ranges, \
+    quarters90m_ranges, year_quarters_ranges
 
 
 @dataclass
@@ -33,6 +35,8 @@ class SMT:
     type: str  # 'high' 'low' 'half_high' or 'half_low'
     first_appeared: str
 
+    same_lvl_targets: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]
+
     a1_sweep_candles_15m: List[InnerCandle]
     a2_sweep_candles_15m: List[InnerCandle]
     a3_sweep_candles_15m: List[InnerCandle]
@@ -54,6 +58,7 @@ def new_empty_smt(a1q, a2q, a3q) -> SMT:
         a3q=a3q,
         type='',
         first_appeared='',
+        same_lvl_targets=[],
         a1_sweep_candles_15m=[],
         a2_sweep_candles_15m=[],
         a3_sweep_candles_15m=[],
@@ -68,17 +73,172 @@ def new_empty_smt(a1q, a2q, a3q) -> SMT:
     )
 
 
+def percent_from_current(current: float, target: float) -> float:
+    return round((target - current) / current * 100, 2)
+
+
 @dataclass
 class Triad:
     a1: Asset
     a2: Asset
     a3: Asset
 
+    def ql_long_targets(
+            self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
+    ) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+        result = []
+
+        for label, a1_ql, a2_ql, a3_ql in qls:
+            if not a1_ql or not a2_ql or not a3_ql:
+                continue
+            _, _, _, a1_high, a1_half, _ = a1_ql
+            _, _, _, a2_high, a2_half, _ = a2_ql
+            _, _, _, a3_high, a3_half, _ = a3_ql
+            if len([x for x in [a1_half, a2_half, a3_half] if not x[1]]) == 3:
+                pfc1 = percent_from_current(self.a1.prev_15m_candle[3], a1_half[0])
+                pfc2 = percent_from_current(self.a2.prev_15m_candle[3], a2_half[0])
+                pfc3 = percent_from_current(self.a3.prev_15m_candle[3], a3_half[0])
+                if pfc1 > 0 and pfc2 > 0 and pfc3 > 0:
+                    result.append((
+                        f"{label}_half_high",
+                        (a1_half[0], pfc1),
+                        (a2_half[0], pfc2),
+                        (a3_half[0], pfc3)
+                    ))
+            if len([x for x in [a1_high, a2_high, a3_high] if not x[1]]) == 3:
+                result.append((
+                    f"{label}_high",
+                    (a1_high[0], percent_from_current(self.a1.prev_15m_candle[3], a1_high[0])),
+                    (a2_high[0], percent_from_current(self.a2.prev_15m_candle[3], a2_high[0])),
+                    (a3_high[0], percent_from_current(self.a3.prev_15m_candle[3], a3_high[0]))
+                ))
+
+        return result
+
+    def ql_short_targets(
+            self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
+    ) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+        result = []
+
+        for label, a1_ql, a2_ql, a3_ql in qls:
+            if not a1_ql or not a2_ql or not a3_ql:
+                continue
+            _, _, _, _, a1_half, a1_low = a1_ql
+            _, _, _, _, a2_half, a2_low = a2_ql
+            _, _, _, _, a3_half, a3_low = a3_ql
+            if len([x for x in [a1_half, a2_half, a3_half] if not x[1]]) == 3:
+                pfc1 = percent_from_current(self.a1.prev_15m_candle[3], a1_half[0])
+                pfc2 = percent_from_current(self.a2.prev_15m_candle[3], a2_half[0])
+                pfc3 = percent_from_current(self.a3.prev_15m_candle[3], a3_half[0])
+                if pfc1 < 0 and pfc2 < 0 and pfc3 < 0:
+                    result.append((
+                        f"{label}_half_low",
+                        (a1_half[0], pfc1),
+                        (a2_half[0], pfc2),
+                        (a3_half[0], pfc3)
+                    ))
+            if len([x for x in [a1_low, a2_low, a3_low] if not x[1]]) == 3:
+                result.append((
+                    f"{label}_low",
+                    (a1_low[0], percent_from_current(self.a1.prev_15m_candle[3], a1_low[0])),
+                    (a2_low[0], percent_from_current(self.a2.prev_15m_candle[3], a2_low[0])),
+                    (a3_low[0], percent_from_current(self.a3.prev_15m_candle[3], a3_low[0]))
+                ))
+
+        return result
+
+    def long_targets(self) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+        return self.ql_long_targets(self.actual_prev_qls())
+
+    def short_targets(self) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+        return self.ql_short_targets(self.actual_prev_qls())
+
+    def actual_prev_qls(self) -> List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]:
+        result = []
+
+        curr_yq, curr_mw, curr_wd, curr_dq, curr_q90m = quarters_by_time(self.a1.snapshot_date_readable)
+
+        # for q90m, _, _ in quarters90m_ranges(self.a1.snapshot_date_readable)[0]:
+        #     match q90m:
+        #         case Quarter90m.Q1_90m:
+        #             result.append(('q1_90m', self.a1.q1_90m, self.a2.q1_90m, self.a3.q1_90m))
+        #         case Quarter90m.Q2_90m:
+        #             result.append(('q2_90m', self.a1.q2_90m, self.a2.q2_90m, self.a3.q2_90m))
+        #         case Quarter90m.Q3_90m:
+        #             result.append(('q3_90m', self.a1.q3_90m, self.a2.q3_90m, self.a3.q3_90m))
+        #         case Quarter90m.Q4_90m:
+        #             result.append(('q4_90m', self.a1.q4_90m, self.a2.q4_90m, self.a3.q4_90m))
+
+        for dq, _, _ in day_quarters_ranges(self.a1.snapshot_date_readable)[0]:
+            if dq == curr_dq:
+                continue
+            match dq:
+                case DayQuarter.DQ1_Asia:
+                    result.append(('asia', self.a1.asia, self.a2.asia, self.a3.asia))
+                case DayQuarter.DQ2_London:
+                    result.append(('london', self.a1.london, self.a2.london, self.a3.london))
+                case DayQuarter.DQ3_NYAM:
+                    result.append(('nyam', self.a1.nyam, self.a2.nyam, self.a3.nyam))
+                case DayQuarter.DQ4_NYPM:
+                    result.append(('nypm', self.a1.nypm, self.a2.nypm, self.a3.nypm))
+
+        for wd, _, _ in weekday_ranges(self.a1.snapshot_date_readable)[0]:
+            if wd == curr_wd:
+                continue
+            match wd:
+                case WeekDay.Mon:
+                    result.append(('mon', self.a1.mon, self.a2.mon, self.a3.mon))
+                case WeekDay.Tue:
+                    result.append(('tue', self.a1.tue, self.a2.tue, self.a3.tue))
+                case WeekDay.Wed:
+                    result.append(('wed', self.a1.wed, self.a2.wed, self.a3.wed))
+                case WeekDay.Thu:
+                    result.append(('thu', self.a1.thu, self.a2.thu, self.a3.thu))
+                case WeekDay.MonThu:
+                    result.append(('mon_thu', self.a1.mon_thu, self.a2.mon_thu, self.a3.mon_thu))
+                case WeekDay.Fri:
+                    result.append(('fri', self.a1.fri, self.a2.fri, self.a3.fri))
+                case WeekDay.MonFri:
+                    result.append(('mon_fri', self.a1.mon_fri, self.a2.mon_fri, self.a3.mon_fri))
+                case WeekDay.Sat:
+                    result.append(('sat', self.a1.sat, self.a2.sat, self.a3.sat))
+
+        for mw, _, _ in month_week_quarters_ranges(self.a1.snapshot_date_readable)[0]:
+            if mw == curr_mw:
+                continue
+            match mw:
+                case MonthWeek.MW1:
+                    result.append(('week1', self.a1.week1, self.a2.week1, self.a3.week1))
+                case MonthWeek.MW2:
+                    result.append(('week2', self.a1.week2, self.a2.week2, self.a3.week2))
+                case MonthWeek.MW3:
+                    result.append(('week3', self.a1.week3, self.a2.week3, self.a3.week3))
+                case MonthWeek.MW4:
+                    result.append(('week4', self.a1.week4, self.a2.week4, self.a3.week4))
+                case MonthWeek.MW5:
+                    result.append(('week5', self.a1.week5, self.a2.week5, self.a3.week5))
+
+        for yq, _, _ in year_quarters_ranges(self.a1.snapshot_date_readable)[0]:
+            if yq == curr_yq:
+                continue
+            match yq:
+                case YearQuarter.YQ1:
+                    result.append(('year_q1', self.a1.year_q1, self.a2.year_q1, self.a3.year_q1))
+                case YearQuarter.YQ2:
+                    result.append(('year_q2', self.a1.year_q2, self.a2.year_q2, self.a3.year_q2))
+                case YearQuarter.YQ3:
+                    result.append(('year_q3', self.a1.year_q3, self.a2.year_q3, self.a3.year_q3))
+                case YearQuarter.YQ4:
+                    result.append(('year_q4', self.a1.year_q4, self.a2.year_q4, self.a3.year_q4))
+
+        result.append(('prev_year', self.a1.prev_year, self.a2.prev_year, self.a3.prev_year))
+        return result
+
     def new_smt(
-            self, next_tick: str, a1_ql, a2_aq, a3_ql: QuarterLiq
+            self, next_tick: str, a1_ql, a2_ql, a3_ql: QuarterLiq
     ) -> Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]:
         _, _, _, a1_high, a1_half, a1_low = a1_ql
-        _, _, _, a2_high, a2_half, a2_low = a2_aq
+        _, _, _, a2_high, a2_half, a2_low = a2_ql
         _, _, _, a3_high, a3_half, a3_low = a3_ql
 
         a1_sweep_candles_15m = self.a1.get_15m_candles_range(next_tick, self.a1.snapshot_date_readable)
@@ -90,7 +250,7 @@ class Triad:
         a3_q_close = None if len(a3_sweep_candles_15m) == 0 else a3_sweep_candles_15m[0][0]
 
         is_high = len([x for x in [a1_high[1], a2_high[1], a3_high[1]] if x]) not in [0, 3]
-        high_smt = new_empty_smt(a1_ql, a2_aq, a3_ql) if is_high else None
+        high_smt = new_empty_smt(a1_ql, a2_ql, a3_ql) if is_high else None
         if high_smt:
             high_smt.type = 'high'
             high_smt.a1_sweep_candles_15m = a1_sweep_candles_15m
@@ -104,7 +264,7 @@ class Triad:
                     break
 
         is_low = len([x for x in [a1_low[1], a2_low[1], a3_low[1]] if x]) not in [0, 3]
-        low_smt = new_empty_smt(a1_ql, a2_aq, a3_ql) if is_low else None
+        low_smt = new_empty_smt(a1_ql, a2_ql, a3_ql) if is_low else None
         if low_smt:
             low_smt.type = 'low'
             low_smt.a1_sweep_candles_15m = a1_sweep_candles_15m
@@ -125,7 +285,7 @@ class Triad:
                                       a2_half[0] < a2_q_close <= a2_high[0] and
                                       a3_half[0] < a3_q_close <= a3_high[0])
 
-        half_smt = new_empty_smt(a1_ql, a2_aq, a3_ql) \
+        half_smt = new_empty_smt(a1_ql, a2_ql, a3_ql) \
             if is_half_swept and (is_half_low or is_half_high) else None
         if half_smt:
             half_smt.type = 'half_high' if is_half_high else 'half_low' if is_half_low else ''
@@ -785,11 +945,11 @@ class Triad:
             high_smt = self.with_1h_psps(next_tick, high_smt)
             high_smt = self.with_2h_psps(next_tick, high_smt)
         if half_smt:
-#             half_smt = self.with_30m_psps(next_tick, half_smt)
+            # half_smt = self.with_30m_psps(next_tick, half_smt)
             half_smt = self.with_1h_psps(next_tick, half_smt)
             half_smt = self.with_2h_psps(next_tick, half_smt)
         if low_smt:
-#             low_smt = self.with_30m_psps(next_tick, low_smt)
+            # low_smt = self.with_30m_psps(next_tick, low_smt)
             low_smt = self.with_1h_psps(next_tick, low_smt)
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
@@ -805,15 +965,15 @@ class Triad:
             next_tick, self.a1.london, self.a2.london, self.a3.london
         )
         if high_smt:
-#             high_smt = self.with_30m_psps(next_tick, high_smt)
+            # high_smt = self.with_30m_psps(next_tick, high_smt)
             high_smt = self.with_1h_psps(next_tick, high_smt)
             high_smt = self.with_2h_psps(next_tick, high_smt)
         if half_smt:
-#             half_smt = self.with_30m_psps(next_tick, half_smt)
+            # half_smt = self.with_30m_psps(next_tick, half_smt)
             half_smt = self.with_1h_psps(next_tick, half_smt)
             half_smt = self.with_2h_psps(next_tick, half_smt)
         if low_smt:
-#             low_smt = self.with_30m_psps(next_tick, low_smt)
+            # low_smt = self.with_30m_psps(next_tick, low_smt)
             low_smt = self.with_1h_psps(next_tick, low_smt)
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
@@ -833,11 +993,11 @@ class Triad:
             high_smt = self.with_1h_psps(next_tick, high_smt)
             high_smt = self.with_2h_psps(next_tick, high_smt)
         if half_smt:
-#             half_smt = self.with_30m_psps(next_tick, half_smt)
+            #  half_smt = self.with_30m_psps(next_tick, half_smt)
             half_smt = self.with_1h_psps(next_tick, half_smt)
             half_smt = self.with_2h_psps(next_tick, half_smt)
         if low_smt:
-#             low_smt = self.with_30m_psps(next_tick, low_smt)
+            #  low_smt = self.with_30m_psps(next_tick, low_smt)
             low_smt = self.with_1h_psps(next_tick, low_smt)
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
@@ -1034,6 +1194,28 @@ def smt_dict_old_smt_cancelled(
     return result
 
 
+def targets_reached(
+        last_candles: Tuple[InnerCandle, InnerCandle, InnerCandle],
+        targets_old: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]],
+        targets_new: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]
+) -> List[Tuple[str, int, float]]:  # target_label, asset_index, price
+    result = []
+    if not targets_old:
+        return []
+    for t in targets_old:
+        if not any(t[1][0] == x[1][0] for x in targets_new):
+            if last_candles[0][2] < t[1][0] < last_candles[0][1]:
+                result.append((t[0], 0, t[1][0]))
+        if not any(t[2][0] == x[2][0] for x in targets_new):
+            if last_candles[1][2] < t[2][0] < last_candles[1][1]:
+                result.append((t[0], 1, t[2][0]))
+        if not any(t[3][0] == x[3][0] for x in targets_new):
+            if last_candles[2][2] < t[3][0] < last_candles[2][1]:
+                result.append((t[0], 2, t[3][0]))
+
+    return result
+
+
 def smt_dict_psp_changed(
         d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
         d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
@@ -1106,18 +1288,23 @@ def psps_changed(
         return []
     for i in range(len(psps_new)):
         if not psps_old or len(psps_old) < i + 1:
-            result.append((psps_new[i].a1_candle[5], 'possible'))
-            continue
-        if not psps_old[i].closed and psps_new[i].closed:
-            if not psps_new[i].swept_from_to:
+            if psps_new[i].confirmed:
+                result.append((psps_new[i].a1_candle[5], 'confirmed'))
+            elif psps_new[i].closed:
                 result.append((psps_new[i].a1_candle[5], 'closed'))
+            else:
+                result.append((psps_new[i].a1_candle[5], 'possible'))
+            continue
+        if not psps_old[i].swept_from_to and psps_new[i].swept_from_to:
+            result.append((psps_new[i].a1_candle[5], 'swept'))
             continue
         if not psps_old[i].confirmed and psps_new[i].confirmed:
             if not psps_new[i].swept_from_to:
                 result.append((psps_new[i].a1_candle[5], 'confirmed'))
             continue
-        if not psps_old[i].swept_from_to and psps_new[i].swept_from_to:
-            result.append((psps_new[i].a1_candle[5], 'swept'))
+        if not psps_old[i].closed and psps_new[i].closed:
+            if not psps_new[i].swept_from_to:
+                result.append((psps_new[i].a1_candle[5], 'closed'))
             continue
 
     return result
@@ -1126,39 +1313,42 @@ def psps_changed(
 def smt_dict_readable(
         d: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
         triad: Triad
-) -> str:
-    result = "<b>Possible short:</b>"
-    for key in d:
+) -> Tuple[str, str]:
+    pos_short = []
+    for key in sorted(d.keys(), reverse=True):
         smt_tuple = d.get(key, None)
         if smt_tuple is None:
             continue
 
         high, half, _ = smt_tuple
         if high is not None:
-            result += f"\n\n{smt_readable(high, key, triad)}"
+            pos_short.append(f"{smt_readable(high, key, triad)}")
         if half is not None and half.type == 'half_high':
-            result += f"\n\n{smt_readable(half, key, triad)}"
-    if result.endswith("short:"):
-        result += "\nNo short SMT found"
+            pos_short.append(f"{smt_readable(half, key, triad)}")
+    if len(pos_short) == 0:
+        pos_short.append("No short SMT found")
 
-    result += "\n\n\n<b>Possible long:</b>"
-    for key in d:
+    pos_long = []
+    for key in sorted(d.keys(), reverse=True):
         smt_tuple = d.get(key, None)
         if smt_tuple is None:
             continue
 
         _, half, low = smt_tuple
         if low is not None:
-            result += f"\n\n{smt_readable(low, key, triad)}"
+            pos_long.append(f"{smt_readable(low, key, triad)}")
         if half is not None and half.type == 'half_low':
-            result += f"\n\n{smt_readable(half, key, triad)}"
-    if result.endswith("long:"):
-        result += "\nNo long SMT found"
+            pos_long.append(f"{smt_readable(half, key, triad)}")
+    if len(pos_long) == 0:
+        pos_long.append("No long SMT found")
 
-    return result
+    return "\n\n".join(pos_short), "\n\n".join(pos_long)
 
 
 def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
+    have_closed_psps = False
+    have_confirmed_psps = False
+
     def swept(symbol: str, ql: QuarterLiq) -> str:
         nonlocal triad
         nonlocal smt
@@ -1169,38 +1359,49 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
             'low': 5,
         }
         if ql[smt_types_match[smt.type]][1]:
-            return f"{symbol} swept {ql[smt_types_match[smt.type]][0]}"
-        return f"{symbol} not swept {ql[smt_types_match[smt.type]][0]}"
+            return f"{symbol} swept {round(ql[smt_types_match[smt.type]][0], 3)}"
+        return f"{symbol} not swept {round(ql[smt_types_match[smt.type]][0], 3)}"
 
     smt_ago = humanize_timedelta(to_utc_datetime(triad.a1.snapshot_date_readable) - to_utc_datetime(smt.first_appeared))
-    result = f"""{smt.type.capitalize()} {key} at {to_ny_date_str(smt.first_appeared)} (<b>{smt_ago} ago</b>):
-  {swept(triad.a1.symbol, smt.a1q)}, {swept(triad.a2.symbol, smt.a2q)}, {swept(triad.a3.symbol, smt.a3q)}"""
+    result = f"""<b>{smt.type.capitalize()} {key}</b> at {to_ny_date_str(smt.first_appeared)} (<b>{smt_ago} ago</b>):
+<code>{swept(triad.a1.symbol, smt.a1q)}, {swept(triad.a2.symbol, smt.a2q)}, {swept(triad.a3.symbol, smt.a3q)}</code>"""
 
     def plus_psps(psps: List[PSP], label: str):
         nonlocal result
         nonlocal triad
         nonlocal smt
+        nonlocal have_closed_psps
+        nonlocal have_confirmed_psps
+
         if not psps:
             return
         for p in psps:
             if p.swept_from_to:
                 continue
             status = 'Confirmed' if p.confirmed else 'Closed' if p.closed else 'Possible'
+            if status == 'Closed':
+                have_closed_psps = True
+            if status == 'Confirmed':
+                have_confirmed_psps = True
             psp_ago = humanize_timedelta(to_utc_datetime(triad.a1.snapshot_date_readable) -
                                          to_utc_datetime(p.a1_candle[5]))
+
+            def boldify(s: str) -> str:
+                nonlocal status
+                return s if status in ['Possible'] else f"<b>{s}</b>"
+
             edge = ""
-            if smt.type in ['high', 'half_high']:
-                c1_diff = round(100 * ((p.a1_candle[1] - triad.a1.prev_15m_candle[3]) / triad.a1.prev_15m_candle[3]), 3)
-                c2_diff = round(100 * ((p.a2_candle[1] - triad.a2.prev_15m_candle[3]) / triad.a2.prev_15m_candle[3]), 3)
-                c3_diff = round(100 * ((p.a3_candle[1] - triad.a3.prev_15m_candle[3]) / triad.a3.prev_15m_candle[3]), 3)
-                edge += f"high {p.a1_candle[1]}(+{c1_diff}%), {p.a2_candle[1]}(+{c2_diff}%), {p.a3_candle[1]}(+{c3_diff}%)"
-            elif smt.type in ['low', 'half_low']:
-                c1_diff = round(100 * ((p.a1_candle[2] - triad.a1.prev_15m_candle[3]) / triad.a1.prev_15m_candle[3]), 3)
-                c2_diff = round(100 * ((p.a2_candle[2] - triad.a2.prev_15m_candle[3]) / triad.a2.prev_15m_candle[3]), 3)
-                c3_diff = round(100 * ((p.a3_candle[2] - triad.a3.prev_15m_candle[3]) / triad.a3.prev_15m_candle[3]), 3)
-                edge += f"low {p.a1_candle[2]}({c1_diff}%), {p.a2_candle[2]}({c2_diff}%), {p.a3_candle[2]}({c3_diff}%)"
+            plus = "+" if smt.type in ['high', 'half_high'] else ""
+
+            c1_diff = percent_from_current(triad.a1.prev_15m_candle[3], p.a1_candle[1])
+            c2_diff = percent_from_current(triad.a2.prev_15m_candle[3], p.a2_candle[1])
+            c3_diff = percent_from_current(triad.a3.prev_15m_candle[3], p.a3_candle[1])
+            edge += f"high {round(p.a1_candle[1], 3)} ({boldify(f'{plus}{c1_diff}%')}), "
+            edge += f"{round(p.a2_candle[1], 3)} ({boldify(f'{plus}{c2_diff}%')}), "
+            edge += f"{round(p.a3_candle[1], 3)} ({boldify(f'{plus}{c3_diff}%')})"
+
             result += f"""
-    {status} {label} PSP {to_ny_date_str(p.a1_candle[5])} (<b>{psp_ago} ago</b>) with {edge}"""
+    {boldify(f'{status} {label} PSP')} {to_ny_date_str(p.a1_candle[5])} ({boldify(f'{psp_ago} ago')}) with {edge}"""
 
     plus_psps(smt.psps_1_month, '1M')
     plus_psps(smt.psps_1_week, '1W')
@@ -1211,7 +1412,22 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
     plus_psps(smt.psps_30m, '30m')
     plus_psps(smt.psps_15m, '15m')
 
-    return result
+    emoji = f"{'‼️' if have_confirmed_psps else ''}{'❗' if have_closed_psps else ''}"
+    return f"{emoji}{result}"
+
+
+def targets_readable(targets: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]) -> str:
+    def to_str(t: Tuple[str, TargetPercent, TargetPercent, TargetPercent]) -> str:
+        result = f"<b>Target {t[0]}</b>: "
+        plus = "+" if t[1][1] > 0 else ""
+
+        result += f"{round(t[1][0], 3)} (<b>{plus}{t[1][1]}%</b>), "
+        result += f"{round(t[2][0], 3)} (<b>{plus}{t[2][1]}%</b>), "
+        result += f"{round(t[3][0], 3)} (<b>{plus}{t[3][1]}%</b>)"
+
+        return result
+
+    return "\n".join([to_str(x) for x in targets])
 
 
 def new_empty_triad(a1_symbol: str, a2_symbol: str, a3_symbol: str) -> Triad:

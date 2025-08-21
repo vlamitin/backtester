@@ -32,6 +32,10 @@ class TelegramThrottler:
         self.chat_locks = defaultdict(Lock)
 
     def send_signal_message(self, text: str):
+        if len(text) > 4096:
+            self.send_signal_message(text[0:4096])
+            self.send_signal_message(text[4096:])
+            return
         with self.chat_locks[SESSIONS_SIGNALS_CHANNEL_ID]:
             now = time.time()
 
@@ -57,9 +61,9 @@ class TelegramThrottler:
             })
 
             if response.status_code != 200:
-                print(f"Failed to send: {response.status_code} - {response.text}")
+                print(f"ERROR: Failed to TG send: {response.status_code} {response.reason}")
             else:
-                print(f"Sent to {SESSIONS_SIGNALS_CHANNEL_ID}: {text}")
+                print(f"Successfully TG sent `{text[0:65]}...`to {SESSIONS_SIGNALS_CHANNEL_ID}")
 
             # Update state
             now = time.time()

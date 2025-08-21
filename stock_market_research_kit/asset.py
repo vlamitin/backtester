@@ -15,6 +15,7 @@ from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to,
     current_year_ranges
 
 LiqSwept: TypeAlias = Tuple[float, bool]  # (price, is_swept)
+TargetPercent: TypeAlias = Tuple[float, float]  # (price, percent_from_current)
 # (date_start, date_end, ended, high, half, low)
 QuarterLiq: TypeAlias = Tuple[str, str, bool, LiqSwept, LiqSwept, LiqSwept]
 Reverse15mGenerator: TypeAlias = Generator[InnerCandle, None, None]
