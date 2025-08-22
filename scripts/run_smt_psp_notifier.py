@@ -8,7 +8,7 @@ from stock_market_research_kit.db_layer import last_candle_15m, select_full_days
 from stock_market_research_kit.tg_notifier import TelegramThrottler
 from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, Triad, smt_dict_new_smt_found, \
     smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled, \
-    targets_readable, targets_reached
+    targets_readable, targets_reached, true_opens_readable
 from utils.date_utils import log_info_ny, now_ny_datetime, now_utc_datetime, to_ny_datetime, to_utc_datetime, \
     to_date_str, ny_zone, to_ny_date_str
 
@@ -44,6 +44,11 @@ def handle_new_candle(triad: Triad):
     reached_long_targets = targets_reached(
         (triad.a1.prev_15m_candle, triad.a2.prev_15m_candle, triad.a3.prev_15m_candle),
         prev_long_targets, long_targets)
+
+    new_long_targets = []  # полезно видеть, что кватал закончился и его экстремумы являются новыми целями
+    new_short_targets = []  # TODO
+    tos = triad.true_opens()
+
     nothing_changed = (len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0 and
                        len(reached_short_targets) == 0 and len(reached_long_targets) == 0)
     if nothing_changed:
@@ -53,7 +58,7 @@ def handle_new_candle(triad: Triad):
         triad.a1.snapshot_date_readable), to_ny_date_str(triad.a1.prev_15m_candle[5])
     header = f"Now <b>{snap_date}</b> (last 15m candle is {candle_date})*\n"
 
-    symbols = [triad.a1.symbol, triad.a2.symbol, triad.a3.symbol]
+    symbols = (triad.a1.symbol, triad.a2.symbol, triad.a3.symbol)
     if len(reached_long_targets) > 0:
         for target_label, asset_index, price in reached_long_targets:
             header += f"\n✅↗{symbols[asset_index]} {target_label} ({round(price, 3)}) target reached"
@@ -81,15 +86,24 @@ def handle_new_candle(triad: Triad):
         header += "\n"
 
     if len(psp_changed) > 0:
+        psp_emoji_dict = {
+            'possible': '❓',
+            'closed': '❗',
+            'confirmed': '‼️',
+            'swept': '🛑'
+        }
+        grouped_psp = {}
         for smt_key, smt_type, psp_key, psp_date, change in psp_changed:
+            if change + psp_key + psp_date not in grouped_psp:
+                grouped_psp[change + psp_key + psp_date] = []
+            grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, psp_key, psp_date, change))
+
+        for key in grouped_psp:
+            _, smt_type, psp_key, psp_date, change = grouped_psp[key][0]
             dt = to_ny_date_str(psp_date)
-            psp_emoji_dict = {
-                'possible': '❓',
-                'closed': '❗',
-                'confirmed': '‼️',
-                'swept': '🛑'
-            }
-            header += f"\n{psp_emoji_dict[change]}{smt_emoji_dict[smt_type]} {change.capitalize()} {psp_key} PSP on {dt} for {smt_type} {smt_key}"
+            msg = f"\n{psp_emoji_dict[change]}{smt_emoji_dict[smt_type]} {change.capitalize()} {psp_key} PSP on {dt} for "
+            msg += " and ".join([f"{x[1]} {x[0]}" for x in grouped_psp[key]])
+            header += msg
         header += "\n"
 
     smt_short, smt_long = smt_dict_readable(smt_psp, triad)
@@ -115,6 +129,9 @@ def handle_new_candle(triad: Triad):
 
     messages = [""]
     messages[-1] += header
+    messages[-1] += f"""
+<b>True opens:</b>
+<pre>{true_opens_readable(tos)}</pre>"""
 
     if len(messages[-1]) + len(short_msg) > 4096 - 8:
         messages.append("")

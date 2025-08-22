@@ -106,7 +106,7 @@ def quarters_by_time(date_utc: str) -> Tuple[YearQuarter, MonthWeek, WeekDay, Da
     return yq, mw, wd, dq, q90m
 
 
-def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, datetime]], str]:  # ranges, t90m0
+def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, datetime]], str]:  # ranges, t90mo
     res = []
     q90m = quarters_by_time(date_utc)[4]
     ny_date = to_utc_datetime(date_utc).astimezone(ZoneInfo("America/New_York"))
@@ -114,7 +114,7 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
     seconds_since_midnight = ny_date.hour * 3600 + ny_date.minute * 60 + ny_date.second
     start_of_q90m = ny_date - timedelta(seconds=seconds_since_midnight % (90 * 60))
 
-    t90m0 = None
+    t90mo = None
 
     if q90m == Quarter90m.Q1_90m:
         res.append((
@@ -128,19 +128,19 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
             (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif q90m == Quarter90m.Q2_90m:
-        t90m0 = start_of_q90m.astimezone(ZoneInfo("UTC"))
+        t90mo = start_of_q90m.astimezone(ZoneInfo("UTC"))
         res.append((
             Quarter90m.Q1_90m,
             (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC")),
-            t90m0 - timedelta(seconds=1)
+            t90mo - timedelta(seconds=1)
         ))
         res.append((
             Quarter90m.Q2_90m,
-            t90m0,
-            t90m0 + timedelta(minutes=90) - timedelta(seconds=1)
+            t90mo,
+            t90mo + timedelta(minutes=90) - timedelta(seconds=1)
         ))
     elif q90m == Quarter90m.Q3_90m:
-        t90m0 = (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC"))
+        t90mo = (start_of_q90m - timedelta(minutes=90)).astimezone(ZoneInfo("UTC"))
         res.append((
             Quarter90m.Q1_90m,
             (start_of_q90m - timedelta(minutes=180)).astimezone(ZoneInfo("UTC")),
@@ -148,7 +148,7 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
         ))
         res.append((
             Quarter90m.Q2_90m,
-            t90m0,
+            t90mo,
             (start_of_q90m - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
         res.append((
@@ -157,7 +157,7 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
             (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
     elif q90m == Quarter90m.Q4_90m:
-        t90m0 = (start_of_q90m - timedelta(minutes=180)).astimezone(ZoneInfo("UTC"))
+        t90mo = (start_of_q90m - timedelta(minutes=180)).astimezone(ZoneInfo("UTC"))
         res.append((
             Quarter90m.Q1_90m,
             (start_of_q90m - timedelta(minutes=270)).astimezone(ZoneInfo("UTC")),
@@ -165,7 +165,7 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
         ))
         res.append((
             Quarter90m.Q2_90m,
-            t90m0,
+            t90mo,
             (start_of_q90m - timedelta(minutes=90, seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
         res.append((
@@ -179,7 +179,7 @@ def quarters90m_ranges(date_utc: str) -> Tuple[List[Tuple[Quarter90m, datetime, 
             (start_of_q90m + timedelta(minutes=90) - timedelta(seconds=1)).astimezone(ZoneInfo("UTC"))
         ))
 
-    return res, "" if not t90m0 else to_date_str(t90m0)
+    return res, "" if not t90mo else to_date_str(t90mo)
 
 
 def day_quarters_ranges(date_utc: str) -> Tuple[List[Tuple[DayQuarter, datetime, datetime]], str]:  # ranges, tdo

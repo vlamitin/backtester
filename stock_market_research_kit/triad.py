@@ -5,7 +5,7 @@ from typing import Tuple, Optional, List, Dict
 
 from stock_market_research_kit.asset import QuarterLiq, Asset, new_empty_asset, Reverse15mGenerator, TargetPercent
 from stock_market_research_kit.candle import InnerCandle, as_1_candle, as_1month_candles, as_1w_candles, \
-    as_1d_candles, as_4h_candles, as_2h_candles, as_1h_candles, as_30m_candles, AsCandles
+    as_1d_candles, as_4h_candles, as_2h_candles, as_1h_candles, as_30m_candles, AsCandles, PriceDate
 from stock_market_research_kit.quarter import MonthWeek, DayQuarter, WeekDay, Quarter90m, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
@@ -82,6 +82,32 @@ class Triad:
     a1: Asset
     a2: Asset
     a3: Asset
+
+    def true_opens(
+            self
+    ) -> Tuple[List[Tuple[str, float, float]], List[Tuple[str, float, float]], List[Tuple[str, float, float]]]:
+        def to_tuple(label: str, curr: float, pd: Optional[PriceDate]) -> Optional[Tuple[str, float, float]]:
+            if not pd:
+                return None
+            return label, pd[0], percent_from_current(curr, pd[0])
+
+        symbols = [self.a1.symbol, self.a2.symbol, self.a3.symbol]
+        res = ([], [], [])
+        for i, asset in enumerate([self.a1, self.a2, self.a3]):
+            res[i].extend(sorted(
+                [x for x in [
+                    to_tuple('tyo', asset.prev_15m_candle[3], asset.true_yo),
+                    to_tuple('tmo', asset.prev_15m_candle[3], asset.true_mo),
+                    to_tuple('two', asset.prev_15m_candle[3], asset.true_wo),
+                    to_tuple('tdo', asset.prev_15m_candle[3], asset.true_do),
+                    to_tuple('t90mo', asset.prev_15m_candle[3], asset.true_90m_open),
+                    (symbols[i], asset.prev_15m_candle[3], 0),
+                ] if x],
+                key=lambda x: x[2],
+                reverse=True
+            ))
+
+        return res
 
     def ql_long_targets(
             self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
@@ -1210,13 +1236,11 @@ def targets_reached(
     if not targets_old:
         return []
     for t in targets_old:
-        if not any(t[1][0] == x[1][0] for x in targets_new):
+        if not any(t[0] == x[0] for x in targets_new):
             if last_candles[0][2] < t[1][0] < last_candles[0][1]:
                 result.append((t[0], 0, t[1][0]))
-        if not any(t[2][0] == x[2][0] for x in targets_new):
             if last_candles[1][2] < t[2][0] < last_candles[1][1]:
                 result.append((t[0], 1, t[2][0]))
-        if not any(t[3][0] == x[3][0] for x in targets_new):
             if last_candles[2][2] < t[3][0] < last_candles[2][1]:
                 result.append((t[0], 2, t[3][0]))
 
@@ -1399,13 +1423,18 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
 
             edge = ""
             plus = "+" if smt.type in ['high', 'half_high'] else ""
+            extremum_1 = p.a1_candle[1] if smt.type in ['high', 'half_high'] else p.a1_candle[2]
+            extremum_2 = p.a2_candle[1] if smt.type in ['high', 'half_high'] else p.a2_candle[2]
+            extremum_3 = p.a3_candle[1] if smt.type in ['high', 'half_high'] else p.a3_candle[2]
 
-            c1_diff = percent_from_current(triad.a1.prev_15m_candle[3], p.a1_candle[1])
-            c2_diff = percent_from_current(triad.a2.prev_15m_candle[3], p.a2_candle[1])
-            c3_diff = percent_from_current(triad.a3.prev_15m_candle[3], p.a3_candle[1])
-            edge += f"high {round(p.a1_candle[1], 3)} ({boldify(f'{plus}{c1_diff}%')}), "
-            edge += f"{round(p.a2_candle[1], 3)} ({boldify(f'{plus}{c2_diff}%')}), "
-            edge += f"{round(p.a3_candle[1], 3)} ({boldify(f'{plus}{c3_diff}%')})"
+            extremum_txt = "high" if smt.type in ['high', 'half_high'] else "low"
+
+            c1_diff = percent_from_current(triad.a1.prev_15m_candle[3], extremum_1)
+            c2_diff = percent_from_current(triad.a2.prev_15m_candle[3], extremum_2)
+            c3_diff = percent_from_current(triad.a3.prev_15m_candle[3], extremum_3)
+            edge += f"{extremum_txt} {round(extremum_1, 3)} ({boldify(f'{plus}{c1_diff}%')}), "
+            edge += f"{round(extremum_2, 3)} ({boldify(f'{plus}{c2_diff}%')}), "
+            edge += f"{round(extremum_3, 3)} ({boldify(f'{plus}{c3_diff}%')})"
 
             result += f"""
     {boldify(f'{status} {label} PSP')} {to_ny_date_str(p.a1_candle[5])} ({boldify(f'{psp_ago} ago')}) with {edge}"""
@@ -1423,9 +1452,49 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
     return f"{emoji}{result}"
 
 
+def true_opens_readable(
+        tos: Tuple[List[Tuple[str, float, float]], List[Tuple[str, float, float]], List[Tuple[str, float, float]]]
+) -> str:
+    def fmt(smb: str, value: float, change: float) -> str:
+        if change == 0:
+            change_str = "0%"
+        else:
+            change_str = f"{change:+.2f}%"
+            change_str = change_str.replace(".00", "").rstrip("0").rstrip(".")
+        if value >= 1000:
+            value_str = f"{value:,.2f}".replace(",", "")
+            if value_str.endswith(".00"):
+                value_str = value_str[:-3]
+        else:
+            value_str = f"{value:.2f}"
+        return f"{smb} {value_str} ({change_str})"
+
+    col_widths = []
+    for i in range(2):
+        texts = []
+        for row in tos[i]:
+            texts.append(fmt(*row))
+        col_widths.append(max(len(t) for t in texts) + 2)
+
+    out = ""
+
+    for i in range(len(tos[0])):
+        c1 = fmt(*tos[0][i]).ljust(col_widths[0])
+        c2 = fmt(*tos[1][i]).ljust(col_widths[1])
+        out += c1 + c2 + "\n"
+
+    out += "\n"
+
+    for i in range(len(tos[0])):
+        c3 = fmt(*tos[2][i])
+        out += c3 + "\n"
+
+    return out
+
+
 def targets_readable(targets: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]) -> str:
     def to_str(t: Tuple[str, TargetPercent, TargetPercent, TargetPercent]) -> str:
-        result = f"<b>Target {t[0]}</b>: "
+        result = f"{t[0]}</b>: "
         plus = "+" if t[1][1] > 0 else ""
 
         result += f"{round(t[1][0], 3)} (<b>{plus}{t[1][1]}%</b>), "
@@ -1434,7 +1503,7 @@ def targets_readable(targets: List[Tuple[str, TargetPercent, TargetPercent, Targ
 
         return result
 
-    return "\n".join([to_str(x) for x in targets])
+    return "\n".join([f"<b>{i + 1}. {to_str(x)}" for i, x in enumerate(targets)])
 
 
 def new_empty_triad(a1_symbol: str, a2_symbol: str, a3_symbol: str) -> Triad:

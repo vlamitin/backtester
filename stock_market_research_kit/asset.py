@@ -41,11 +41,16 @@ class Asset:
     snapshot_date_readable: str
     candles_15m: Deque[InnerCandle]
 
+    prev_year: Optional[QuarterLiq]
+
     year_q1: Optional[QuarterLiq]
     year_q2: Optional[QuarterLiq]
     year_q3: Optional[QuarterLiq]
     year_q4: Optional[QuarterLiq]
     true_yo: Optional[PriceDate]  # 1st of april, for 1jan - 31mar well be None
+
+    prev_month: Optional[QuarterLiq]  # TODO
+    true_yqo: Optional[PriceDate]  # first full week of second yq month (in 2025: do 3feb, do 5may, do 4aug, do 3nov)
 
     week1: Optional[QuarterLiq]
     week2: Optional[QuarterLiq]
@@ -92,8 +97,6 @@ class Asset:
     current_1w_candle: Optional[InnerCandle]
     prev_1month_candle: InnerCandle
     current_1month_candle: Optional[InnerCandle]
-
-    prev_year: Optional[QuarterLiq]
     current_year_candle: Optional[InnerCandle]
 
     def get_15m_candles_range(self, from_: str, to: str) -> List[InnerCandle]:
@@ -575,7 +578,7 @@ class Asset:
         prev_year_from, prev_year_to = prev_year_ranges(self.snapshot_date_readable)
         current_year_from, current_year_to = current_year_ranges(self.snapshot_date_readable)
 
-        ranges_90m, t90m0 = quarters90m_ranges(self.snapshot_date_readable)
+        ranges_90m, t90mo = quarters90m_ranges(self.snapshot_date_readable)
         sweeps_90m = []
         cum_90m_quarters = []
         for rng_90m in ranges_90m:
@@ -682,8 +685,8 @@ class Asset:
                 print(f"populated {len(self.candles_15m) // (4 * 24)} days for {self.symbol}")
             pc_date = to_utc_datetime(prev_candle[5])
 
-            if prev_candle[5] == t90m0:
-                self.true_90m_open = (prev_candle[0], t90m0)
+            if prev_candle[5] == t90mo:
+                self.true_90m_open = (prev_candle[0], t90mo)
             if prev_candle[5] == tdo:
                 self.true_do = (prev_candle[0], tdo)
             if prev_candle[5] == two:
@@ -879,6 +882,8 @@ def new_empty_asset(symbol: str) -> Asset:
         year_q2=None,
         year_q3=None,
         true_yo=None,
+        prev_month=None,
+        true_yqo=None,
         week1=None,
         week2=None,
         week3=None,
