@@ -107,20 +107,14 @@ def handle_new_candle(triad: Triad):
         header += "\n"
 
     smt_short, smt_long = smt_dict_readable(smt_psp, triad)
-    short_msg = f"""<blockquote><b>↘ Possible short</b>
-
-🎯 <b>Short targets</b> for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
-{targets_readable(short_targets)}
-
-🔀 <b>Short SMTs:</b>
+    short_targets_msg = f"""<blockquote>↘🎯 <b>Short targets</b> for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
+{targets_readable(short_targets)}</blockquote>"""
+    short_smts_msg = f"""<blockquote>↘🔀 <b>Short SMTs:</b>
 {smt_short}</blockquote>"""
 
-    long_msg = f"""<blockquote><b>↗ Possible long</b>
-
-🎯 Long targets for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
-{targets_readable(long_targets)}
-
-🔀 <b>Long SMTs:</b> 
+    long_targets_msg = f"""<blockquote>↗🎯 <b>Long targets</b> for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
+{targets_readable(long_targets)}</blockquote>"""
+    long_smts_msg = f"""<blockquote>↗🔀 <b>Long SMTs:</b> 
 {smt_long}</blockquote>"""
 
     footer = """
@@ -133,18 +127,31 @@ def handle_new_candle(triad: Triad):
 <b>True opens:</b>
 <pre>{true_opens_readable(tos)}</pre>"""
 
-    if len(messages[-1]) + len(short_msg) > 4096 - 8:
+    if len(messages[-1]) + len(short_targets_msg) > 4096 - 8:
         messages.append("")
     else:
         messages[-1] += "\n"
-    messages[-1] += short_msg
+    messages[-1] += short_targets_msg
 
-    if len(messages[-1]) + len(long_msg) > 4096 - 8:
+    if len(messages[-1]) + len(short_smts_msg) > 4096 - 8:
+        messages.append("")
+    else:
+        messages[-1] += "\n"
+    messages[-1] += short_smts_msg
+
+    if len(messages[-1]) + len(long_targets_msg) > 4096 - 8:
         messages.append("")
     else:
         messages[-1] += "\n"
         messages[-1] += "\n"
-    messages[-1] += long_msg
+    messages[-1] += long_targets_msg
+
+    if len(messages[-1]) + len(long_smts_msg) > 4096 - 8:
+        messages.append("")
+    else:
+        messages[-1] += "\n"
+        messages[-1] += "\n"
+    messages[-1] += long_smts_msg
 
     if len(messages[-1]) + len(footer) > 4096 - 8:
         messages.append("")
