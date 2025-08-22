@@ -1,6 +1,6 @@
 (async () => {
 
-    const symbol = "CRVUSDT"
+    const symbol = "BTCUSDT"
 
     document.title = symbol + " sessions"
 
@@ -27,16 +27,16 @@
     })
 
     days.forEach((day, i) => {
-        day.cme_as_candle[5] && candles.push(toHCCandle(day.cme_as_candle, `CME Open 18:00-19:00`, candle_types_map[day.date_readable]["CME Open"], 'c'))
-        day.asia_as_candle[5] && candles.push(toHCCandle(day.asia_as_candle, `Asia Open 19:00-22:00`, candle_types_map[day.date_readable]["Asia Open"], 'a'))
-        day.london_as_candle[5] && candles.push(toHCCandle(day.london_as_candle, `London Open 02:00-05:00`, candle_types_map[day.date_readable]["London Open"], 'l'))
-        day.early_session_as_candle[5] && candles.push(toHCCandle(day.early_session_as_candle, `Early session 07:00-08:00`, candle_types_map[day.date_readable]["Early session"], 'e'))
-        day.premarket_as_candle[5] && candles.push(toHCCandle(day.premarket_as_candle, `Premarket 08:00-09:30`, candle_types_map[day.date_readable]["Premarket"], 'p'))
-        day.ny_am_open_as_candle[5] && candles.push(toHCCandle(day.ny_am_open_as_candle, `NY AM Open 09:30-10:00`, candle_types_map[day.date_readable]["NY AM Open"], 'O'))
-        day.ny_am_as_candle[5] && candles.push(toHCCandle(day.ny_am_as_candle, `NY AM 10:00-12:00`, candle_types_map[day.date_readable]["NY AM"], 'A'))
-        day.ny_lunch_as_candle[5] && candles.push(toHCCandle(day.ny_lunch_as_candle, `NY Lunch 12:00-13:00`, candle_types_map[day.date_readable]["NY Lunch"], 'L'))
-        day.ny_pm_as_candle[5] && candles.push(toHCCandle(day.ny_pm_as_candle, `NY PM 13:00-15:00`, candle_types_map[day.date_readable]["NY PM"], 'P'))
-        day.ny_pm_close_as_candle[5] && candles.push(toHCCandle(day.ny_pm_close_as_candle, `NY PM Close 15:00-16:00`,candle_types_map[day.date_readable]["NY PM Close"], 'C'))
+        day.cme && candles.push(toHCCandle(day.cme.session_candle, `CME Open 18:00-19:00`, candle_types_map[day.date_readable]["CME Open"], 'c'))
+        day.asia && candles.push(toHCCandle(day.asia.session_candle, `Asia Open 19:00-22:00`, candle_types_map[day.date_readable]["Asia Open"], 'a'))
+        day.london && candles.push(toHCCandle(day.london.session_candle, `London Open 02:00-05:00`, candle_types_map[day.date_readable]["London Open"], 'l'))
+        day.early_session && candles.push(toHCCandle(day.early_session.session_candle, `Early session 07:00-08:00`, candle_types_map[day.date_readable]["Early session"], 'e'))
+        day.premarket && candles.push(toHCCandle(day.premarket.session_candle, `Premarket 08:00-09:30`, candle_types_map[day.date_readable]["Premarket"], 'p'))
+        day.ny_am_open && candles.push(toHCCandle(day.ny_am_open.session_candle, `NY AM Open 09:30-10:00`, candle_types_map[day.date_readable]["NY AM Open"], 'O'))
+        day.ny_am && candles.push(toHCCandle(day.ny_am.session_candle, `NY AM 10:00-12:00`, candle_types_map[day.date_readable]["NY AM"], 'A'))
+        day.ny_lunch && candles.push(toHCCandle(day.ny_lunch.session_candle, `NY Lunch 12:00-13:00`, candle_types_map[day.date_readable]["NY Lunch"], 'L'))
+        day.ny_pm && candles.push(toHCCandle(day.ny_pm.session_candle, `NY PM 13:00-15:00`, candle_types_map[day.date_readable]["NY PM"], 'P'))
+        day.ny_pm_close && candles.push(toHCCandle(day.ny_pm_close.session_candle, `NY PM Close 15:00-16:00`,candle_types_map[day.date_readable]["NY PM Close"], 'C'))
 
 
         if (![6, 0].includes(new Date(day.date_readable).getDay())) {
@@ -124,11 +124,11 @@
                     .dateFormat('%a %b %e %Y', this.x) + '</b>'
 
                 s += `<br/><b>${this.point.custom.name}</b> ${this.point.custom.type}`
-                if (this.point.custom.impact == "UNSPECIFIED") {
-                    s += `<br/>impact: ${this.point.custom.impact}`
-                } else {
-                    s += `<br/>impact: <b>${this.point.custom.impact}</b>`
-                }
+                // if (this.point.custom.impact == "UNSPECIFIED") {
+                //     s += `<br/>impact: ${this.point.custom.impact}`
+                // } else {
+                //     s += `<br/>impact: <b>${this.point.custom.impact}</b>`
+                // }
 
 
                 const perf = (this.point.close - this.point.open).toFixed(2)

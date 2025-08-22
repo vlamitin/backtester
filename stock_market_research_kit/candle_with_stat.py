@@ -12,7 +12,7 @@ import scipy.stats as stats
 from stock_market_research_kit.candle import InnerCandle, as_1_candle
 from stock_market_research_kit.day import Day
 from stock_market_research_kit.db_layer import select_days
-from stock_market_research_kit.session import SessionName, sessions_in_order
+from stock_market_research_kit.session import SessionName, sessions_in_order, SessionPriceAction, LevelAction
 from utils.date_utils import start_of_day, to_date_str, to_utc_datetime
 
 
@@ -136,14 +136,26 @@ def group_by_popular(df_series):
     return s_grouped
 
 
-def to_days_df(days: List[Day]):
-    df = pd.DataFrame(days, columns=['date_readable'])
+def to_spa_df(spas: List[SessionPriceAction]):
+    df = pd.DataFrame(index=range(len(spas)))
+    df['date'] = [x.session_candle[5] for x in spas]
+    df['open'] = [x.session_candle[0] for x in spas]
+    df['high'] = [x.session_candle[1] for x in spas]
+    df['low'] = [x.session_candle[2] for x in spas]
+    df['close'] = [x.session_candle[3] for x in spas]
+
+    df['perf'] = (df['close'] - df['open']) / df['open'] * 100
+    df['volat'] = (df['high'] - df['low']) / df['open'] * 100
+
+    df['do'] = [x.do[0] for x in spas]
+    df['do_action'] = [x.level_action(x.do[0]).value for x in spas]
     return df
 
 
-def to_sessions_df(session_candles: List[InnerCandle], days: List[Day]):
-    df = pd.DataFrame(session_candles, columns=['open', 'high', 'low', 'close', 'volume', 'date'])
+def to_candle_df(candles: List[InnerCandle]):
+    df = pd.DataFrame(candles, columns=['open', 'high', 'low', 'close', 'volume', 'date'])
     df['day_date'] = df['date'].apply(lambda x: to_date_str(start_of_day(to_utc_datetime(x))))
+    df['day_of_week'] = df['day_date'].apply(lambda x: to_utc_datetime(x).isoweekday())
 
     df['volume_perc_all'], df['volume_perc_sma20'] = perc_all_and_sma20(df['volume'])
 
@@ -184,20 +196,29 @@ def to_sessions_df(session_candles: List[InnerCandle], days: List[Day]):
     return df
 
 
-def days_matching_session_df_condition(days, session_name, condition):
-    session_candles = [as_1_candle(x.candles_by_session(session_name)) for x in days if
-                       len(x.candles_by_session(session_name)) > 0]
-    sess_df = to_sessions_df(session_candles, days)
-    indices = sess_df.index[condition(sess_df)].to_list()
-    return [days[x] for x in indices]
+def days_matching_candle_df_condition(days, session_name, condition):
+    days_with_spa = [x for x in days if x.spa_by_session(session_name)]
+    spas = [x.spa_by_session(session_name) for x in days_with_spa]
+    session_candles = [x.candles_15m for x in spas if len(x.candles_15m) > 0]
+    candle_df = to_candle_df(session_candles)
+    indices = candle_df.index[condition(candle_df)].to_list()
+    return [days_with_spa[x] for x in indices]
 
 
-def show_correlation_2_sessions(title: str, days: List[Day],
-                                session1_candles: List[InnerCandle], session2_candles: List[InnerCandle]):
+def days_matching_spa_df_condition(days, session_name, condition):
+    days_with_spa = [x for x in days if x.spa_by_session(session_name)]
+    spas = [x.spa_by_session(session_name) for x in days_with_spa]
+    candle_df = to_spa_df(spas)
+    indices = candle_df.index[condition(candle_df)].to_list()
+    return [days_with_spa[x] for x in indices]
+
+
+def show_correlation_2_candles(title: str,
+                               session1_candles: List[InnerCandle], session2_candles: List[InnerCandle]):
     show_corr_charts(
         title,
-        to_sessions_df([candle for candle in session1_candles if candle[5] != ""], days),
-        to_sessions_df([candle for candle in session2_candles if candle[5] != ""], days),
+        to_candle_df([candle for candle in session1_candles if candle[5] != ""]),
+        to_candle_df([candle for candle in session2_candles if candle[5] != ""]),
         ['perf', 'volat', 'upper_wick_fraction', 'body_fraction', 'lower_wick_fraction'],
         ['perf', 'upper_wick_fraction', 'body_fraction', 'lower_wick_fraction', 'min_safe_stop_bull',
          'min_safe_stop_bear']
@@ -276,14 +297,21 @@ def predicts(df_session, df_incomplete_session):
     # return sequence_df
 
 
-def predicts_for_incomplete(year_session_candles: List[List[InnerCandle]], days: List[Day]):
-    df_session = to_sessions_df(
-        [as_1_candle(sess_candles) for sess_candles in year_session_candles if len(sess_candles) > 0], days)
-    df_minus15 = to_sessions_df(
-        [as_1_candle(sess_candles[:-1]) for sess_candles in year_session_candles if len(sess_candles) > 0], days)
-    df_minus30 = to_sessions_df(
-        [as_1_candle(sess_candles[:-2]) for sess_candles in year_session_candles if len(sess_candles) > 0], days)
-    return predicts(df_session, df_minus15), predicts(df_session, df_minus30)
+# def predicts_for_incomplete(year_session_candles: List[List[InnerCandle]], days: List[Day]):
+#     df_session = to_sessions_df(
+#         [as_1_candle(sess_candles) for sess_candles in year_session_candles if len(sess_candles) > 0], days)
+#     df_minus15 = to_sessions_df(
+#         [as_1_candle(sess_candles[:-1]) for sess_candles in year_session_candles if len(sess_candles) > 0], days)
+#     df_minus30 = to_sessions_df(
+#         [as_1_candle(sess_candles[:-2]) for sess_candles in year_session_candles if len(sess_candles) > 0], days)
+#     return predicts(df_session, df_minus15), predicts(df_session, df_minus30)
+
+
+def to_candles(day: Day, names: List[SessionName]):
+    candles = []
+    for name in names:
+        candles.extend(day.candles_by_session(name))
+    return candles
 
 
 def show_correlations_for_session(days: List[Day], target_session: SessionName, predict_sessions: List[SessionName],
@@ -293,39 +321,33 @@ def show_correlations_for_session(days: List[Day], target_session: SessionName, 
 
     sn = to_sn([target_session])
 
-    def to_candles(day: Day, names: List[SessionName]):
-        candles = []
-        for name in names:
-            candles.extend(day.candles_by_session(name))
-        return candles
-
     if len(predict_sessions) > 0:
-        show_correlation_2_sessions(
-            f"{to_sn(predict_sessions)} + {sn}[:-1] -> {sn}[-1:]", days,
+        show_correlation_2_candles(
+            f"{to_sn(predict_sessions)} + {sn}[:-1] -> {sn}[-1:]",
             [as_1_candle([*to_candles(x, predict_sessions), *x.candles_by_session(target_session)[:-1]]) for x in days],
             [as_1_candle([*x.candles_by_session(target_session)[-1:]]) for x in days]
         )
         if target_session not in [SessionName.NY_OPEN]:
-            show_correlation_2_sessions(
-                f"{to_sn(predict_sessions)} + {sn}[:-2] -> {sn}[-2:]", days,
+            show_correlation_2_candles(
+                f"{to_sn(predict_sessions)} + {sn}[:-2] -> {sn}[-2:]",
                 [as_1_candle([*to_candles(x, predict_sessions), *x.candles_by_session(target_session)[:-2]]) for x in
                  days],
                 [as_1_candle([*x.candles_by_session(target_session)[-2:]]) for x in days]
             )
 
-        show_correlation_2_sessions(
-            f"{to_sn(predict_sessions)} -> {sn}", days,
+        show_correlation_2_candles(
+            f"{to_sn(predict_sessions)} -> {sn}",
             [as_1_candle(to_candles(x, predict_sessions)) for x in days],
             [as_1_candle(x.candles_by_session(target_session)) for x in days]
         )
-        show_correlation_2_sessions(
-            f"{to_sn(predict_sessions)} -> {sn}[:1]", days,
+        show_correlation_2_candles(
+            f"{to_sn(predict_sessions)} -> {sn}[:1]",
             [as_1_candle(to_candles(x, predict_sessions)) for x in days],
             [as_1_candle([*x.candles_by_session(target_session)][:1]) for x in days]
         )
         if target_session not in [SessionName.NY_OPEN]:
-            show_correlation_2_sessions(
-                f"{to_sn(predict_sessions)} -> {sn}[:2]", days,
+            show_correlation_2_candles(
+                f"{to_sn(predict_sessions)} -> {sn}[:2]",
                 [as_1_candle(to_candles(x, predict_sessions)) for x in days],
                 [as_1_candle([*x.candles_by_session(target_session)][:2]) for x in days]
             )
@@ -333,42 +355,42 @@ def show_correlations_for_session(days: List[Day], target_session: SessionName, 
     if only_predict_sessions:
         return
 
-    show_correlation_2_sessions(
-        f"{sn}[:-1] -> {sn}[-1:]", days,
+    show_correlation_2_candles(
+        f"{sn}[:-1] -> {sn}[-1:]",
         [as_1_candle([*x.candles_by_session(target_session)[:-1]]) for x in days],
         [as_1_candle([*x.candles_by_session(target_session)[-1:]]) for x in days]
     )
     if target_session not in [SessionName.NY_OPEN]:
-        show_correlation_2_sessions(
-            f"{sn}[:-2] -> {sn}[-2:]", days,
+        show_correlation_2_candles(
+            f"{sn}[:-2] -> {sn}[-2:]",
             [as_1_candle([*x.candles_by_session(target_session)[:-2]]) for x in days],
             [as_1_candle([*x.candles_by_session(target_session)[-2:]]) for x in days]
         )
 
     if target_session not in [SessionName.CME, SessionName.ASIA]:
         target_session_days = [x for x in days if len(x.candles_by_session(target_session)) > 0]
-        show_correlation_2_sessions(
-            f"Current day before {sn} -> {sn}", target_session_days,
-            [as_1_candle([*x.day_candles_before(x.candles_by_session(target_session)[0][5])]) for x in
+        show_correlation_2_candles(
+            f"Current day before {sn} -> {sn}",
+            [as_1_candle([*x.candles_before_date(x.candles_by_session(target_session)[0][5])]) for x in
              target_session_days],
             [as_1_candle([*x.candles_by_session(target_session)]) for x in days]
         )
-        show_correlation_2_sessions(
-            f"Current day before {sn} -> {sn}[:1]", target_session_days,
-            [as_1_candle([*x.day_candles_before(x.candles_by_session(target_session)[0][5])]) for x in
+        show_correlation_2_candles(
+            f"Current day before {sn} -> {sn}[:1]",
+            [as_1_candle([*x.candles_before_date(x.candles_by_session(target_session)[0][5])]) for x in
              target_session_days],
             [as_1_candle([*x.candles_by_session(target_session)][:1]) for x in days]
         )
         if target_session not in [SessionName.NY_OPEN]:
-            show_correlation_2_sessions(
-                f"Current day before {sn} -> {sn}[:2]", target_session_days,
-                [as_1_candle([*x.day_candles_before(x.candles_by_session(target_session)[0][5])]) for x in
+            show_correlation_2_candles(
+                f"Current day before {sn} -> {sn}[:2]",
+                [as_1_candle([*x.candles_before_date(x.candles_by_session(target_session)[0][5])]) for x in
                  target_session_days],
                 [as_1_candle([*x.candles_by_session(target_session)][:2]) for x in target_session_days]
             )
 
-    show_correlation_2_sessions(
-        f"{sn} -> 1D", days,
+    show_correlation_2_candles(
+        f"{sn} -> 1D",
         [as_1_candle(x.candles_by_session(target_session)) for x in days],
         [x.candle_1d for x in days]
     )
@@ -423,6 +445,23 @@ def show_sessions(days: List[Day]):
                                    SessionName.NY_LUNCH, SessionName.NY_PM], True)
 
 
+def top_do_action_sessions(days):
+    results = []
+    for level in [LevelAction.BREAK_BULL, LevelAction.FAKEBREAK_BULL, LevelAction.BOUNCE_BULL,
+                  LevelAction.TURNAWAY_BULL,
+                  LevelAction.BREAK_BEAR, LevelAction.FAKEBREAK_BEAR, LevelAction.BOUNCE_BEAR,
+                  LevelAction.TURNAWAY_BEAR]:
+        for session in [SessionName.EARLY, SessionName.PRE, SessionName.NY_OPEN,
+                        SessionName.NY_AM, SessionName.NY_LUNCH, SessionName.NY_PM, SessionName.NY_CLOSE]:
+            results.append((session, level, len(days_matching_spa_df_condition(
+                days, session,
+                lambda df: df['do_action'] == level.value
+            ))))
+
+    results = sorted(results, key=lambda x: x[2], reverse=True)
+    print(results)
+
+
 if __name__ == "__main__":
     try:
         days_from_db: List[Day] = [
@@ -430,13 +469,36 @@ if __name__ == "__main__":
             *select_days(2024, "AVAXUSDT"),
             *select_days(2025, "AVAXUSDT"),
         ]
+        # top_do_action_sessions(days_from_db)
+        #
+        # days_with_nyam_break_bear_do = days_matching_spa_df_condition(
+        #     days_from_db, SessionName.NY_AM,
+        #     lambda df: df['do_action'] == LevelAction.BREAK_BEAR.value
+        # )
+        # show_corr_charts(
+        #     "london -> pre",
+        #     to_candle_df([x.london.session_candle for x in days_with_nyam_break_bear_do]),
+        #     to_candle_df([x.premarket.session_candle for x in days_with_nyam_break_bear_do]),
+        #     ['perf', 'volat', 'day_of_week'],
+        #     ['perf', 'upper_wick_fraction', 'body_fraction', 'lower_wick_fraction', 'min_safe_stop_bull',
+        #      'min_safe_stop_bear']
+        # )
+
+        # days_with_nyam = [x for x in days_from_db if x.ny_am and len(x.ny_am.candles_15m) > 0]
+        # nyam_spas = [x.spa_by_session(SessionName.NY_AM) for x in days_with_nyam]
+        # nyam_spa_df = to_spa_df(nyam_spas)
+        #
+        # sns.stripplot(x="volat", y="do_action", data=nyam_spa_df, size=5, jitter=True, dodge=True)
+        # plt.title(f"bla")
+        # plt.show()
+
         # show_sessions(days_from_db)
         #
-        # mondays = [x for x in days_from_db if to_utc_datetime(x.date_readable).isoweekday() == 1]
-        # show_sessions(mondays)
+        mondays = [x for x in days_from_db if to_utc_datetime(x.date_readable).isoweekday() == 1]
+        show_sessions(mondays)
 
-        fridays = [x for x in days_from_db if to_utc_datetime(x.date_readable).isoweekday() == 5]
-        show_sessions(fridays)
+        # fridays = [x for x in days_from_db if to_utc_datetime(x.date_readable).isoweekday() == 5]
+        # show_sessions(fridays)
 
         # days_with_asia_tothemoon = days_matching_session_df_condition(
         #     days_from_db, SessionName.ASIA,

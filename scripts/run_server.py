@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from scripts.run_sessions_sequencer import fill_profiles
 from scripts.run_sessions_typifier import typify_sessions
+from stock_market_research_kit.day import json_from_days
 from stock_market_research_kit.db_layer import select_days
 from stock_market_research_kit.session import json_from_sessions
 from stock_market_research_kit.session_quantiles import quantile_session_year_thr
@@ -28,7 +29,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps([asdict(x) for x in days], indent=4).encode())
+            self.wfile.write(json_from_days(days).encode())
             return
 
         sessions_split_parts = self.path.split("/api/sessions/")
@@ -70,9 +71,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
-        symbol_thresholds = quantile_session_year_thr("CRVUSDT", 2024)
+        symbol_thresholds = quantile_session_year_thr("BTCUSDT", 2024)
         _, _, profiles = fill_profiles(
-            "CRVUSDT", 2024, lambda session_name, _: symbol_thresholds[session_name])
+            "BTCUSDT", 2024, lambda session_name, _: symbol_thresholds[session_name])
         server = HTTPServer(('localhost', 8000), RequestHandler)
         print('Starting server at http://localhost:8000')
         server.serve_forever()

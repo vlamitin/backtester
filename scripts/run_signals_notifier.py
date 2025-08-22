@@ -1,6 +1,6 @@
 import time
 from datetime import datetime, timedelta, time as dtime
-from typing import List, Tuple
+from typing import List, Tuple, Generator
 from zoneinfo import ZoneInfo
 
 from scripts.run_day_markuper import markup_days
@@ -282,10 +282,10 @@ def handle_open_trades(symbols_with_strategies: List[Tuple[str, NotifierStrategy
 
 def update_candles(symbols):
     for symbol in symbols:
-        update_candle_from_binance(symbol)
+        update_candle_from_binance(symbol, datetime.now(ZoneInfo("UTC")))
 
 
-def ny_time_generator(start_date: datetime, times_ny: list[dtime]):
+def ny_time_generator(start_date: datetime, times_ny: list[dtime]) -> Generator[datetime, None, None]:
     current_date = start_date.astimezone(ZoneInfo("America/New_York"))
     while True:
         if current_date.isoweekday() not in [6, 7]:
@@ -316,8 +316,8 @@ def run_notifier(symbols_with_strategy):
         dtime(16, 0),  # ny close
     ]
     gen = ny_time_generator(
-        datetime(2025, 5, 6, 9, 28, tzinfo=ZoneInfo("America/New_York")),
-        # datetime.now(ZoneInfo("America/New_York")),
+        # datetime(2025, 5, 20, 6, 58, tzinfo=ZoneInfo("America/New_York")),
+        datetime.now(ZoneInfo("America/New_York")),
         times_of_day
     )
 
@@ -339,10 +339,20 @@ if __name__ == "__main__":
     try:
         log_info_ny("Starting Notifier")
         start_time = time.perf_counter()
-        update_candles(["BTCUSDT"])
-        update_candles(["AAVEUSDT"])
-        update_candles(["AVAXUSDT"])
-        update_candles(["CRVUSDT"])
+        update_candles([
+            "BTCUSDT",
+            "AAVEUSDT",
+            "AVAXUSDT",
+            "CRVUSDT",
+            "CRVUSDT",
+            "1INCHUSDT",
+            "COMPUSDT",
+            "LINKUSDT",
+            "LTCUSDT",
+            "SUSHIUSDT",
+            "UNIUSDT",
+            "XLMUSDT",
+        ])
         run_notifier([
             ("BTCUSDT", btc_naive_p30_safe_stops_strategy_strategy11(quantile_session_year_thr("BTCUSDT", 2024))),
             ("AAVEUSDT", btc_naive_p30_safe_stops_strategy_strategy11(quantile_session_year_thr("AAVEUSDT", 2024))),

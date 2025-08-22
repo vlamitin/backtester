@@ -164,14 +164,17 @@ def get_next_session_mock(session_name: SessionName, date_str: str) -> Optional[
 
 
 class LevelAction(Enum):
-    UNSPECIFIED = 'UNSPECIFIED'
-    BREAK = 'BREAK'  # пробой и закрытие за уровнем (больше чем на threshold в допустим 0.1% Open Price)
-    FAKEBREAK = 'FAKEBREAK'
-    BOUNCE = 'BOUNCE'  # отскок прям от уровня (или +/- пару пипсов)
-    TURNAWAY = 'TURNAWAY'  # отскок не доходя больше чем пару пипсов, но меньше чем threshold (0.1% от Open Price напр)
-    STALL = 'STALL'  # коснулись +/- уровня и зависли на нём
-    PASSTHROUGH = 'PASSTHROUGH'  # без замедления прошли
-    IGNORE = 'IGNORE'  # не дошли к уровню ближе чем на TURNAWAY threshold
+    UNSPECIFIED = 'UNS'
+    BREAK_BULL = 'BRK_BLL'  # пробой и закрытие за уровнем (больше чем на threshold в допустим 0.1% Open Price)
+    FAKEBREAK_BULL = 'FKB_BLL'
+    BOUNCE_BULL = 'BNC_BLL'  # отскок прям от уровня (или +/- пару пипсов)
+    TURNAWAY_BULL = 'TRN_BLL'  # отскок не доходя больше чем пару пипсов, но меньше чем threshold (0.1% от Open Price напр)
+    IGNORE_BULL = 'IGN_BLL'  # не дошли к уровню ближе чем на TURNAWAY threshold
+    BREAK_BEAR = 'BRK_BEA'
+    FAKEBREAK_BEAR = 'FKB_BEA'
+    BOUNCE_BEAR = 'BNC_BEA'
+    TURNAWAY_BEAR = 'TRN_BEA'
+    IGNORE_BEAR = 'IGN_BEA'
 
 
 @dataclass
@@ -200,50 +203,42 @@ class SessionPriceAction:
 
     def level_action(self, level: float) -> LevelAction:
         threshold = 0.001  # 0.1%
-        pip_slack = 0.0002  # пара пипсов (условно)
+        pip_slack = 0.0002  # 0.02%
 
-        if len(self.candles_15m):
+        if len(self.candles_15m) == 0:
             return LevelAction.UNSPECIFIED
 
-        open_price = self.session_candle[0]
-        close_price = self.session_candle[3]
+        open_, high, low, close_ = self.session_candle[:4]
 
         def within_pip(price):
-            return abs(price - level) <= pip_slack
+            return abs(price - level) / open_ <= pip_slack
 
         def within_turnaway_range(price):
-            return pip_slack < abs(price - level) <= (open_price * threshold)
+            return pip_slack < abs(price - level) / open_ <= threshold
 
-        broke_above = any(c[3] > level + open_price * threshold for c in self.candles_15m)
-        broke_below = any(c[3] < level - open_price * threshold for c in self.candles_15m)
+        if open_ < level:
+            if high > level:
+                if close_ > level:
+                    return LevelAction.BREAK_BULL
+                return LevelAction.FAKEBREAK_BULL
+            if within_pip(high) and close_ < level * (1 - pip_slack):
+                return LevelAction.BOUNCE_BULL
+            if within_turnaway_range(high):
+                return LevelAction.TURNAWAY_BULL
+            if high < level * (1 - threshold):
+                return LevelAction.IGNORE_BULL
 
-        if broke_above or broke_below:
-            if level > open_price and close_price < level:  # пробили вверх и закрылись ниже
-                return LevelAction.FAKEBREAK
-            elif level < open_price and close_price > level:  # пробили вниз и закрылись выше
-                return LevelAction.FAKEBREAK
-            else:
-                return LevelAction.BREAK
-
-        if any(within_pip(c[1]) or within_pip(c[2]) for c in self.candles_15m):
-            if level < open_price and close_price < open_price:  # отскок вниз
-                return LevelAction.BOUNCE
-            elif level > open_price and close_price > open_price:  # отскок вверх
-                return LevelAction.BOUNCE
-
-        if any(within_turnaway_range(c[1]) or within_turnaway_range(c[2]) for c in self.candles_15m):
-            return LevelAction.TURNAWAY
-
-        touching_count = sum(1 for c in self.candles_15m if c[2] <= level <= c[1])
-        if touching_count >= len(self.candles_15m) // 2:
-            return LevelAction.STALL
-
-        if broke_above or broke_below:
-            return LevelAction.PASSTHROUGH
-
-        min_dist = min(abs(c[1] - level) for c in self.candles_15m)
-        if min_dist > open_price * threshold:
-            return LevelAction.IGNORE
+        if open_ > level:
+            if low < level:
+                if close_ < level:
+                    return LevelAction.BREAK_BEAR
+                return LevelAction.FAKEBREAK_BEAR
+            if within_pip(low) and close_ > level * (1 + pip_slack):
+                return LevelAction.BOUNCE_BEAR
+            if within_turnaway_range(low):
+                return LevelAction.TURNAWAY_BEAR
+            if low > level * (1 + threshold):
+                return LevelAction.IGNORE_BEAR
 
         return LevelAction.UNSPECIFIED
 
