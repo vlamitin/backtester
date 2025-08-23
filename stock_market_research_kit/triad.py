@@ -14,7 +14,7 @@ from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to,
     to_ny_date_str, quarters_by_time, month_week_quarters_ranges, weekday_ranges, day_quarters_ranges, \
     year_quarters_ranges
 
-Target: TypeAlias = Tuple[str, TargetPercent, TargetPercent, TargetPercent]
+Target: TypeAlias = Tuple[int, str, str, TargetPercent, TargetPercent, TargetPercent]  # level, direction, label, tp*3
 
 
 @dataclass
@@ -36,8 +36,6 @@ class SMT:
 
     type: str  # 'high' 'low' 'half_high' or 'half_low'
     first_appeared: str
-
-    same_lvl_targets: List[Target]
 
     a1_sweep_candles_15m: List[InnerCandle]
     a2_sweep_candles_15m: List[InnerCandle]
@@ -63,7 +61,6 @@ def new_empty_smt(a1q, a2q, a3q) -> SMT:
         a3q=a3q,
         type='',
         first_appeared='',
-        same_lvl_targets=[],
         a1_sweep_candles_15m=[],
         a2_sweep_candles_15m=[],
         a3_sweep_candles_15m=[],
@@ -115,11 +112,11 @@ class Triad:
         return res
 
     def ql_long_targets(
-            self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
+            self, qls: List[Tuple[int, str, QuarterLiq, QuarterLiq, QuarterLiq]]  # level, label, ql1-ql3
     ) -> List[Target]:
         result = []
 
-        for label, a1_ql, a2_ql, a3_ql in qls:
+        for level, label, a1_ql, a2_ql, a3_ql in qls:
             if not a1_ql or not a2_ql or not a3_ql:
                 continue
             _, _, _, a1_high, a1_half, _ = a1_ql
@@ -131,14 +128,18 @@ class Triad:
                 pfc3 = percent_from_current(self.a3.prev_15m_candle[3], a3_half[0])
                 if pfc1 > 0 and pfc2 > 0 and pfc3 > 0:
                     result.append((
-                        f"{label}_half_high",
+                        level,
+                        "half_high",
+                        label,
                         (a1_half[0], pfc1),
                         (a2_half[0], pfc2),
                         (a3_half[0], pfc3)
                     ))
             if len([x for x in [a1_high, a2_high, a3_high] if not x[1]]) == 3:
                 result.append((
-                    f"{label}_high",
+                    level,
+                    "high",
+                    label,
                     (a1_high[0], percent_from_current(self.a1.prev_15m_candle[3], a1_high[0])),
                     (a2_high[0], percent_from_current(self.a2.prev_15m_candle[3], a2_high[0])),
                     (a3_high[0], percent_from_current(self.a3.prev_15m_candle[3], a3_high[0]))
@@ -147,11 +148,11 @@ class Triad:
         return result
 
     def ql_short_targets(
-            self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
+            self, qls: List[Tuple[int, str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
     ) -> List[Target]:
         result = []
 
-        for label, a1_ql, a2_ql, a3_ql in qls:
+        for level, label, a1_ql, a2_ql, a3_ql in qls:
             if not a1_ql or not a2_ql or not a3_ql:
                 continue
             _, _, _, _, a1_half, a1_low = a1_ql
@@ -163,14 +164,18 @@ class Triad:
                 pfc3 = percent_from_current(self.a3.prev_15m_candle[3], a3_half[0])
                 if pfc1 < 0 and pfc2 < 0 and pfc3 < 0:
                     result.append((
-                        f"{label}_half_low",
+                        level,
+                        "half_low",
+                        label,
                         (a1_half[0], pfc1),
                         (a2_half[0], pfc2),
                         (a3_half[0], pfc3)
                     ))
             if len([x for x in [a1_low, a2_low, a3_low] if not x[1]]) == 3:
                 result.append((
-                    f"{label}_low",
+                    level,
+                    "low",
+                    label,
                     (a1_low[0], percent_from_current(self.a1.prev_15m_candle[3], a1_low[0])),
                     (a2_low[0], percent_from_current(self.a2.prev_15m_candle[3], a2_low[0])),
                     (a3_low[0], percent_from_current(self.a3.prev_15m_candle[3], a3_low[0]))
@@ -191,7 +196,7 @@ class Triad:
             reverse=True
         )
 
-    def actual_prev_qls(self) -> List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]:
+    def actual_prev_qls(self) -> List[Tuple[int, str, QuarterLiq, QuarterLiq, QuarterLiq]]:
         result = []
 
         curr_yq, curr_mw, curr_wd, curr_dq, curr_q90m = quarters_by_time(self.a1.snapshot_date_readable)
@@ -212,64 +217,64 @@ class Triad:
                 continue
             match dq:
                 case DayQuarter.DQ1_Asia:
-                    result.append(('asia', self.a1.asia, self.a2.asia, self.a3.asia))
+                    result.append((5, 'asia', self.a1.asia, self.a2.asia, self.a3.asia))
                 case DayQuarter.DQ2_London:
-                    result.append(('london', self.a1.london, self.a2.london, self.a3.london))
+                    result.append((5, 'london', self.a1.london, self.a2.london, self.a3.london))
                 case DayQuarter.DQ3_NYAM:
-                    result.append(('nyam', self.a1.nyam, self.a2.nyam, self.a3.nyam))
+                    result.append((5, 'nyam', self.a1.nyam, self.a2.nyam, self.a3.nyam))
                 case DayQuarter.DQ4_NYPM:
-                    result.append(('nypm', self.a1.nypm, self.a2.nypm, self.a3.nypm))
+                    result.append((5, 'nypm', self.a1.nypm, self.a2.nypm, self.a3.nypm))
 
         for wd, _, _ in weekday_ranges(self.a1.snapshot_date_readable)[0]:
             if wd == curr_wd:
                 continue
             match wd:
                 case WeekDay.Mon:
-                    result.append(('mon', self.a1.mon, self.a2.mon, self.a3.mon))
+                    result.append((4, 'mon', self.a1.mon, self.a2.mon, self.a3.mon))
                 case WeekDay.Tue:
-                    result.append(('tue', self.a1.tue, self.a2.tue, self.a3.tue))
+                    result.append((4, 'tue', self.a1.tue, self.a2.tue, self.a3.tue))
                 case WeekDay.Wed:
-                    result.append(('wed', self.a1.wed, self.a2.wed, self.a3.wed))
+                    result.append((4, 'wed', self.a1.wed, self.a2.wed, self.a3.wed))
                 case WeekDay.Thu:
-                    result.append(('thu', self.a1.thu, self.a2.thu, self.a3.thu))
+                    result.append((4, 'thu', self.a1.thu, self.a2.thu, self.a3.thu))
                 case WeekDay.MonThu:
-                    result.append(('mon_thu', self.a1.mon_thu, self.a2.mon_thu, self.a3.mon_thu))
+                    result.append((4, 'mon_thu', self.a1.mon_thu, self.a2.mon_thu, self.a3.mon_thu))
                 case WeekDay.Fri:
-                    result.append(('fri', self.a1.fri, self.a2.fri, self.a3.fri))
+                    result.append((4, 'fri', self.a1.fri, self.a2.fri, self.a3.fri))
                 case WeekDay.MonFri:
-                    result.append(('mon_fri', self.a1.mon_fri, self.a2.mon_fri, self.a3.mon_fri))
+                    result.append((4, 'mon_fri', self.a1.mon_fri, self.a2.mon_fri, self.a3.mon_fri))
                 case WeekDay.Sat:
-                    result.append(('sat', self.a1.sat, self.a2.sat, self.a3.sat))
+                    result.append((4, 'sat', self.a1.sat, self.a2.sat, self.a3.sat))
 
         for mw, _, _ in month_week_quarters_ranges(self.a1.snapshot_date_readable)[0]:
             if mw == curr_mw:
                 continue
             match mw:
                 case MonthWeek.MW1:
-                    result.append(('week1', self.a1.week1, self.a2.week1, self.a3.week1))
+                    result.append((3, 'week1', self.a1.week1, self.a2.week1, self.a3.week1))
                 case MonthWeek.MW2:
-                    result.append(('week2', self.a1.week2, self.a2.week2, self.a3.week2))
+                    result.append((3, 'week2', self.a1.week2, self.a2.week2, self.a3.week2))
                 case MonthWeek.MW3:
-                    result.append(('week3', self.a1.week3, self.a2.week3, self.a3.week3))
+                    result.append((3, 'week3', self.a1.week3, self.a2.week3, self.a3.week3))
                 case MonthWeek.MW4:
-                    result.append(('week4', self.a1.week4, self.a2.week4, self.a3.week4))
+                    result.append((3, 'week4', self.a1.week4, self.a2.week4, self.a3.week4))
                 case MonthWeek.MW5:
-                    result.append(('week5', self.a1.week5, self.a2.week5, self.a3.week5))
+                    result.append((3, 'week5', self.a1.week5, self.a2.week5, self.a3.week5))
 
         for yq, _, _ in year_quarters_ranges(self.a1.snapshot_date_readable)[0]:
             if yq == curr_yq:
                 continue
             match yq:
                 case YearQuarter.YQ1:
-                    result.append(('year_q1', self.a1.year_q1, self.a2.year_q1, self.a3.year_q1))
+                    result.append((2, 'year_q1', self.a1.year_q1, self.a2.year_q1, self.a3.year_q1))
                 case YearQuarter.YQ2:
-                    result.append(('year_q2', self.a1.year_q2, self.a2.year_q2, self.a3.year_q2))
+                    result.append((2, 'year_q2', self.a1.year_q2, self.a2.year_q2, self.a3.year_q2))
                 case YearQuarter.YQ3:
-                    result.append(('year_q3', self.a1.year_q3, self.a2.year_q3, self.a3.year_q3))
+                    result.append((2, 'year_q3', self.a1.year_q3, self.a2.year_q3, self.a3.year_q3))
                 case YearQuarter.YQ4:
-                    result.append(('year_q4', self.a1.year_q4, self.a2.year_q4, self.a3.year_q4))
+                    result.append((2, 'year_q4', self.a1.year_q4, self.a2.year_q4, self.a3.year_q4))
 
-        result.append(('prev_year', self.a1.prev_year, self.a2.prev_year, self.a3.prev_year))
+        result.append((1, 'prev_year', self.a1.prev_year, self.a2.prev_year, self.a3.prev_year))
         return result
 
     def new_smt(
@@ -1148,86 +1153,93 @@ class Triad:
             low_smt = self.with_30m_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def actual_smt_psp(self) -> Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]]:
-        result = {
-            '1.1 prev_year SMT': self.prev_year_smt(),
-            '2.1 year_q1 SMT': self.year_q1_smt(),
-            '2.2 year_q2 SMT': self.year_q2_smt(),
-            '2.3 year_q3 SMT': self.year_q3_smt(),
-            '2.4 year_q4 SMT': self.year_q4_smt(),
-            '3.1 week1 SMT': self.week1_smt(),
-            '3.2 week2 SMT': self.week2_smt(),
-            '3.3 week3 SMT': self.week3_smt(),
-            '3.4 week4 SMT': self.week4_smt(),
-            '3.5 week5 SMT': self.week5_smt(),
-            '4.1 mon SMT': self.mon_smt(),
-            '4.2 tue SMT': self.tue_smt(),
-            '4.3 wed SMT': self.wed_smt(),
-            '4.4 thu SMT': self.thu_smt(),
-            '4.4.1 mon_thu SMT': self.mon_thu_smt(),
-            '4.5 fri SMT': self.fri_smt(),
-            '4.5.1 mon_fri SMT': self.mon_fri_smt(),
-            '4.6 sat SMT': self.sat_smt(),
-            '5.1 asia SMT': self.asia_smt(),
-            '5.2 london SMT': self.london_smt(),
-            '5.3 nyam SMT': self.nyam_smt(),
-            '5.4 nypm SMT': self.nypm_smt(),
-            # '6.1 q1_90 SMT': self.q1_90_smt(),
-            # '6.2 q2_90 SMT': self.q2_90_smt(),
-            # '6.3 q3_90 SMT': self.q3_90_smt(),
-            # '6.4 q4_90 SMT': self.q4_90_smt(),
-        }
-
-        return result
+    def actual_smt_psp(self) -> List[Tuple[int, str, Optional[SMTLevels]]]:  # level, label, smt levels
+        return [
+            (1, 'prev_year SMT', self.prev_year_smt()),
+            (2, 'year_q1 SMT', self.year_q1_smt()),
+            (2, 'year_q2 SMT', self.year_q2_smt()),
+            (2, 'year_q3 SMT', self.year_q3_smt()),
+            (2, 'year_q4 SMT', self.year_q4_smt()),
+            (3, 'week1 SMT', self.week1_smt()),
+            (3, 'week2 SMT', self.week2_smt()),
+            (3, 'week3 SMT', self.week3_smt()),
+            (3, 'week4 SMT', self.week4_smt()),
+            (3, 'week5 SMT', self.week5_smt()),
+            (4, 'mon SMT', self.mon_smt()),
+            (4, 'tue SMT', self.tue_smt()),
+            (4, 'wed SMT', self.wed_smt()),
+            (4, 'thu SMT', self.thu_smt()),
+            (4, 'mon_thu SMT', self.mon_thu_smt()),
+            (4, 'fri SMT', self.fri_smt()),
+            (4, 'mon_fri SMT', self.mon_fri_smt()),
+            (4, 'sat SMT', self.sat_smt()),
+            (5, 'asia SMT', self.asia_smt()),
+            (5, 'london SMT', self.london_smt()),
+            (5, 'nyam SMT', self.nyam_smt()),
+            (5, 'nypm SMT', self.nypm_smt()),
+            #     (6, 'q1_90 SMT', self.q1_90_smt()),
+            #     (6, 'q2_90 SMT', self.q2_90_smt()),
+            #     (6, 'q3_90 SMT', self.q3_90_smt()),
+            #     (6, 'q4_90 SMT', self.q4_90_smt()),
+        ]
 
 
-def smt_dict_new_smt_found(
-        d_old: Dict[str, Optional[SMTLevels]],
-        d_new: Dict[str, Optional[SMTLevels]],
-) -> List[Tuple[str, SMT]]:
+def new_smt_found(
+        l_old: List[Tuple[int, str, Optional[SMTLevels]]],
+        l_new: List[Tuple[int, str, Optional[SMTLevels]]],
+) -> List[Tuple[int, str, SMT]]:  # level, label, smt
     result = []
 
-    for key in d_new:
-        smt_tuple_new = d_new.get(key, None)
-        smt_tuple_old = d_old.get(key, None)
+    d_old = {}
+    for level, label, smt_tuple_old in l_old:
+        d_old[f"{level}_{label}"] = (level, label, smt_tuple_old)
+
+    for level, label, smt_tuple_new in l_new:
         if not smt_tuple_new:
             continue
-
         high_new, half_new, low_new = smt_tuple_new
+
+        _, _, smt_tuple_old = d_old.get(f"{level}_{label}", None)
         if not smt_tuple_old:
             for smt in [high_new, half_new, low_new]:
                 if smt:
-                    result.append((key, smt))
+                    result.append((level, label, smt))
             continue
 
         high_old, half_old, low_old = smt_tuple_old
         for smts in [(high_new, high_old), (half_new, half_old), (low_new, low_old)]:
             if smts[0] and not smts[1]:
-                result.append((key, smts[0]))
+                result.append((level, label, smts[0]))
 
     return result
 
 
 def smt_dict_old_smt_cancelled(
-        d_old: Dict[str, Optional[SMTLevels]],
-        d_new: Dict[str, Optional[SMTLevels]],
-) -> List[Tuple[str, SMT]]:
+        l_old: List[Tuple[int, str, Optional[SMTLevels]]],
+        l_new: List[Tuple[int, str, Optional[SMTLevels]]],
+) -> List[Tuple[int, str, SMT]]:  # level, label, smt
     result = []
 
-    for key in d_new:
-        smt_tuple_new = d_new.get(key, None)
-        smt_tuple_old = d_old.get(key, None)
+    d_new = {}
+    for level, label, smt_tuple_new in l_new:
+        d_new[f"{level}_{label}"] = (level, label, smt_tuple_new)
+
+    for level, label, smt_tuple_old in l_old:
         if not smt_tuple_old:
             continue
-
         high_old, half_old, low_old = smt_tuple_old
+
+        _, _, smt_tuple_new = d_new.get(f"{level}_{label}", None)
         if not smt_tuple_new:
+            for smt in [high_old, half_old, low_old]:
+                if smt:
+                    result.append((level, label, smt))
             continue
 
         high_new, half_new, low_new = smt_tuple_new
         for smts in [(high_old, high_new), (half_old, half_new), (low_old, low_new)]:
             if smts[0] and not smts[1]:
-                result.append((key, smts[0]))
+                result.append((level, label, smts[0]))
 
     return result
 
@@ -1236,30 +1248,49 @@ def targets_reached(
         last_candles: Tuple[InnerCandle, InnerCandle, InnerCandle],
         targets_old: List[Target],
         targets_new: List[Target]
-) -> List[Tuple[str, int, float]]:  # target_label, asset_index, price
+) -> List[Tuple[int, str, str, int, float]]:  # level, direction, label, asset_index, price
     result = []
     if not targets_old:
         return []
-    for t in targets_old:
-        if not any(t[0] == x[0] for x in targets_new):
-            if last_candles[0][2] < t[1][0] < last_candles[0][1]:
-                result.append((t[0], 0, t[1][0]))
-            if last_candles[1][2] < t[2][0] < last_candles[1][1]:
-                result.append((t[0], 1, t[2][0]))
-            if last_candles[2][2] < t[3][0] < last_candles[2][1]:
-                result.append((t[0], 2, t[3][0]))
+    for level, direction, label, tp_a1, tp_a2, tp_a3 in targets_old:
+        if not any(f"{direction}_{label}" == f"{x[1]}_{x[2]}" for x in targets_new):
+            if last_candles[0][2] < tp_a1[0] < last_candles[0][1]:
+                result.append((level, direction, label, 0, tp_a1[0]))
+            if last_candles[1][2] < tp_a2[0] < last_candles[1][1]:
+                result.append((level, direction, label, 1, tp_a2[0]))
+            if last_candles[2][2] < tp_a3[0] < last_candles[2][1]:
+                result.append((level, direction, label, 2, tp_a3[0]))
+
+    return result
+
+
+def targets_new_appeared(
+        targets_old: List[Target],
+        targets_new: List[Target]
+) -> List[Target]:
+    result = []
+    if not targets_new:
+        return []
+    for level, direction, label, tp_a1, tp_a2, tp_a3 in targets_new:
+        if not any(f"{direction}_{label}" == f"{x[1]}_{x[2]}" for x in targets_old):
+            result.append((level, direction, label, tp_a1, tp_a2, tp_a3))
 
     return result
 
 
 def smt_dict_psp_changed(
-        d_old: Dict[str, Optional[SMTLevels]],
-        d_new: Dict[str, Optional[SMTLevels]],
-) -> List[Tuple[str, str, str, str, str]]:  # (smt_key, smt_type, psp_key, psp_date, possible|closed|confirmed|swept)
+        l_old: List[Tuple[int, str, Optional[SMTLevels]]],
+        l_new: List[Tuple[int, str, Optional[SMTLevels]]],
+) -> List[Tuple[int, str, str, str, str, str]]:
+    # returns (smt_level, smt_key, smt_type, psp_key, psp_date, possible|closed|confirmed|swept)
     result = []
-    for key in d_new:
-        smt_tuple_new = d_new.get(key, None)
-        smt_tuple_old = d_old.get(key, None)
+
+    d_old = {}
+    for level, label, smt_tuple_old in l_old:
+        d_old[f"{level}_{label}"] = (level, label, smt_tuple_old)
+
+    for level, label, smt_tuple_new in l_new:
+        _, _, smt_tuple_old = d_old.get(f"{level}_{label}", None)
         if not smt_tuple_new or not smt_tuple_old:
             continue
         high_new, half_new, low_new = smt_tuple_new
@@ -1267,50 +1298,68 @@ def smt_dict_psp_changed(
 
         if high_new and high_old:
             result.extend(
-                [(key, high_new.type, '15m', x[0], x[1]) for x in psps_changed(high_old.psps_15m, high_new.psps_15m)])
+                [(level, label, high_new.type, '15m', x[0], x[1]) for x in
+                 psps_changed(high_old.psps_15m, high_new.psps_15m)])
             result.extend(
-                [(key, high_new.type, '30m', x[0], x[1]) for x in psps_changed(high_old.psps_30m, high_new.psps_30m)])
+                [(level, label, high_new.type, '30m', x[0], x[1]) for x in
+                 psps_changed(high_old.psps_30m, high_new.psps_30m)])
             result.extend(
-                [(key, high_new.type, '1h', x[0], x[1]) for x in psps_changed(high_old.psps_1h, high_new.psps_1h)])
+                [(level, label, high_new.type, '1h', x[0], x[1]) for x in
+                 psps_changed(high_old.psps_1h, high_new.psps_1h)])
             result.extend(
-                [(key, high_new.type, '2h', x[0], x[1]) for x in psps_changed(high_old.psps_2h, high_new.psps_2h)])
+                [(level, label, high_new.type, '2h', x[0], x[1]) for x in
+                 psps_changed(high_old.psps_2h, high_new.psps_2h)])
             result.extend(
-                [(key, high_new.type, '4h', x[0], x[1]) for x in psps_changed(high_old.psps_4h, high_new.psps_4h)])
+                [(level, label, high_new.type, '4h', x[0], x[1]) for x in
+                 psps_changed(high_old.psps_4h, high_new.psps_4h)])
             result.extend(
-                [(key, high_new.type, '1d', x[0], x[1]) for x in psps_changed(high_old.psps_1d, high_new.psps_1d)])
-            result.extend([(key, high_new.type, '1_week', x[0], x[1]) for x in
+                [(level, label, high_new.type, '1d', x[0], x[1]) for x in
+                 psps_changed(high_old.psps_1d, high_new.psps_1d)])
+            result.extend([(level, label, high_new.type, '1_week', x[0], x[1]) for x in
                            psps_changed(high_old.psps_1_week, high_new.psps_1_week)])
 
         if half_new and half_old:
             result.extend(
-                [(key, half_new.type, '15m', x[0], x[1]) for x in psps_changed(half_old.psps_15m, half_new.psps_15m)])
+                [(level, label, half_new.type, '15m', x[0], x[1]) for x in
+                 psps_changed(half_old.psps_15m, half_new.psps_15m)])
             result.extend(
-                [(key, half_new.type, '30m', x[0], x[1]) for x in psps_changed(half_old.psps_30m, half_new.psps_30m)])
+                [(level, label, half_new.type, '30m', x[0], x[1]) for x in
+                 psps_changed(half_old.psps_30m, half_new.psps_30m)])
             result.extend(
-                [(key, half_new.type, '1h', x[0], x[1]) for x in psps_changed(half_old.psps_1h, half_new.psps_1h)])
+                [(level, label, half_new.type, '1h', x[0], x[1]) for x in
+                 psps_changed(half_old.psps_1h, half_new.psps_1h)])
             result.extend(
-                [(key, half_new.type, '2h', x[0], x[1]) for x in psps_changed(half_old.psps_2h, half_new.psps_2h)])
+                [(level, label, half_new.type, '2h', x[0], x[1]) for x in
+                 psps_changed(half_old.psps_2h, half_new.psps_2h)])
             result.extend(
-                [(key, half_new.type, '4h', x[0], x[1]) for x in psps_changed(half_old.psps_4h, half_new.psps_4h)])
+                [(level, label, half_new.type, '4h', x[0], x[1]) for x in
+                 psps_changed(half_old.psps_4h, half_new.psps_4h)])
             result.extend(
-                [(key, half_new.type, '1d', x[0], x[1]) for x in psps_changed(half_old.psps_1d, half_new.psps_1d)])
-            result.extend([(key, half_new.type, '1_week', x[0], x[1]) for x in
+                [(level, label, half_new.type, '1d', x[0], x[1]) for x in
+                 psps_changed(half_old.psps_1d, half_new.psps_1d)])
+            result.extend([(level, label, half_new.type, '1_week', x[0], x[1]) for x in
                            psps_changed(half_old.psps_1_week, half_new.psps_1_week)])
 
         if low_new and low_old:
             result.extend(
-                [(key, low_new.type, '15m', x[0], x[1]) for x in psps_changed(low_old.psps_15m, low_new.psps_15m)])
+                [(level, label, low_new.type, '15m', x[0], x[1]) for x in
+                 psps_changed(low_old.psps_15m, low_new.psps_15m)])
             result.extend(
-                [(key, low_new.type, '30m', x[0], x[1]) for x in psps_changed(low_old.psps_30m, low_new.psps_30m)])
+                [(level, label, low_new.type, '30m', x[0], x[1]) for x in
+                 psps_changed(low_old.psps_30m, low_new.psps_30m)])
             result.extend(
-                [(key, low_new.type, '1h', x[0], x[1]) for x in psps_changed(low_old.psps_1h, low_new.psps_1h)])
+                [(level, label, low_new.type, '1h', x[0], x[1]) for x in
+                 psps_changed(low_old.psps_1h, low_new.psps_1h)])
             result.extend(
-                [(key, low_new.type, '2h', x[0], x[1]) for x in psps_changed(low_old.psps_2h, low_new.psps_2h)])
+                [(level, label, low_new.type, '2h', x[0], x[1]) for x in
+                 psps_changed(low_old.psps_2h, low_new.psps_2h)])
             result.extend(
-                [(key, low_new.type, '4h', x[0], x[1]) for x in psps_changed(low_old.psps_4h, low_new.psps_4h)])
+                [(level, label, low_new.type, '4h', x[0], x[1]) for x in
+                 psps_changed(low_old.psps_4h, low_new.psps_4h)])
             result.extend(
-                [(key, low_new.type, '1d', x[0], x[1]) for x in psps_changed(low_old.psps_1d, low_new.psps_1d)])
-            result.extend([(key, low_new.type, '1_week', x[0], x[1]) for x in
+                [(level, label, low_new.type, '1d', x[0], x[1]) for x in
+                 psps_changed(low_old.psps_1d, low_new.psps_1d)])
+            result.extend([(level, label, low_new.type, '1_week', x[0], x[1]) for x in
                            psps_changed(low_old.psps_1_week, low_new.psps_1_week)])
 
     return result
@@ -1347,62 +1396,60 @@ def psps_changed(
 
 
 def smt_dict_readable(
-        d: Dict[str, Optional[SMTLevels]],
+        l: List[Tuple[int, str, Optional[SMTLevels]]],
         triad: Triad
 ) -> Tuple[str, str]:
     pos_short = []
-    for key in sorted(d.keys(), reverse=True):
-        smt_tuple = d.get(key, None)
+    for level, label, smt_tuple in sorted(l, key=lambda x: x[0], reverse=True):
         if smt_tuple is None:
             continue
 
         high, half, _ = smt_tuple
         if high is not None:
-            pos_short.append(f"{smt_readable(high, key, triad)}")
+            pos_short.append(f"{smt_readable(high, label, triad)}")
         if half is not None and half.type == 'half_high':
-            pos_short.append(f"{smt_readable(half, key, triad)}")
+            pos_short.append(f"{smt_readable(half, label, triad)}")
     if len(pos_short) == 0:
         pos_short.append("No short SMT found")
 
     pos_long = []
-    for key in sorted(d.keys(), reverse=True):
-        smt_tuple = d.get(key, None)
+    for level, label, smt_tuple in sorted(l, key=lambda x: x[0], reverse=True):
         if smt_tuple is None:
             continue
 
         _, half, low = smt_tuple
         if low is not None:
-            pos_long.append(f"{smt_readable(low, key, triad)}")
+            pos_long.append(f"{smt_readable(low, label, triad)}")
         if half is not None and half.type == 'half_low':
-            pos_long.append(f"{smt_readable(half, key, triad)}")
+            pos_long.append(f"{smt_readable(half, label, triad)}")
     if len(pos_long) == 0:
         pos_long.append("No long SMT found")
 
     return "\n\n".join(pos_short), "\n\n".join(pos_long)
 
 
-def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
+def smt_readable(smt: SMT, label: str, triad: Triad) -> str:
     have_closed_psps = False
     have_confirmed_psps = False
 
     def swept(symbol: str, ql: QuarterLiq) -> str:
         nonlocal triad
         nonlocal smt
-        smt_types_match = {
+        smt_types_ql_match = {
             'high': 3,
             'half_high': 4,
             'half_low': 4,
             'low': 5,
         }
-        if ql[smt_types_match[smt.type]][1]:
-            return f"{symbol} swept {round(ql[smt_types_match[smt.type]][0], 3)}"
-        return f"{symbol} not swept {round(ql[smt_types_match[smt.type]][0], 3)}"
+        if ql[smt_types_ql_match[smt.type]][1]:
+            return f"{symbol} swept {round(ql[smt_types_ql_match[smt.type]][0], 3)}"
+        return f"{symbol} not swept {round(ql[smt_types_ql_match[smt.type]][0], 3)}"
 
     smt_ago = humanize_timedelta(to_utc_datetime(triad.a1.snapshot_date_readable) - to_utc_datetime(smt.first_appeared))
-    result = f"""<b>{smt.type.capitalize()} {key}</b> at {to_ny_date_str(smt.first_appeared)} (<b>{smt_ago} ago</b>):
+    result = f"""<b>{smt.type.capitalize()} {label}</b> at {to_ny_date_str(smt.first_appeared)} (<b>{smt_ago} ago</b>):
 <code>{swept(triad.a1.symbol, smt.a1q)}, {swept(triad.a2.symbol, smt.a2q)}, {swept(triad.a3.symbol, smt.a3q)}</code>"""
 
-    def plus_psps(psps: List[PSP], label: str):
+    def plus_psps(psps: List[PSP], psp_label: str):
         nonlocal result
         nonlocal triad
         nonlocal smt
@@ -1442,7 +1489,7 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
             edge += f"{round(extremum_3, 3)} ({boldify(f'{plus}{c3_diff}%')})"
 
             result += f"""
-    {boldify(f'{status} {label} PSP')} {to_ny_date_str(p.a1_candle[5])} ({boldify(f'{psp_ago} ago')}) with {edge}"""
+    {boldify(f'{status} {psp_label} PSP')} {to_ny_date_str(p.a1_candle[5])} ({boldify(f'{psp_ago} ago')}) with {edge}"""
 
     plus_psps(smt.psps_1_month, '1M')
     plus_psps(smt.psps_1_week, '1W')
@@ -1499,12 +1546,12 @@ def true_opens_readable(
 
 def targets_readable(targets: List[Target]) -> str:
     def to_str(t: Target) -> str:
-        result = f"{t[0]}</b>: "
-        plus = "+" if t[1][1] > 0 else ""
+        result = f"{t[1]} {t[2]}</b>: "
+        plus = "+" if t[3][1] > 0 else ""
 
-        result += f"{round(t[1][0], 3)} (<b>{plus}{t[1][1]}%</b>), "
-        result += f"{round(t[2][0], 3)} (<b>{plus}{t[2][1]}%</b>), "
-        result += f"{round(t[3][0], 3)} (<b>{plus}{t[3][1]}%</b>)"
+        result += f"{round(t[3][0], 3)} (<b>{plus}{t[3][1]}%</b>), "
+        result += f"{round(t[4][0], 3)} (<b>{plus}{t[4][1]}%</b>), "
+        result += f"{round(t[5][0], 3)} (<b>{plus}{t[5][1]}%</b>)"
 
         return result
 

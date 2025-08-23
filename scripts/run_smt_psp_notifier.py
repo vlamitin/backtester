@@ -6,9 +6,9 @@ from zoneinfo import ZoneInfo
 from scripts.run_series_raw_loader import update_candle_from_binance
 from stock_market_research_kit.db_layer import last_candle_15m, select_full_days_candles_15m, select_candles_15m
 from stock_market_research_kit.tg_notifier import TelegramThrottler
-from stock_market_research_kit.triad import Candles15mGenerator, new_triad, Triad, smt_dict_new_smt_found, \
+from stock_market_research_kit.triad import Candles15mGenerator, new_triad, Triad, new_smt_found, \
     smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled, \
-    targets_readable, targets_reached, true_opens_readable
+    targets_readable, targets_reached, true_opens_readable, targets_new_appeared
 from utils.date_utils import log_info_ny, now_ny_datetime, now_utc_datetime, to_ny_datetime, to_utc_datetime, \
     to_date_str, ny_zone, to_ny_date_str
 
@@ -35,7 +35,7 @@ def handle_new_candle(triad: Triad):
     long_targets = triad.long_targets()
     short_targets = triad.short_targets()
 
-    new_smts = smt_dict_new_smt_found(prev_smt_psp, smt_psp)
+    new_smts = new_smt_found(prev_smt_psp, smt_psp)
     cancelled_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
     psp_changed = smt_dict_psp_changed(prev_smt_psp, smt_psp)
     reached_short_targets = targets_reached(
@@ -45,12 +45,13 @@ def handle_new_candle(triad: Triad):
         (triad.a1.prev_15m_candle, triad.a2.prev_15m_candle, triad.a3.prev_15m_candle),
         prev_long_targets, long_targets)
 
-    new_long_targets = []  # полезно видеть, что кватал закончился и его экстремумы являются новыми целями
-    new_short_targets = []  # TODO
+    new_long_targets = targets_new_appeared(prev_long_targets, long_targets)
+    new_short_targets = targets_new_appeared(prev_short_targets, short_targets)
     tos = triad.true_opens()
 
     nothing_changed = (len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0 and
-                       len(reached_short_targets) == 0 and len(reached_long_targets) == 0)
+                       len(reached_short_targets) == 0 and len(reached_long_targets) == 0 and
+                       len(new_long_targets) == 0 and len(new_short_targets) == 0)
     if nothing_changed:
         log_info_ny("nothing changed")
         return
@@ -61,14 +62,26 @@ def handle_new_candle(triad: Triad):
 
     symbols = (triad.a1.symbol, triad.a2.symbol, triad.a3.symbol)
     if len(reached_long_targets) > 0:
-        for target_label, asset_index, price in reached_long_targets:
-            header += f"\n✅↗{symbols[asset_index]} {target_label} ({round(price, 3)}) target reached"
+        for _, direction, label, asset_index, price in reached_long_targets:
+            header += f"\n✅↗{symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
         header += "\n"
 
     if len(reached_short_targets) > 0:
-        for target_label, asset_index, price in reached_short_targets:
-            header += f"\n✅↘{symbols[asset_index]} {target_label} ({round(price, 3)}) target reached"
+        for _, direction, label, asset_index, price in reached_short_targets:
+            header += f"\n✅↘{symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
         header += "\n"
+
+    if len(new_short_targets) > 0:
+        header += f"""
+↘🎯 New short targets:
+{targets_readable(new_short_targets)}        
+"""
+
+    if len(new_long_targets) > 0:
+        header += f"""
+↗🎯 New long targets:
+{targets_readable(new_long_targets)}        
+"""
 
     smt_emoji_dict = {
         'high': '↘',
@@ -77,13 +90,13 @@ def handle_new_candle(triad: Triad):
         'half_low': '↗️'
     }
     if len(new_smts) > 0:
-        for key, smt in new_smts:
-            header += f"\n🆕{smt_emoji_dict[smt.type]} New {smt_readable(smt, key, triad)}"
+        for _, label, smt in new_smts:
+            header += f"\n🆕{smt_emoji_dict[smt.type]} New {smt_readable(smt, label, triad)}"
         header += "\n"
 
     if len(cancelled_smts) > 0:
-        for key, smt in cancelled_smts:
-            header += f"\n🚫{smt_emoji_dict[smt.type]} Cancelled {smt.type.capitalize()} {key}"
+        for _, label, smt in cancelled_smts:
+            header += f"\n🚫{smt_emoji_dict[smt.type]} Cancelled {smt.type.capitalize()} {label}"
         header += "\n"
 
     if len(psp_changed) > 0:
@@ -94,7 +107,7 @@ def handle_new_candle(triad: Triad):
             'swept': '🛑'
         }
         grouped_psp = {}
-        for smt_key, smt_type, psp_key, psp_date, change in psp_changed:
+        for _, smt_key, smt_type, psp_key, psp_date, change in psp_changed:
             if change + psp_key + psp_date not in grouped_psp:
                 grouped_psp[change + psp_key + psp_date] = []
             grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, psp_key, psp_date, change))
@@ -109,13 +122,17 @@ def handle_new_candle(triad: Triad):
 
     smt_short, smt_long = smt_dict_readable(smt_psp, triad)
     short_targets_msg = f"""<blockquote>↘🎯 <b>Short targets</b> for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
+
 {targets_readable(short_targets)}</blockquote>"""
     short_smts_msg = f"""<blockquote>↘🔀 <b>Short SMTs:</b>
+
 {smt_short}</blockquote>"""
 
     long_targets_msg = f"""<blockquote>↗🎯 <b>Long targets</b> for {triad.a1.symbol}-{triad.a2.symbol}-{triad.a3.symbol}:
+
 {targets_readable(long_targets)}</blockquote>"""
-    long_smts_msg = f"""<blockquote>↗🔀 <b>Long SMTs:</b> 
+    long_smts_msg = f"""<blockquote>↗🔀 <b>Long SMTs:</b>
+
 {smt_long}</blockquote>"""
 
     footer = """
