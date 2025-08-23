@@ -2,7 +2,7 @@ import copy
 from datetime import timedelta
 
 from stock_market_research_kit.db_layer import select_full_days_candles_15m, select_candles_15m
-from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, triad_from_json, json_from_triad, Triad, \
+from stock_market_research_kit.triad import Candles15mGenerator, new_triad, triad_from_json, json_from_triad, Triad, \
     smt_dict_readable
 from utils.date_utils import to_utc_datetime
 
@@ -48,7 +48,7 @@ def triad_from_snapshot(snap: str) -> Triad:
     return t
 
 
-def reverse_09_aug_2025_test_generator(symbol) -> Reverse15mGenerator:
+def reverse_09_aug_2025_test_generator(symbol) -> Candles15mGenerator:
     candles_2024 = select_full_days_candles_15m(2024, symbol)
     candles_2025 = [x for x in select_full_days_candles_15m(2025, symbol) if
                     to_utc_datetime(x[5]) < to_utc_datetime('2025-08-10 00:00')]

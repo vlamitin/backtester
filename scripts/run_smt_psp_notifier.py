@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 from scripts.run_series_raw_loader import update_candle_from_binance
 from stock_market_research_kit.db_layer import last_candle_15m, select_full_days_candles_15m, select_candles_15m
 from stock_market_research_kit.tg_notifier import TelegramThrottler
-from stock_market_research_kit.triad import Reverse15mGenerator, new_triad, Triad, smt_dict_new_smt_found, \
+from stock_market_research_kit.triad import Candles15mGenerator, new_triad, Triad, smt_dict_new_smt_found, \
     smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled, \
     targets_readable, targets_reached, true_opens_readable
 from utils.date_utils import log_info_ny, now_ny_datetime, now_utc_datetime, to_ny_datetime, to_utc_datetime, \
@@ -52,6 +52,7 @@ def handle_new_candle(triad: Triad):
     nothing_changed = (len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0 and
                        len(reached_short_targets) == 0 and len(reached_long_targets) == 0)
     if nothing_changed:
+        log_info_ny("nothing changed")
         return
 
     snap_date, candle_date = to_ny_date_str(
@@ -88,8 +89,8 @@ def handle_new_candle(triad: Triad):
     if len(psp_changed) > 0:
         psp_emoji_dict = {
             'possible': '❓',
-            'closed': '❗',
-            'confirmed': '‼️',
+            'closed': '🔚',
+            'confirmed': '☑️️',
             'swept': '🛑'
         }
         grouped_psp = {}
@@ -98,7 +99,7 @@ def handle_new_candle(triad: Triad):
                 grouped_psp[change + psp_key + psp_date] = []
             grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, psp_key, psp_date, change))
 
-        for key in grouped_psp:
+        for key in sorted(grouped_psp.keys()):  # we sort for 'possible' to be in the end
             _, smt_type, psp_key, psp_date, change = grouped_psp[key][0]
             dt = to_ny_date_str(psp_date)
             msg = f"\n{psp_emoji_dict[change]}{smt_emoji_dict[smt_type]} {change.capitalize()} {psp_key} PSP on {dt} for "
@@ -177,7 +178,7 @@ def time_15m_generator(start_date: datetime) -> Generator[datetime, None, None]:
         yield current_date
 
 
-def reverse_candles_generator(symbol, last_date_utc: datetime) -> Reverse15mGenerator:
+def reverse_candles_generator(symbol, last_date_utc: datetime) -> Candles15mGenerator:
     candles_prev_year = select_full_days_candles_15m(last_date_utc.year - 1, symbol)
     candles_this_year = select_candles_15m(
         last_date_utc.year, symbol,

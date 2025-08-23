@@ -146,8 +146,8 @@ def look_for_entry_backtest(day_sessions: List[Session], day: Day,
     for session in profiles:
         for candle_type in profiles[session]:
             for profile in profiles[session][candle_type]:
-                for x in day_sessions:
-                    if not x.type or not x.name:
+                for ds in day_sessions:
+                    if not ds.type or not ds.name:
                         print("hello there")
                 if is_sublist(list(profile[0]), [f"{x.name.value}__{x.type.value}" for x in day_sessions]):
                     hunting_sessions = [x for x in day_sessions if x.name.value == session]

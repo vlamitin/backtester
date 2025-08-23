@@ -1,18 +1,20 @@
 import json
 from dataclasses import dataclass, asdict
 from datetime import timedelta, datetime
-from typing import Tuple, Optional, List, Dict
+from typing import Tuple, Optional, List, Dict, TypeAlias
 
-from stock_market_research_kit.asset import QuarterLiq, Asset, new_empty_asset, Reverse15mGenerator, TargetPercent
+from stock_market_research_kit.asset import QuarterLiq, Asset, new_empty_asset, Candles15mGenerator, TargetPercent
 from stock_market_research_kit.candle import InnerCandle, as_1_candle, as_1month_candles, as_1w_candles, \
     as_1d_candles, as_4h_candles, as_2h_candles, as_1h_candles, as_30m_candles, AsCandles, PriceDate
-from stock_market_research_kit.quarter import MonthWeek, DayQuarter, WeekDay, Quarter90m, YearQuarter
+from stock_market_research_kit.quarter import MonthWeek, DayQuarter, WeekDay, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
     get_current_4h_from_to, get_prev_1d_from_to, get_current_1d_from_to, get_prev_1w_from_to, get_current_1w_from_to, \
     get_prev_1month_from_to, get_current_1month_from_to, GetDateRange, humanize_timedelta, \
     to_ny_date_str, quarters_by_time, month_week_quarters_ranges, weekday_ranges, day_quarters_ranges, \
-    quarters90m_ranges, year_quarters_ranges
+    year_quarters_ranges
+
+Target: TypeAlias = Tuple[str, TargetPercent, TargetPercent, TargetPercent]
 
 
 @dataclass
@@ -35,7 +37,7 @@ class SMT:
     type: str  # 'high' 'low' 'half_high' or 'half_low'
     first_appeared: str
 
-    same_lvl_targets: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]
+    same_lvl_targets: List[Target]
 
     a1_sweep_candles_15m: List[InnerCandle]
     a2_sweep_candles_15m: List[InnerCandle]
@@ -49,6 +51,9 @@ class SMT:
     psps_1d: Optional[List[PSP]]
     psps_1_week: Optional[List[PSP]]
     psps_1_month: Optional[List[PSP]]
+
+
+SMTLevels: TypeAlias = Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]  # high, half, low
 
 
 def new_empty_smt(a1q, a2q, a3q) -> SMT:
@@ -111,7 +116,7 @@ class Triad:
 
     def ql_long_targets(
             self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
-    ) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+    ) -> List[Target]:
         result = []
 
         for label, a1_ql, a2_ql, a3_ql in qls:
@@ -143,7 +148,7 @@ class Triad:
 
     def ql_short_targets(
             self, qls: List[Tuple[str, QuarterLiq, QuarterLiq, QuarterLiq]]  # label, ql1-ql3
-    ) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+    ) -> List[Target]:
         result = []
 
         for label, a1_ql, a2_ql, a3_ql in qls:
@@ -173,13 +178,13 @@ class Triad:
 
         return result
 
-    def long_targets(self) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+    def long_targets(self) -> List[Target]:
         return sorted(
             self.ql_long_targets(self.actual_prev_qls()),
             key=lambda t: t[1][1]
         )
 
-    def short_targets(self) -> List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]:
+    def short_targets(self) -> List[Target]:
         return sorted(
             self.ql_short_targets(self.actual_prev_qls()),
             key=lambda t: t[1][1],
@@ -269,7 +274,7 @@ class Triad:
 
     def new_smt(
             self, next_tick: str, a1_ql, a2_ql, a3_ql: QuarterLiq
-    ) -> Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]:
+    ) -> SMTLevels:
         _, _, _, a1_high, a1_half, a1_low = a1_ql
         _, _, _, a2_high, a2_half, a2_low = a2_ql
         _, _, _, a3_high, a3_half, a3_low = a3_ql
@@ -545,7 +550,7 @@ class Triad:
         )
         return smt
 
-    def prev_year_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def prev_year_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.prev_year:
             return None
 
@@ -569,7 +574,7 @@ class Triad:
             low_smt = self.with_month_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def year_q1_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def year_q1_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.year_q1:
             return None
 
@@ -593,7 +598,7 @@ class Triad:
             low_smt = self.with_month_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def year_q2_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def year_q2_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.year_q2:
             return None
 
@@ -617,7 +622,7 @@ class Triad:
             low_smt = self.with_month_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def year_q3_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def year_q3_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.year_q3:
             return None
 
@@ -641,7 +646,7 @@ class Triad:
             low_smt = self.with_month_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def year_q4_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def year_q4_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.year_q4:
             return None
 
@@ -665,7 +670,7 @@ class Triad:
             low_smt = self.with_month_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def week1_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def week1_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.week1:
             return None
 
@@ -686,7 +691,7 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def week2_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def week2_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.week2:
             return None
 
@@ -707,7 +712,7 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def week3_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def week3_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.week3:
             return None
 
@@ -728,7 +733,7 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def week4_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def week4_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.week4:
             return None
 
@@ -749,7 +754,7 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def week5_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def week5_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.week5:
             return None
 
@@ -770,7 +775,7 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def mon_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def mon_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.mon:
             return None
 
@@ -794,7 +799,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def tue_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def tue_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.tue:
             return None
 
@@ -818,7 +823,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def wed_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def wed_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.wed:
             return None
 
@@ -842,7 +847,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def thu_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def thu_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.thu:
             return None
 
@@ -866,7 +871,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def mon_thu_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def mon_thu_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.mon_thu:
             return None
 
@@ -890,7 +895,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def fri_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def fri_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.fri:
             return None
 
@@ -914,7 +919,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def mon_fri_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def mon_fri_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.mon_fri:
             return None
 
@@ -938,7 +943,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def sat_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def sat_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.sat:
             return None
 
@@ -962,7 +967,7 @@ class Triad:
             low_smt = self.with_4h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def asia_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def asia_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.asia:
             return None
 
@@ -987,7 +992,7 @@ class Triad:
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def london_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def london_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.london:
             return None
 
@@ -1011,7 +1016,7 @@ class Triad:
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def nyam_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def nyam_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.nyam:
             return None
 
@@ -1035,7 +1040,7 @@ class Triad:
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def nypm_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def nypm_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.nypm:
             return None
 
@@ -1059,7 +1064,7 @@ class Triad:
             low_smt = self.with_2h_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def q1_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def q1_90_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.q1_90m:
             return None
 
@@ -1080,7 +1085,7 @@ class Triad:
             low_smt = self.with_30m_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def q2_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def q2_90_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.q2_90m:
             return None
 
@@ -1101,7 +1106,7 @@ class Triad:
             low_smt = self.with_30m_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def q3_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def q3_90_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.q3_90m:
             return None
 
@@ -1122,7 +1127,7 @@ class Triad:
             low_smt = self.with_30m_psps(next_tick, low_smt)
         return high_smt, half_smt, low_smt
 
-    def q4_90_smt(self) -> Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]:  # high, half, low
+    def q4_90_smt(self) -> Optional[SMTLevels]:  # high, half, low
         if not self.a1.q4_90m:
             return None
 
@@ -1177,8 +1182,8 @@ class Triad:
 
 
 def smt_dict_new_smt_found(
-        d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
-        d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
+        d_old: Dict[str, Optional[SMTLevels]],
+        d_new: Dict[str, Optional[SMTLevels]],
 ) -> List[Tuple[str, SMT]]:
     result = []
 
@@ -1204,8 +1209,8 @@ def smt_dict_new_smt_found(
 
 
 def smt_dict_old_smt_cancelled(
-        d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
-        d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
+        d_old: Dict[str, Optional[SMTLevels]],
+        d_new: Dict[str, Optional[SMTLevels]],
 ) -> List[Tuple[str, SMT]]:
     result = []
 
@@ -1229,8 +1234,8 @@ def smt_dict_old_smt_cancelled(
 
 def targets_reached(
         last_candles: Tuple[InnerCandle, InnerCandle, InnerCandle],
-        targets_old: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]],
-        targets_new: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]
+        targets_old: List[Target],
+        targets_new: List[Target]
 ) -> List[Tuple[str, int, float]]:  # target_label, asset_index, price
     result = []
     if not targets_old:
@@ -1248,8 +1253,8 @@ def targets_reached(
 
 
 def smt_dict_psp_changed(
-        d_old: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
-        d_new: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
+        d_old: Dict[str, Optional[SMTLevels]],
+        d_new: Dict[str, Optional[SMTLevels]],
 ) -> List[Tuple[str, str, str, str, str]]:  # (smt_key, smt_type, psp_key, psp_date, possible|closed|confirmed|swept)
     result = []
     for key in d_new:
@@ -1342,7 +1347,7 @@ def psps_changed(
 
 
 def smt_dict_readable(
-        d: Dict[str, Optional[Tuple[Optional[SMT], Optional[SMT], Optional[SMT]]]],
+        d: Dict[str, Optional[SMTLevels]],
         triad: Triad
 ) -> Tuple[str, str]:
     pos_short = []
@@ -1448,7 +1453,7 @@ def smt_readable(smt: SMT, key: str, triad: Triad) -> str:
     plus_psps(smt.psps_30m, '30m')
     plus_psps(smt.psps_15m, '15m')
 
-    emoji = f"{'‼️' if have_confirmed_psps else ''}{'❗' if have_closed_psps else ''}"
+    emoji = f"{'☑️' if have_confirmed_psps else ''}{'🔚' if have_closed_psps else ''}"
     return f"{emoji}{result}"
 
 
@@ -1492,8 +1497,8 @@ def true_opens_readable(
     return out
 
 
-def targets_readable(targets: List[Tuple[str, TargetPercent, TargetPercent, TargetPercent]]) -> str:
-    def to_str(t: Tuple[str, TargetPercent, TargetPercent, TargetPercent]) -> str:
+def targets_readable(targets: List[Target]) -> str:
+    def to_str(t: Target) -> str:
         result = f"{t[0]}</b>: "
         plus = "+" if t[1][1] > 0 else ""
 
@@ -1515,7 +1520,7 @@ def new_empty_triad(a1_symbol: str, a2_symbol: str, a3_symbol: str) -> Triad:
 
 
 def new_triad(symbols_tuple: Tuple[str, str, str],
-              generators_tuple: Tuple[Reverse15mGenerator, Reverse15mGenerator, Reverse15mGenerator]) -> Triad:
+              generators_tuple: Tuple[Candles15mGenerator, Candles15mGenerator, Candles15mGenerator]) -> Triad:
     res = new_empty_triad(*symbols_tuple)
 
     res.a1.populate(generators_tuple[0])

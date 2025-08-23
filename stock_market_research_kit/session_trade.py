@@ -14,7 +14,7 @@ class SessionTrade:
     entry_time: str
     entry_price: float
     entry_position_usd: float
-    position_usd: float  # actual position in coins
+    position_usd: float  # actual position in usd
 
     hunting_session: SessionName
     hunting_type: SessionType

@@ -63,7 +63,8 @@ class TelegramThrottler:
             if response.status_code != 200:
                 print(f"ERROR: Failed to TG send: {response.status_code} {response.reason}")
             else:
-                print(f"Successfully TG sent `{text[0:65]}...`to {SESSIONS_SIGNALS_CHANNEL_ID}")
+                txt = text[0:65].replace('\n', ' ')
+                print(f"Successfully TG sent `{txt}...`to {SESSIONS_SIGNALS_CHANNEL_ID}")
 
             # Update state
             now = time.time()

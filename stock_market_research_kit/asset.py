@@ -18,7 +18,8 @@ LiqSwept: TypeAlias = Tuple[float, bool]  # (price, is_swept)
 TargetPercent: TypeAlias = Tuple[float, float]  # (price, percent_from_current)
 # (date_start, date_end, ended, high, half, low)
 QuarterLiq: TypeAlias = Tuple[str, str, bool, LiqSwept, LiqSwept, LiqSwept]
-Reverse15mGenerator: TypeAlias = Generator[InnerCandle, None, None]
+Candles15mGenerator: TypeAlias = Generator[InnerCandle, None, None]
+TriadCandles15mGenerator: TypeAlias = Generator[Tuple[InnerCandle, InnerCandle, InnerCandle], None, None]
 
 
 class TriadAsset(Enum):
@@ -551,7 +552,7 @@ class Asset:
                 )
                 self.current_year_candle = None
 
-    def populate(self, reverse_15m_gen: Reverse15mGenerator):
+    def populate(self, reverse_15m_gen: Candles15mGenerator):
         self.prev_15m_candle = next(reverse_15m_gen)
         self.candles_15m.appendleft(self.prev_15m_candle)
 
