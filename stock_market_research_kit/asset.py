@@ -285,6 +285,7 @@ class Asset:
                 self.year_q1 = None
                 self.year_q2 = None
                 self.year_q3 = None
+                self.true_yo = None
 
         ranges_mw, tmo = month_week_quarters_ranges(self.snapshot_date_readable)
         for i in range(len(ranges_mw)):
@@ -320,11 +321,13 @@ class Asset:
                     self.week1 = None
                     self.week2 = None
                     self.week3 = None
+                    self.true_mo = None
             elif prev_mw == MonthWeek.MW5:
                 self.week1 = None
                 self.week2 = None
                 self.week3 = None
                 self.week4 = None
+                self.true_mo = None
 
         ranges_wd, two = weekday_ranges(self.snapshot_date_readable)
         for i in range(len(ranges_wd)):
@@ -363,6 +366,7 @@ class Asset:
                 self.mon_thu = None
                 self.mon_fri = None
                 self.sat = None
+                self.true_wo = None
 
         ranges_dq, tdo = day_quarters_ranges(self.snapshot_date_readable)
         for i in range(len(ranges_dq)):
@@ -396,6 +400,7 @@ class Asset:
                 self.asia = None
                 self.london = None
                 self.nyam = None
+                self.true_do = None
 
         ranges_q90m, true_90m_open = quarters90m_ranges(self.snapshot_date_readable)
         for i in range(len(ranges_q90m)):
@@ -429,6 +434,7 @@ class Asset:
                 self.q1_90m = None
                 self.q2_90m = None
                 self.q3_90m = None
+                self.true_90m_open = None
 
         if candle[5] == true_90m_open:
             self.true_90m_open = (candle[0], true_90m_open)
