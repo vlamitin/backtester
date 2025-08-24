@@ -3,7 +3,7 @@ from typing import TypeAlias, Callable, List, Tuple, Optional
 
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade
 from stock_market_research_kit.triad import Triad, SMTLevels, SMT, Target, TrueOpen
-from utils.date_utils import to_utc_datetime
+from utils.date_utils import to_utc_datetime, to_ny_datetime, to_date_str, to_ny_date_str
 
 ONE_RR_IN_USD = 100
 
@@ -82,9 +82,8 @@ def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: 
         pnl = trade.entry_position_usd / trade.entry_price * (close_price - trade.entry_price)
     else:
         pnl = trade.entry_position_usd / trade.entry_price * (trade.entry_price - close_price)
-
     trade.pnl_usd = pnl
-    trade.closes.append((100, close_price, time_str, reason))
+    trade.closes.append((100, close_price, time_str, to_ny_date_str(time_str), reason))
 
     return trade
 
@@ -180,6 +179,7 @@ def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             return [SmtPspTrade(
                 asset=max_good_tos_smb,
                 entry_time=tr.a1.snapshot_date_readable,
+                entry_time_ny=to_ny_date_str(tr.a1.snapshot_date_readable),
                 entry_price=tr.a1.prev_15m_candle[3],
                 entry_position_assets=rr_pos_a1[1],
                 entry_position_usd=rr_pos_a1[2],
@@ -201,6 +201,7 @@ def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             return [SmtPspTrade(
                 asset=max_good_tos_smb,
                 entry_time=tr.a2.snapshot_date_readable,
+                entry_time_ny=to_ny_date_str(tr.a2.snapshot_date_readable),
                 entry_price=tr.a2.prev_15m_candle[3],
                 entry_position_assets=rr_pos_a2[1],
                 entry_position_usd=rr_pos_a2[2],
@@ -222,6 +223,7 @@ def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             return [SmtPspTrade(
                 asset=max_good_tos_smb,
                 entry_time=tr.a3.snapshot_date_readable,
+                entry_time_ny=to_ny_date_str(tr.a3.snapshot_date_readable),
                 entry_price=tr.a3.prev_15m_candle[3],
                 entry_position_assets=rr_pos_a3[1],
                 entry_position_usd=rr_pos_a3[2],

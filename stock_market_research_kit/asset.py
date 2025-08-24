@@ -5,14 +5,14 @@ from datetime import timedelta
 from enum import Enum
 from typing import TypeAlias, Tuple, Optional, List, Generator, Deque
 
-from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle
+from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle, as_1d_candles
 from stock_market_research_kit.quarter import Quarter90m, DayQuarter, WeekDay, MonthWeek, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
     get_current_4h_from_to, get_prev_1d_from_to, get_current_1d_from_to, get_prev_1w_from_to, get_current_1w_from_to, \
     get_prev_1month_from_to, get_current_1month_from_to, quarters90m_ranges, day_quarters_ranges, \
     prev_year_ranges, weekday_ranges, month_week_quarters_ranges, year_quarters_ranges, quarters_by_time, \
-    current_year_ranges
+    current_year_ranges, log_info_ny
 
 LiqSwept: TypeAlias = Tuple[float, bool]  # (price, is_swept)
 TargetPercent: TypeAlias = Tuple[float, float]  # (price, percent_from_current)
@@ -41,6 +41,7 @@ class Asset:
     symbol: str
     snapshot_date_readable: str
     candles_15m: Deque[InnerCandle]
+    # candles_1d: List[InnerCandle]
 
     prev_year: Optional[QuarterLiq]
 
@@ -249,6 +250,10 @@ class Asset:
     def plus_15m(self, candle: InnerCandle):
         prev_yq, prev_mw, prev_wd, prev_dq, prev_q90m = quarters_by_time(self.snapshot_date_readable)
         self.candles_15m.append(candle)
+        # if candle[5].endswith("00:00"):
+        #     self.candles_1d.append(candle)
+        # else:
+        #     self.candles_1d[-1] = as_1_candle([self.candles_1d[-1], candle])
         self.prev_15m_candle = candle
         self.snapshot_date_readable = to_date_str(to_utc_datetime(self.prev_15m_candle[5]) + timedelta(minutes=15))
         new_yq, new_mw, new_wd, new_dq, new_q90m = quarters_by_time(self.snapshot_date_readable)
@@ -689,7 +694,7 @@ class Asset:
             prev_candle = next(reverse_15m_gen)
             self.candles_15m.appendleft(prev_candle)
             if len(self.candles_15m) % (4 * 24 * 90) == 0:
-                print(f"populated {len(self.candles_15m) // (4 * 24)} days for {self.symbol}")
+                log_info_ny(f"populated {len(self.candles_15m) // (4 * 24)} days for {self.symbol}")
             pc_date = to_utc_datetime(prev_candle[5])
 
             if prev_candle[5] == t90mo:
@@ -875,7 +880,8 @@ class Asset:
 
             if pc_date <= prev_year_from:
                 break
-        print(f"populated {len(self.candles_15m) // (4 * 24)} days for {self.symbol}")
+        # self.candles_1d = as_1d_candles(list(self.candles_15m))
+        log_info_ny(f"populated {len(self.candles_15m) // (4 * 24)} days for {self.symbol}")
 
 
 def new_empty_asset(symbol: str) -> Asset:

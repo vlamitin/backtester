@@ -1,4 +1,5 @@
 import json
+import time
 from dataclasses import dataclass, asdict
 from datetime import timedelta, datetime
 from typing import Tuple, Optional, List, Dict, TypeAlias
@@ -12,7 +13,7 @@ from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to,
     get_current_4h_from_to, get_prev_1d_from_to, get_current_1d_from_to, get_prev_1w_from_to, get_current_1w_from_to, \
     get_prev_1month_from_to, get_current_1month_from_to, GetDateRange, humanize_timedelta, \
     to_ny_date_str, quarters_by_time, month_week_quarters_ranges, weekday_ranges, day_quarters_ranges, \
-    year_quarters_ranges
+    year_quarters_ranges, log_info_ny, log_warn_ny
 
 Target: TypeAlias = Tuple[int, str, str, TargetPercent, TargetPercent, TargetPercent]  # level, direction, label, tp*3
 TrueOpen: TypeAlias = Tuple[str, float, float]  # label, price, percent_from_current
@@ -285,9 +286,11 @@ class Triad:
         _, _, _, a2_high, a2_half, a2_low = a2_ql
         _, _, _, a3_high, a3_half, a3_low = a3_ql
 
+        # _get_15m_candles_range_time = time.perf_counter()
         a1_sweep_candles_15m = self.a1.get_15m_candles_range(next_tick, self.a1.snapshot_date_readable)
         a2_sweep_candles_15m = self.a2.get_15m_candles_range(next_tick, self.a2.snapshot_date_readable)
         a3_sweep_candles_15m = self.a3.get_15m_candles_range(next_tick, self.a3.snapshot_date_readable)
+        # log_info_ny(f"get_15m_candles_range took {(time.perf_counter() - _get_15m_candles_range_time):.6f} seconds")
 
         a1_q_close = None if len(a1_sweep_candles_15m) == 0 else a1_sweep_candles_15m[0][0]
         a2_q_close = None if len(a2_sweep_candles_15m) == 0 else a2_sweep_candles_15m[0][0]
@@ -356,6 +359,8 @@ class Triad:
             as_candles: AsCandles,
             smt: SMT
     ) -> List[PSP]:
+        _as_1_candle_time = time.perf_counter()
+
         psps = []
         a1_prev_candle = as_1_candle(self.a1.get_15m_candles_range(
             to_date_str(prev_candle_range[0]), to_date_str(prev_candle_range[1])
@@ -371,6 +376,10 @@ class Triad:
         a2_candles = as_candles(smt.a2_sweep_candles_15m)
         a3_candles = as_candles(smt.a3_sweep_candles_15m)
 
+        _as_1_candle_took = time.perf_counter() - _as_1_candle_time
+        if _as_1_candle_took > 0.05:
+            log_warn_ny(f"as_1_candle took {_as_1_candle_took:.6f} seconds, as_candles is {as_candles.__name__}")
+
         if len(a1_candles) == 0:
             return []
 
@@ -378,6 +387,7 @@ class Triad:
         a2_min, a2_max = a2_candles[0][2], a2_candles[0][1]
         a3_min, a3_max = a3_candles[0][2], a3_candles[0][1]
 
+        _psps_calculation_time = time.perf_counter()
         for i in range(len(a1_candles)):
             c_end = current_candle_range_getter(a1_candles[i][5])[1]
             snap_end = to_utc_datetime(self.a1.snapshot_date_readable) - timedelta(seconds=1)
@@ -482,6 +492,10 @@ class Triad:
                 a2_min, a2_max = min(a2_min, a2_candles[i][2]), max(a2_max, a2_candles[i][1])
                 a3_min, a3_max = min(a3_min, a3_candles[i][2]), max(a3_max, a3_candles[i][1])
 
+        _psps_calculation_took = time.perf_counter() - _psps_calculation_time
+        if _psps_calculation_took > 0.02:
+            log_warn_ny(f"psps_calculation took {_psps_calculation_took:.6f} seconds, as_candles is {as_candles.__name__}")
+
         return psps
 
     def with_15m_psps(self, next_tick: str, smt: SMT) -> SMT:  # enriches smt with 15m PSPs
@@ -557,15 +571,20 @@ class Triad:
         return smt
 
     def prev_year_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        # _prev_year_smt_time = time.perf_counter()
         if not self.a1.prev_year:
             return None
 
         next_tick = to_date_str(to_utc_datetime(self.a1.prev_year[1]) + timedelta(minutes=1))
         if to_utc_datetime(self.a1.snapshot_date_readable) <= to_utc_datetime(next_tick):
             return None
+        # _new_smt_time = time.perf_counter()
         high_smt, half_smt, low_smt = self.new_smt(
             next_tick, self.a1.prev_year, self.a2.prev_year, self.a3.prev_year
         )
+        # log_info_ny(f"new_smt took {(time.perf_counter() - _new_smt_time):.6f} seconds")
+
+        # _with_psp_time = time.perf_counter()
         if high_smt:
             high_smt = self.with_day_psps(next_tick, high_smt)
             high_smt = self.with_week_psps(next_tick, high_smt)
@@ -578,18 +597,27 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
             low_smt = self.with_week_psps(next_tick, low_smt)
             low_smt = self.with_month_psps(next_tick, low_smt)
+        # log_info_ny(f"with_psp took {(time.perf_counter() - _with_psp_time):.6f} seconds")
+        #         log_info_ny(f"prev_year_smt took {(time.perf_counter() - _prev_year_smt_time):.6f} seconds")
+
         return high_smt, half_smt, low_smt
 
     def year_q1_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        # _year_q1_smt_time = time.perf_counter()
         if not self.a1.year_q1:
             return None
 
         next_tick = to_date_str(to_utc_datetime(self.a1.year_q1[1]) + timedelta(minutes=1))
         if to_utc_datetime(self.a1.snapshot_date_readable) <= to_utc_datetime(next_tick):
             return None
+
+        # _new_smt_time = time.perf_counter()
         high_smt, half_smt, low_smt = self.new_smt(
             next_tick, self.a1.year_q1, self.a2.year_q1, self.a3.year_q1
         )
+        # log_info_ny(f"new_smt took {(time.perf_counter() - _new_smt_time):.6f} seconds")
+
+        _with_psp_time = time.perf_counter()
         if high_smt:
             high_smt = self.with_day_psps(next_tick, high_smt)
             high_smt = self.with_week_psps(next_tick, high_smt)
@@ -602,9 +630,12 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
             low_smt = self.with_week_psps(next_tick, low_smt)
             low_smt = self.with_month_psps(next_tick, low_smt)
+        # log_info_ny(f"with_psp took {(time.perf_counter() - _with_psp_time):.6f} seconds")
+        # log_info_ny(f"year_q1_smt took {(time.perf_counter() - _year_q1_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def year_q2_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _year_q2_smt_time = time.perf_counter()
         if not self.a1.year_q2:
             return None
 
@@ -626,9 +657,11 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
             low_smt = self.with_week_psps(next_tick, low_smt)
             low_smt = self.with_month_psps(next_tick, low_smt)
+        #         log_info_ny(f"year_q2_smt took {(time.perf_counter() - _year_q2_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def year_q3_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _year_q3_smt_time = time.perf_counter()
         if not self.a1.year_q3:
             return None
 
@@ -650,9 +683,11 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
             low_smt = self.with_week_psps(next_tick, low_smt)
             low_smt = self.with_month_psps(next_tick, low_smt)
+        #         log_info_ny(f"year_q3_smt took {(time.perf_counter() - _year_q3_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def year_q4_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _year_q4_smt_time = time.perf_counter()
         if not self.a1.year_q4:
             return None
 
@@ -674,9 +709,11 @@ class Triad:
             low_smt = self.with_day_psps(next_tick, low_smt)
             low_smt = self.with_week_psps(next_tick, low_smt)
             low_smt = self.with_month_psps(next_tick, low_smt)
+        #         log_info_ny(f"year_q4_smt took {(time.perf_counter() - _year_q4_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def week1_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _week1_smt_time = time.perf_counter()
         if not self.a1.week1:
             return None
 
@@ -695,9 +732,11 @@ class Triad:
         if low_smt:
             low_smt = self.with_4h_psps(next_tick, low_smt)
             low_smt = self.with_day_psps(next_tick, low_smt)
+        #         log_info_ny(f"week1_smt took {(time.perf_counter() - _week1_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def week2_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _week2_smt_time = time.perf_counter()
         if not self.a1.week2:
             return None
 
@@ -716,9 +755,11 @@ class Triad:
         if low_smt:
             low_smt = self.with_4h_psps(next_tick, low_smt)
             low_smt = self.with_day_psps(next_tick, low_smt)
+        #         log_info_ny(f"week2_smt took {(time.perf_counter() - _week2_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def week3_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _week3_smt_time = time.perf_counter()
         if not self.a1.week3:
             return None
 
@@ -737,9 +778,11 @@ class Triad:
         if low_smt:
             low_smt = self.with_4h_psps(next_tick, low_smt)
             low_smt = self.with_day_psps(next_tick, low_smt)
+        #         log_info_ny(f"week3_smt took {(time.perf_counter() - _week3_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def week4_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _week4_smt_time = time.perf_counter()
         if not self.a1.week4:
             return None
 
@@ -758,9 +801,11 @@ class Triad:
         if low_smt:
             low_smt = self.with_4h_psps(next_tick, low_smt)
             low_smt = self.with_day_psps(next_tick, low_smt)
+        #         log_info_ny(f"week4_smt took {(time.perf_counter() - _week4_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def week5_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        #         _week5_smt_time = time.perf_counter()
         if not self.a1.week5:
             return None
 
@@ -779,6 +824,7 @@ class Triad:
         if low_smt:
             low_smt = self.with_4h_psps(next_tick, low_smt)
             low_smt = self.with_day_psps(next_tick, low_smt)
+#         log_info_ny(f"week5_smt took {(time.perf_counter() - _week5_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def mon_smt(self) -> Optional[SMTLevels]:  # high, half, low
@@ -974,6 +1020,7 @@ class Triad:
         return high_smt, half_smt, low_smt
 
     def asia_smt(self) -> Optional[SMTLevels]:  # high, half, low
+        # _asia_smt_time = time.perf_counter()
         if not self.a1.asia:
             return None
 
@@ -981,9 +1028,13 @@ class Triad:
         if to_utc_datetime(self.a1.snapshot_date_readable) <= to_utc_datetime(next_tick):
             return None
 
+        _new_smt_time = time.perf_counter()
         high_smt, half_smt, low_smt = self.new_smt(
             next_tick, self.a1.asia, self.a2.asia, self.a3.asia
         )
+        # log_info_ny(f"new_smt took {(time.perf_counter() - _new_smt_time):.6f} seconds")
+
+        _with_psp_time = time.perf_counter()
         if high_smt:
             # high_smt = self.with_30m_psps(next_tick, high_smt)
             high_smt = self.with_1h_psps(next_tick, high_smt)
@@ -996,6 +1047,9 @@ class Triad:
             # low_smt = self.with_30m_psps(next_tick, low_smt)
             low_smt = self.with_1h_psps(next_tick, low_smt)
             low_smt = self.with_2h_psps(next_tick, low_smt)
+        # log_info_ny(f"with_psp took {(time.perf_counter() - _with_psp_time):.6f} seconds")
+        # log_info_ny(f"asia_smt took {(time.perf_counter() - _asia_smt_time):.6f} seconds")
+
         return high_smt, half_smt, low_smt
 
     def london_smt(self) -> Optional[SMTLevels]:  # high, half, low

@@ -195,18 +195,20 @@ def as_1w_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
     if len(candles_15m) == 0:
         return []
 
+    candles_1d = as_1d_candles(candles_15m)
+
     result = []
     idx_start_of_1w = next(
-        (i for i, x in enumerate(candles_15m) if get_current_1w_from_to(x[5])[0] == to_utc_datetime(x[5])),
+        (i for i, x in enumerate(candles_1d) if get_current_1w_from_to(x[5])[0] == to_utc_datetime(x[5])),
         None
     )
     if idx_start_of_1w is None:
         # return [as_1_candle(candles_15m)]
         return []  # first not-full candle will be ignored!
     if idx_start_of_1w != 0:
-        result.append(as_1_candle(candles_15m[0:idx_start_of_1w]))
-    for i in range(idx_start_of_1w, len(candles_15m), 672):
-        result.append(as_1_candle(candles_15m[i:i + 672]))
+        result.append(as_1_candle(candles_1d[0:idx_start_of_1w]))
+    for i in range(idx_start_of_1w, len(candles_1d), 7):
+        result.append(as_1_candle(candles_1d[i:i + 7]))
 
     # result = []
     # for candle in candles_15m:
@@ -228,8 +230,10 @@ def as_1month_candles(candles_15m: List[InnerCandle]) -> List[InnerCandle]:
     if len(candles_15m) == 0:
         return []
 
+    candles_1d = as_1d_candles(candles_15m)
+
     result = []  # first not-full candle will NOT be ignored!
-    for candle in candles_15m:
+    for candle in candles_1d:
         if len(result) > 0:
             if candle[5][0:7] == result[-1][5][0:7]:
                 result[-1] = as_1_candle([result[-1], candle])

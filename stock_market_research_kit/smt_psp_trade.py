@@ -7,6 +7,7 @@ from typing import List, Tuple
 class SmtPspTrade:
     asset: str
     entry_time: str
+    entry_time_ny: str
     entry_price: float
     entry_position_assets: float
     entry_position_usd: float
@@ -26,7 +27,9 @@ class SmtPspTrade:
     initial_targets: Tuple[float, float, float]
     targets: Tuple[float, float, float]
 
-    closes: List[Tuple[float, float, str, str]]  # list of closes in (position_percent, price, time, reason) format
+    closes: List[
+        Tuple[float, float, str, str, str]
+    ]  # list of closes in (position_percent, price, time, time_ny, reason) format
     pnl_usd: float
 
 
