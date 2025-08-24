@@ -41,3 +41,11 @@ class Quarter90m(Enum):
     Q2_90m = 'Second 90m quarter of 6h'
     Q3_90m = 'Third 90m quarter of 6h'
     Q4_90m = 'Fourth 90m quarter of 6h'
+
+
+if __name__ == "__main__":
+    try:
+        print(Quarter90m.Q1_90m.name)
+    except KeyboardInterrupt:
+        print(f"KeyboardInterrupt, exiting ...")
+        quit(0)

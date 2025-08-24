@@ -18,12 +18,12 @@ class SmtPspTrade:
 
     direction: str  # UP or DOWN
 
-    stop: float  # in some strategies we move initial stop
+    stop: float
     psp_extremums: Tuple[float, float, float]
 
     deadline_close: str  # optional
 
-    take_profit: float  # in some strategies we move tp
+    take_profit: float
     targets: Tuple[float, float, float]
 
     closes: List[
@@ -33,9 +33,17 @@ class SmtPspTrade:
     close_position_fee: float
 
 
+def smt_psp_trade_decoder(dct):
+    return SmtPspTrade(**dct)
+
+
 def json_from_smt_psp_trade(trade: SmtPspTrade) -> str:
     return json.dumps(asdict(trade), ensure_ascii=False, indent=4)
 
 
 def json_from_smt_psp_trades(trades: List[SmtPspTrade]) -> str:
     return json.dumps([trade.__dict__ for trade in trades], ensure_ascii=False, indent=4)
+
+
+def smt_psp_trades_from_json(json_str: str) -> List[SmtPspTrade]:
+    return [smt_psp_trade_decoder(x) for x in json.loads(json_str)]
