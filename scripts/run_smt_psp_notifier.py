@@ -7,7 +7,7 @@ from scripts.run_series_raw_loader import update_candle_from_binance
 from stock_market_research_kit.db_layer import last_candle_15m, select_full_days_candles_15m, select_candles_15m
 from stock_market_research_kit.tg_notifier import TelegramThrottler
 from stock_market_research_kit.triad import Candles15mGenerator, new_triad, Triad, new_smt_found, \
-    smt_dict_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled, \
+    calc_psp_changed, smt_dict_readable, smt_readable, smt_dict_old_smt_cancelled, \
     targets_readable, targets_reached, true_opens_readable, targets_new_appeared
 from utils.date_utils import log_info_ny, now_ny_datetime, now_utc_datetime, to_ny_datetime, to_utc_datetime, \
     to_date_str, ny_zone, to_ny_date_str
@@ -37,7 +37,7 @@ def handle_new_candle(triad: Triad):
 
     new_smts = new_smt_found(prev_smt_psp, smt_psp)
     cancelled_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
-    psp_changed = smt_dict_psp_changed(prev_smt_psp, smt_psp)
+    psp_changes = calc_psp_changed(prev_smt_psp, smt_psp)
     reached_short_targets = targets_reached(
         (triad.a1.prev_15m_candle, triad.a2.prev_15m_candle, triad.a3.prev_15m_candle),
         prev_short_targets, short_targets)
@@ -49,7 +49,7 @@ def handle_new_candle(triad: Triad):
     new_short_targets = targets_new_appeared(prev_short_targets, short_targets)
     tos = triad.true_opens()
 
-    nothing_changed = (len(new_smts) == 0 and len(psp_changed) == 0 and len(cancelled_smts) == 0 and
+    nothing_changed = (len(new_smts) == 0 and len(psp_changes) == 0 and len(cancelled_smts) == 0 and
                        len(reached_short_targets) == 0 and len(reached_long_targets) == 0 and
                        len(new_long_targets) == 0 and len(new_short_targets) == 0)
     if nothing_changed:
@@ -63,12 +63,12 @@ def handle_new_candle(triad: Triad):
     symbols = (triad.a1.symbol, triad.a2.symbol, triad.a3.symbol)
     if len(reached_long_targets) > 0:
         for _, direction, label, asset_index, price in reached_long_targets:
-            header += f"\n✅↗{symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
+            header += f"\n✅↗ {symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
         header += "\n"
 
     if len(reached_short_targets) > 0:
         for _, direction, label, asset_index, price in reached_short_targets:
-            header += f"\n✅↘{symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
+            header += f"\n✅↘ {symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
         header += "\n"
 
     if len(new_short_targets) > 0:
@@ -99,7 +99,7 @@ def handle_new_candle(triad: Triad):
             header += f"\n🚫{smt_emoji_dict[smt.type]} Cancelled {smt.type.capitalize()} {label}"
         header += "\n"
 
-    if len(psp_changed) > 0:
+    if len(psp_changes) > 0:
         psp_emoji_dict = {
             'possible': '❓',
             'closed': '🔚',
@@ -107,7 +107,7 @@ def handle_new_candle(triad: Triad):
             'swept': '🛑'
         }
         grouped_psp = {}
-        for _, smt_key, smt_type, psp_key, psp_date, change in psp_changed:
+        for _, smt_key, smt_type, psp_key, psp_date, change in psp_changes:
             if change + psp_key + psp_date not in grouped_psp:
                 grouped_psp[change + psp_key + psp_date] = []
             grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, psp_key, psp_date, change))

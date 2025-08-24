@@ -1,0 +1,78 @@
+[
+    {
+        "asset": "BTCUSDT",
+        "entry_time": "2024-01-01 21:00",
+        "entry_price": 43753.3,
+        "entry_position_assets": 0.6165228113440308,
+        "entry_position_usd": 26974.90752157878,
+        "entry_reason": "TODO",
+        "direction": "DOWN",
+        "initial_stop": 43915.5,
+        "stop": 43915.5,
+        "psp_extremums": [
+            43915.5,
+            2351.34,
+            109.543
+        ],
+        "deadline_close": "",
+        "initial_take_profit": 42614.5,
+        "take_profit": 42614.5,
+        "initial_targets": [
+            42614.5,
+            2296.51,
+            103.852
+        ],
+        "targets": [
+            42614.5,
+            2296.51,
+            103.852
+        ],
+        "closes": [
+            [
+                100,
+                43915.5,
+                "2024-01-01 23:30",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0
+    },
+    {
+        "asset": "BTCUSDT",
+        "entry_time": "2024-01-01 22:00",
+        "entry_price": 43679.8,
+        "entry_position_assets": 0.4242681374628818,
+        "entry_position_usd": 18531.947390751186,
+        "entry_reason": "TODO",
+        "direction": "DOWN",
+        "initial_stop": 43915.5,
+        "stop": 43915.5,
+        "psp_extremums": [
+            43915.5,
+            2351.34,
+            109.543
+        ],
+        "deadline_close": "",
+        "initial_take_profit": 42614.5,
+        "take_profit": 42614.5,
+        "initial_targets": [
+            42614.5,
+            2296.51,
+            103.852
+        ],
+        "targets": [
+            42614.5,
+            2296.51,
+            103.852
+        ],
+        "closes": [
+            [
+                100,
+                43915.5,
+                "2024-01-01 23:30",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0
+    }
+]

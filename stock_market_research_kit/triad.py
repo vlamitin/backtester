@@ -15,6 +15,7 @@ from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to,
     year_quarters_ranges
 
 Target: TypeAlias = Tuple[int, str, str, TargetPercent, TargetPercent, TargetPercent]  # level, direction, label, tp*3
+TrueOpen: TypeAlias = Tuple[str, float, float]  # label, price, percent_from_current
 
 
 @dataclass
@@ -87,8 +88,8 @@ class Triad:
 
     def true_opens(
             self
-    ) -> Tuple[List[Tuple[str, float, float]], List[Tuple[str, float, float]], List[Tuple[str, float, float]]]:
-        def to_tuple(label: str, curr: float, pd: Optional[PriceDate]) -> Optional[Tuple[str, float, float]]:
+    ) -> Tuple[List[TrueOpen], List[TrueOpen], List[TrueOpen]]:
+        def to_tuple(label: str, curr: float, pd: Optional[PriceDate]) -> Optional[TrueOpen]:
             if not pd:
                 return None
             return label, pd[0], percent_from_current(curr, pd[0])
@@ -1278,7 +1279,7 @@ def targets_new_appeared(
     return result
 
 
-def smt_dict_psp_changed(
+def calc_psp_changed(
         l_old: List[Tuple[int, str, Optional[SMTLevels]]],
         l_new: List[Tuple[int, str, Optional[SMTLevels]]],
 ) -> List[Tuple[int, str, str, str, str, str]]:
@@ -1505,7 +1506,7 @@ def smt_readable(smt: SMT, label: str, triad: Triad) -> str:
 
 
 def true_opens_readable(
-        tos: Tuple[List[Tuple[str, float, float]], List[Tuple[str, float, float]], List[Tuple[str, float, float]]]
+        tos: Tuple[List[TrueOpen], List[TrueOpen], List[TrueOpen]]
 ) -> str:
     def fmt(smb: str, value: float, change: float) -> str:
         if change == 0:
