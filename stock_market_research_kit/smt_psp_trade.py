@@ -11,26 +11,26 @@ class SmtPspTrade:
     entry_price: float
     entry_position_assets: float
     entry_position_usd: float
+    entry_position_fee: float
     entry_rr: float
     entry_reason: str
+    psp_key_used: str
 
     direction: str  # UP or DOWN
 
-    initial_stop: float
     stop: float  # in some strategies we move initial stop
     psp_extremums: Tuple[float, float, float]
 
     deadline_close: str  # optional
 
-    initial_take_profit: float
     take_profit: float  # in some strategies we move tp
-    initial_targets: Tuple[float, float, float]
     targets: Tuple[float, float, float]
 
     closes: List[
         Tuple[float, float, str, str, str]
     ]  # list of closes in (position_percent, price, time, time_ny, reason) format
     pnl_usd: float
+    close_position_fee: float
 
 
 def json_from_smt_psp_trade(trade: SmtPspTrade) -> str:

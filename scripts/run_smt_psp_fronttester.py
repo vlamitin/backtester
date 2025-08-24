@@ -17,22 +17,24 @@ def fronttest(
 ) -> Dict[str, List[SmtPspTrade]]:
     closed_trades: Dict[str, List[SmtPspTrade]] = {}
     active_trades: Dict[str, List[SmtPspTrade]] = {}
+
+    _tc_pnl = []
     for s in strategies:
+        _tc_pnl.append((0, 0))
         closed_trades[s.name] = []
         active_trades[s.name] = []
 
-    _counter = 0
-    _trades_count, _pnl = 0, 0
     prev_smt_psp = triad.actual_smt_psp()
     prev_long_targets = triad.long_targets()
     prev_short_targets = triad.short_targets()
 
     _prev_handle_day_time = time.perf_counter()
+    _counter = 0
     while True:
         a1_candle, a2_candle, a3_candle = next(candles_gen)
         if _counter % (4 * 24 * 1) == 0:
             log_info_ny(
-                f"candle {a1_candle[5]}, handled {_counter // (4 * 24)} days, closed {_trades_count} trades pnl is {_pnl}, took {(time.perf_counter() - _prev_handle_day_time):.6f} seconds")
+                f"candle {a1_candle[5]}, handled {_counter // (4 * 24)} days, strategies: {'; '.join([f'trades: {x[0]}, pnl: {round(x[1], 2)}' for x in _tc_pnl])}. Took {(time.perf_counter() - _prev_handle_day_time):.3f} seconds")
             _prev_handle_day_time = time.perf_counter()
         _counter += 1
 
@@ -81,7 +83,7 @@ def fronttest(
         #     log_warn_ny(f"smt_psp_targets_time took {_smt_psp_targets_time_took:.6f} seconds")
 
         _handle_strategies_time = time.perf_counter()
-        for s in strategies:
+        for i, s in enumerate(strategies):
             active_trades[s.name], s_closed_trades = s.trades_handler(
                 stop_after,
                 active_trades[s.name],
@@ -93,8 +95,7 @@ def fronttest(
                 )
             )
             for t in s_closed_trades:
-                _trades_count += 1
-                _pnl += t.pnl_usd
+                _tc_pnl[i] = (_tc_pnl[i][0] + 1, _tc_pnl[i][1] + t.pnl_usd)
             closed_trades[s.name].extend(s_closed_trades)
 
             if to_utc_datetime(triad.a1.snapshot_date_readable) >= to_utc_datetime(stop_after):
