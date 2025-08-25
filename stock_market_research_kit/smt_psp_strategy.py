@@ -6,7 +6,8 @@ from stock_market_research_kit.triad import Triad, SMTLevels, SMT, Target, TrueO
 from utils.date_utils import to_utc_datetime, to_ny_datetime, to_date_str, to_ny_date_str
 
 ONE_RR_IN_USD = 100
-MARKET_ORDER_FEE_PERCENT = 0.55  # bybit default
+MARKET_ORDER_FEE_PERCENT = 0.045  # HL default
+LIMIT_ORDER_FEE_PERCENT = 0.015  # HL default
 
 TrueOpens: TypeAlias = Tuple[List[TrueOpen], List[TrueOpen], List[TrueOpen]]
 SmtPspChange: TypeAlias = Tuple[
@@ -483,7 +484,7 @@ def strategy03_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
                 take_profit = my_target[5][0]
 
         trades.append(SmtPspTrade(
-            asset=smb_to_trade,
+            asset=smb,
             entry_time=entry_time,
             entry_time_ny=to_ny_date_str(entry_time),
             entry_price=entry_price,
@@ -672,7 +673,7 @@ def strategy05_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
                 take_profit = my_target[5][0]
 
         trades.append(SmtPspTrade(
-            asset=smb_to_trade,
+            asset=smb,
             entry_time=entry_time,
             entry_time_ny=to_ny_date_str(entry_time),
             entry_price=entry_price,
@@ -791,6 +792,102 @@ def strategy06_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
         close_position_fee=0
     )]
 
+
+def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
+    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    if not my_psp_change:
+        return []
+    smt_level, smt_label, smt_type, psp_key, psp_date, change = my_psp_change
+
+    if not smt_types_is_long[smt_type]:
+        return []
+
+    def targets_sorter(prev_t: Target, t: Target) -> Target:
+        if smt_types_is_long[smt_type] and t[3][0] < prev_t[3][0]:  # we choose more conservative target
+            return t
+        elif t[3][0] > prev_t[3][0]:  # we choose more conservative target
+            return t
+        return prev_t
+
+    my_target = _filter_by_target(smt_types_is_long[smt_type], tc, [5], targets_sorter)
+    if not my_target:
+        return []
+
+    stop_a1, stop_a2, stop_a3 = _psp_extremums(
+        [x for x in spc[1] if x[0] == smt_level and x[1] == smt_label][0][2],
+        smt_type, psp_key, psp_date)
+
+    if (tr.a1.prev_15m_candle[3] in [my_target[3][0], stop_a1] or
+            tr.a2.prev_15m_candle[3] in [my_target[4][0], stop_a2] or
+            tr.a3.prev_15m_candle[3] in [my_target[5][0], stop_a3]):
+        return []
+
+    rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[3][0], stop_a1),
+                                       _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[4][0], stop_a2),
+                                       _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[5][0], stop_a3))
+
+    smb_to_trade = _filter_by_tos_ratio_and_rr(
+        tos, (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol),
+        (tr.a1.prev_15m_candle[3], tr.a2.prev_15m_candle[3], tr.a3.prev_15m_candle[3]),
+        (rr_pos_a1[0], rr_pos_a2[0], rr_pos_a3[0]),
+        1.5, 0.5, smt_types_is_long[smt_type]
+    )
+    if smb_to_trade == "":
+        return []
+
+    reason = f"{psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}"
+    entry_time = tr.a1.snapshot_date_readable
+    entry_price = tr.a1.prev_15m_candle[3]
+    entry_position_assets = rr_pos_a1[1]
+    entry_position_usd = rr_pos_a1[2]
+    entry_rr = rr_pos_a1[0]
+    stop = stop_a1
+    take_profit = my_target[3][0]
+
+    trades = []
+    for smb in (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol):
+        match smb:
+            case tr.a2.symbol:
+                entry_time = tr.a2.snapshot_date_readable
+                entry_price = tr.a2.prev_15m_candle[3]
+                entry_position_assets = rr_pos_a2[1]
+                entry_position_usd = rr_pos_a2[2]
+                entry_rr = rr_pos_a2[0]
+                stop = stop_a2
+                take_profit = my_target[4][0]
+            case tr.a3.symbol:
+                entry_time = tr.a3.snapshot_date_readable
+                entry_price = tr.a3.prev_15m_candle[3]
+                entry_position_assets = rr_pos_a3[1]
+                entry_position_usd = rr_pos_a3[2]
+                entry_rr = rr_pos_a3[0]
+                stop = stop_a3
+                take_profit = my_target[5][0]
+
+        trades.append(SmtPspTrade(
+            asset=smb,
+            entry_time=entry_time,
+            entry_time_ny=to_ny_date_str(entry_time),
+            entry_price=entry_price,
+            entry_position_assets=entry_position_assets,
+            entry_position_usd=entry_position_usd,
+            entry_position_fee=entry_position_usd * MARKET_ORDER_FEE_PERCENT / 100,
+            entry_rr=entry_rr,
+            entry_reason=reason,
+            psp_key_used=psp_key,
+            direction="UP" if smt_types_is_long[smt_type] else "DOWN",
+            stop=stop,
+            psp_extremums=(stop_a1, stop_a2, stop_a3),
+            deadline_close="",
+            take_profit=take_profit,
+            targets=(my_target[3][0], my_target[4][0], my_target[5][0]),
+            closes=[],
+            pnl_usd=0,
+            close_position_fee=0
+        ))
+    return trades
+
+
 def strategy01_th(
         stop_after: str, active_trades: List[SmtPspTrade], tr: Triad,
         tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
@@ -876,10 +973,9 @@ strategy02_wq_smt_moderate_conservative = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
-# триггер цель и вход как в strategy01
-# отсутствие rr и smt фильтров, входим во все 3 актива
-strategy03_wq_smt_conservative_no_filters = SmtPspStrategy(
-    name="03. Closed PSP trigger in weekly SMT - conservative dq target - conservative - pre-take - no TO or RR filter",
+# триггер цель и вход как в strategy01, но входим во все 3 актива
+strategy03_wq_smt_conservative_3_assets = SmtPspStrategy(
+    name="03. Closed PSP trigger in weekly SMT - conservative dq target - conservative - pre-take - medium TO filter",
     trade_opener=strategy03_to,
     trades_handler=strategy01_th
 )
@@ -892,9 +988,9 @@ strategy04_wq_smt_conservative_moderate_rr_to_filters = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
-# всё как в strategy01, но цели как в strategy02
-strategy05_wq_smt_conservative_moderate_no_filters = SmtPspStrategy(
-    name="05. Closed PSP trigger in weekly SMT - mod conservative dq target - conservative - pre-take - no TO or RR filter",
+# всё как в strategy02, но входим сразу в 3 актива
+strategy05_wq_smt_conservative_moderate_3_assets = SmtPspStrategy(
+    name="05. Closed PSP trigger in weekly SMT - mod conservative dq target - conservative - pre-take - medium TO filter",
     trade_opener=strategy05_to,
     trades_handler=strategy01_th
 )
@@ -904,5 +1000,12 @@ strategy05_wq_smt_conservative_moderate_no_filters = SmtPspStrategy(
 strategy06_wq_smt_conservative_moderate_rr_to_filters = SmtPspStrategy(
     name="06. Closed PSP trigger in weekly SMT - conservative dq target - conservative - pre-take - moderate asset TO and RR filter",
     trade_opener=strategy06_to,
+    trades_handler=strategy01_th
+)
+
+# всё как в strategy03, но торгуем только UP и
+strategy07_wq_smt_conservative_3_assets = SmtPspStrategy(
+    name="07. Closed PSP trigger in weekly SMT - conservative dq target - conservative - pre-take - medium TO filter - UP only",
+    trade_opener=strategy07_to,
     trades_handler=strategy01_th
 )

@@ -5,9 +5,9 @@ from scripts.run_smt_psp_fronttester import fronttest
 from stock_market_research_kit.asset import Candles15mGenerator, TriadCandles15mGenerator
 from stock_market_research_kit.db_layer import select_full_days_candles_15m, select_candles_15m
 from stock_market_research_kit.smt_psp_strategy import strategy01_wq_smt_conservative, \
-    strategy02_wq_smt_moderate_conservative, strategy03_wq_smt_conservative_no_filters, \
+    strategy02_wq_smt_moderate_conservative, strategy03_wq_smt_conservative_3_assets, \
     strategy04_wq_smt_conservative_moderate_rr_to_filters, strategy06_wq_smt_conservative_moderate_rr_to_filters, \
-    strategy05_wq_smt_conservative_moderate_no_filters
+    strategy05_wq_smt_conservative_moderate_3_assets, strategy07_wq_smt_conservative_3_assets
 from stock_market_research_kit.smt_psp_trade import json_from_smt_psp_trades
 from stock_market_research_kit.triad import new_triad
 
@@ -17,6 +17,7 @@ strategy03_2024_snapshot = "scripts/test_snapshots/strategy_3_2024_btc_eth_sol.j
 strategy04_2024_snapshot = "scripts/test_snapshots/strategy_4_2024_btc_eth_sol.json"
 strategy05_2024_snapshot = "scripts/test_snapshots/strategy_5_2024_btc_eth_sol.json"
 strategy06_2024_snapshot = "scripts/test_snapshots/strategy_6_2024_btc_eth_sol.json"
+strategy07_2024_snapshot = "scripts/test_snapshots/strategy_7_2024_btc_eth_sol.json"
 
 strategy01_2025_snapshot = "scripts/test_snapshots/strategy_1_2025_btc_eth_sol.json"
 strategy02_2025_snapshot = "scripts/test_snapshots/strategy_2_2025_btc_eth_sol.json"
@@ -64,28 +65,24 @@ def backtest_strategy_full_2024():
     closed_trades = fronttest(
         triad,
         [
-            strategy03_wq_smt_conservative_no_filters,
-            strategy04_wq_smt_conservative_moderate_rr_to_filters,
-            strategy05_wq_smt_conservative_moderate_no_filters,
-            strategy06_wq_smt_conservative_moderate_rr_to_filters,
+            strategy03_wq_smt_conservative_3_assets,
+            strategy05_wq_smt_conservative_moderate_3_assets,
+            strategy07_wq_smt_conservative_3_assets,
         ],
         candles_generator(symbols, 2024, '2024-01-01 00:00', '2025-01-01 00:00'),
         '2025-01-01 00:00'
     )
 
-    strategy03_trades = closed_trades[strategy03_wq_smt_conservative_no_filters.name]
-    strategy04_trades = closed_trades[strategy04_wq_smt_conservative_moderate_rr_to_filters.name]
-    strategy05_trades = closed_trades[strategy05_wq_smt_conservative_moderate_no_filters.name]
-    strategy06_trades = closed_trades[strategy06_wq_smt_conservative_moderate_rr_to_filters.name]
+    strategy03_trades = closed_trades[strategy03_wq_smt_conservative_3_assets.name]
+    strategy05_trades = closed_trades[strategy05_wq_smt_conservative_moderate_3_assets.name]
+    strategy07_trades = closed_trades[strategy07_wq_smt_conservative_3_assets.name]
 
     with open(strategy03_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy03_trades))
-    with open(strategy04_2024_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy04_trades))
     with open(strategy05_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy05_trades))
-    with open(strategy06_2024_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy06_trades))
+    with open(strategy07_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy07_trades))
 
 
 if __name__ == "__main__":
