@@ -6,7 +6,7 @@
         "entry_price": 105.444,
         "entry_position_assets": 52.714812862414576,
         "entry_position_usd": 5558.460727464442,
-        "entry_position_fee": 30.571534001054435,
+        "entry_position_fee": 2.501307327358999,
         "entry_rr": 3.9831312598840443,
         "entry_reason": "1h psp for high tue SMT -> low london, aside tos: t90mo,tdo,two,tmo",
         "psp_key_used": "1h",
@@ -34,7 +34,7 @@
             ]
         ],
         "pnl_usd": 55.719557195572314,
-        "close_position_fee": 30.26507643647879
+        "close_position_fee": 2.476233526620992
     },
     {
         "asset": "SOLUSDT",
@@ -43,7 +43,7 @@
         "entry_price": 97.725,
         "entry_position_assets": 170.94017094016863,
         "entry_position_usd": 16705.128205127978,
-        "entry_position_fee": 91.87820512820389,
+        "entry_position_fee": 7.51730769230759,
         "entry_rr": 6.523076923076815,
         "entry_reason": "1h psp for high mon SMT -> low asia, aside tos: tdo,t90mo,two,tmo",
         "psp_key_used": "1h",
@@ -71,7 +71,7 @@
             ]
         ],
         "pnl_usd": 73.84615384615078,
-        "close_position_fee": 91.47205128205007
+        "close_position_fee": 7.484076923076823
     },
     {
         "asset": "SOLUSDT",
@@ -80,7 +80,7 @@
         "entry_price": 113.54,
         "entry_position_assets": 512.8205128205308,
         "entry_position_usd": 58225.64102564307,
-        "entry_position_fee": 320.2410256410369,
+        "entry_position_fee": 26.201538461539382,
         "entry_rr": 14.287179487179994,
         "entry_reason": "1h psp for high sat SMT -> low nyam, aside tos: t90mo,two,tdo,tmo",
         "psp_key_used": "1h",
@@ -108,7 +108,7 @@
             ]
         ],
         "pnl_usd": 264.61538461539664,
-        "close_position_fee": 318.78564102565224
+        "close_position_fee": 26.082461538462454
     },
     {
         "asset": "SOLUSDT",
@@ -117,7 +117,7 @@
         "entry_price": 112.125,
         "entry_position_assets": 1369.863013698756,
         "entry_position_usd": 153595.89041097302,
-        "entry_position_fee": 844.7773972603517,
+        "entry_position_fee": 69.11815068493786,
         "entry_rr": 65.87671232877314,
         "entry_reason": "1h psp for high tue SMT -> low asia, aside tos: two,t90mo,tdo,tmo",
         "psp_key_used": "1h",
@@ -145,7 +145,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 845.3273972603517
+        "close_position_fee": 69.16315068493786
     },
     {
         "asset": "SOLUSDT",
@@ -154,7 +154,7 @@
         "entry_price": 148.062,
         "entry_position_assets": 156.7398119122314,
         "entry_position_usd": 23207.210031348808,
-        "entry_position_fee": 127.63965517241846,
+        "entry_position_fee": 10.443244514106963,
         "entry_rr": 6.573667711599011,
         "entry_reason": "1h psp for high sat SMT -> low asia, aside tos: t90mo,tdo,two",
         "psp_key_used": "1h",
@@ -182,7 +182,7 @@
             ]
         ],
         "pnl_usd": 293.8871473354339,
-        "close_position_fee": 126.02327586207358
+        "close_position_fee": 10.310995297806018
     },
     {
         "asset": "SOLUSDT",
@@ -191,7 +191,7 @@
         "entry_price": 182.837,
         "entry_position_assets": 39.26187671770715,
         "entry_position_usd": 7178.523753435423,
-        "entry_position_fee": 39.481880643894826,
+        "entry_position_fee": 3.23033568904594,
         "entry_rr": 3.36199450333727,
         "entry_reason": "4h psp for low mon SMT -> high nyam, aside tos: tdo,two,t90mo",
         "psp_key_used": "4h",
@@ -219,7 +219,7 @@
             ]
         ],
         "pnl_usd": 336.199450333727,
-        "close_position_fee": 41.33097762073033
+        "close_position_fee": 3.381625441696117
     },
     {
         "asset": "SOLUSDT",
@@ -228,7 +228,7 @@
         "entry_price": 196.975,
         "entry_position_assets": 150.37593984962587,
         "entry_position_usd": 29620.300751880055,
-        "entry_position_fee": 162.9116541353403,
+        "entry_position_fee": 13.329135338346026,
         "entry_rr": 5.22556390977449,
         "entry_reason": "2h psp for high thu SMT -> low asia, aside tos: t90mo,tdo,two,tmo",
         "psp_key_used": "2h",
@@ -256,7 +256,7 @@
             ]
         ],
         "pnl_usd": 68.57142857142772,
-        "close_position_fee": 162.53451127819747
+        "close_position_fee": 13.298278195488882
     },
     {
         "asset": "SOLUSDT",
@@ -265,7 +265,7 @@
         "entry_price": 173.0,
         "entry_position_assets": 84.81764206955032,
         "entry_position_usd": 14673.452078032205,
-        "entry_position_fee": 80.70398642917714,
+        "entry_position_fee": 6.603053435114492,
         "entry_rr": 10.452926208651391,
         "entry_reason": "1h psp for low wed SMT -> high asia, aside tos: tyo,two,tdo,t90mo",
         "psp_key_used": "1h",
@@ -293,7 +293,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 80.15398642917714
+        "close_position_fee": 6.558053435114492
     },
     {
         "asset": "SOLUSDT",
@@ -302,7 +302,7 @@
         "entry_price": 151.142,
         "entry_position_assets": 152.20700152206754,
         "entry_position_usd": 23004.870624048333,
-        "entry_position_fee": 126.52678843226585,
+        "entry_position_fee": 10.35219178082175,
         "entry_rr": 16.93455098934524,
         "entry_reason": "2h psp for high fri SMT -> low nyam, aside tos: t90mo,tdo,two",
         "psp_key_used": "2h",
@@ -330,7 +330,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 127.07678843226584
+        "close_position_fee": 10.39719178082175
     },
     {
         "asset": "SOLUSDT",
@@ -339,7 +339,7 @@
         "entry_price": 151.204,
         "entry_position_assets": 83.75209380234587,
         "entry_position_usd": 12663.651591289905,
-        "entry_position_fee": 69.65008375209447,
+        "entry_position_fee": 5.698643216080456,
         "entry_rr": 9.37018425460647,
         "entry_reason": "1h psp for high fri SMT -> low nyam, aside tos: t90mo,tdo,two",
         "psp_key_used": "1h",
@@ -367,7 +367,7 @@
             ]
         ],
         "pnl_usd": 103.35008375209554,
-        "close_position_fee": 69.08165829145796
+        "close_position_fee": 5.652135678392015
     },
     {
         "asset": "SOLUSDT",
@@ -376,7 +376,7 @@
         "entry_price": 149.775,
         "entry_position_assets": 41.89359028068705,
         "entry_position_usd": 6274.6124842899035,
-        "entry_position_fee": 34.51036866359447,
+        "entry_position_fee": 2.8235756179304565,
         "entry_rr": 4.123586091328021,
         "entry_reason": "1h psp for low mon SMT -> high nyam, aside tos: tyo,tmo,tdo,two,t90mo",
         "psp_key_used": "1h",
@@ -404,7 +404,7 @@
             ]
         ],
         "pnl_usd": 2.052785923753942,
-        "close_position_fee": 34.52165898617512
+        "close_position_fee": 2.8244993715961453
     },
     {
         "asset": "SOLUSDT",
@@ -413,7 +413,7 @@
         "entry_price": 148.986,
         "entry_position_assets": 150.15015015015086,
         "entry_position_usd": 22370.270270270375,
-        "entry_position_fee": 123.03648648648708,
+        "entry_position_fee": 10.06662162162167,
         "entry_rr": 15.963963963964048,
         "entry_reason": "1h psp for low mon SMT -> high nyam, aside tos: tyo,tmo,tdo,two,t90mo",
         "psp_key_used": "1h",
@@ -441,7 +441,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 122.48648648648708
+        "close_position_fee": 10.02162162162167
     },
     {
         "asset": "SOLUSDT",
@@ -450,7 +450,7 @@
         "entry_price": 167.108,
         "entry_position_assets": 225.2252252252167,
         "entry_position_usd": 37636.93693693551,
-        "entry_position_fee": 207.00315315314532,
+        "entry_position_fee": 16.93662162162098,
         "entry_rr": 14.090090090089557,
         "entry_reason": "1h psp for low mon SMT -> high nyam, aside tos: tyo,two,t90mo,tdo",
         "psp_key_used": "1h",
@@ -478,7 +478,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 206.4531531531453
+        "close_position_fee": 16.89162162162098
     },
     {
         "asset": "SOLUSDT",
@@ -487,7 +487,7 @@
         "entry_price": 169.33,
         "entry_position_assets": 71.22507122506997,
         "entry_position_usd": 12060.541310541099,
-        "entry_position_fee": 66.33297720797604,
+        "entry_position_fee": 5.427243589743495,
         "entry_rr": 3.368945868945802,
         "entry_reason": "1h psp for low mon SMT -> high london, aside tos: tyo,tdo,two,t90mo",
         "psp_key_used": "1h",
@@ -515,7 +515,7 @@
             ]
         ],
         "pnl_usd": -27.279202279202494,
-        "close_position_fee": 66.18294159544043
+        "close_position_fee": 5.414967948717853
     },
     {
         "asset": "SOLUSDT",
@@ -524,7 +524,7 @@
         "entry_price": 169.967,
         "entry_position_assets": 187.61726078799705,
         "entry_position_usd": 31888.742964353496,
-        "entry_position_fee": 175.38808630394425,
+        "entry_position_fee": 14.349934333959073,
         "entry_rr": 10.046904315197276,
         "entry_reason": "1h psp for high mon SMT -> low nyam, aside tos: t90mo,tdo,two",
         "psp_key_used": "1h",
@@ -552,7 +552,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 175.93808630394426
+        "close_position_fee": 14.394934333959073
     },
     {
         "asset": "SOLUSDT",
@@ -561,7 +561,7 @@
         "entry_price": 174.854,
         "entry_position_assets": 107.5268817204326,
         "entry_position_usd": 18801.50537634452,
-        "entry_position_fee": 103.40827956989487,
+        "entry_position_fee": 8.460677419355035,
         "entry_rr": 3.7870967741936576,
         "entry_reason": "2h psp for high mon SMT -> low nyam, aside tos: t90mo,tdo,two",
         "psp_key_used": "2h",
@@ -589,7 +589,7 @@
             ]
         ],
         "pnl_usd": 75.91397849462726,
-        "close_position_fee": 102.99075268817445
+        "close_position_fee": 8.426516129032454
     },
     {
         "asset": "SOLUSDT",
@@ -598,7 +598,7 @@
         "entry_price": 129.047,
         "entry_position_assets": 404.8582995951652,
         "entry_position_usd": 52245.74898785728,
-        "entry_position_fee": 287.35161943321503,
+        "entry_position_fee": 23.51058704453578,
         "entry_rr": 18.79757085020352,
         "entry_reason": "1h psp for low tue SMT -> high nyam, aside tos: tyo,tmo,two,tdo,t90mo",
         "psp_key_used": "1h",
@@ -626,7 +626,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 286.8016194332151
+        "close_position_fee": 23.465587044535777
     },
     {
         "asset": "SOLUSDT",
@@ -635,7 +635,7 @@
         "entry_price": 177.804,
         "entry_position_assets": 81.10300081102974,
         "entry_position_usd": 14420.437956204332,
-        "entry_position_fee": 79.31240875912384,
+        "entry_position_fee": 6.489197080291949,
         "entry_rr": 3.9221411192213855,
         "entry_reason": "1h psp for low mon SMT -> high nyam, aside tos: tyo,two,tdo,t90mo",
         "psp_key_used": "1h",
@@ -663,7 +663,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 78.76240875912384
+        "close_position_fee": 6.444197080291949
     },
     {
         "asset": "SOLUSDT",
@@ -672,7 +672,7 @@
         "entry_price": 141.892,
         "entry_position_assets": 49.48045522018766,
         "entry_position_usd": 7020.880752102867,
-        "entry_position_fee": 38.61484413656577,
+        "entry_position_fee": 3.1593963384462898,
         "entry_rr": 6.204849084611529,
         "entry_reason": "2h psp for high mon SMT -> low asia, aside tos: t90mo,tdo,two",
         "psp_key_used": "2h",
@@ -700,7 +700,7 @@
             ]
         ],
         "pnl_usd": -41.761504205838094,
-        "close_position_fee": 38.844532409697884
+        "close_position_fee": 3.1781890153389174
     },
     {
         "asset": "SOLUSDT",
@@ -709,7 +709,7 @@
         "entry_price": 144.431,
         "entry_position_assets": 343.6426116838526,
         "entry_position_usd": 49632.64604811052,
-        "entry_position_fee": 272.97955326460783,
+        "entry_position_fee": 22.334690721649732,
         "entry_rr": 10.549828178694348,
         "entry_reason": "1h psp for half_high tue SMT -> low london, aside tos: t90mo,two,tmo,tdo",
         "psp_key_used": "1h",
@@ -737,7 +737,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 273.52955326460784
+        "close_position_fee": 22.37969072164973
     },
     {
         "asset": "SOLUSDT",
@@ -746,7 +746,7 @@
         "entry_price": 126.718,
         "entry_position_assets": 67.65899864681963,
         "entry_position_usd": 8573.61299052769,
-        "entry_position_fee": 47.154871447902295,
+        "entry_position_fee": 3.8581258457374603,
         "entry_rr": 5.075778078484405,
         "entry_reason": "1h psp for low wed SMT -> high nyam, aside tos: tyo,two,tdo,t90mo",
         "psp_key_used": "1h",
@@ -774,7 +774,7 @@
             ]
         ],
         "pnl_usd": -28.14614343707675,
-        "close_position_fee": 47.000067658998375
+        "close_position_fee": 3.8454600811907755
     },
     {
         "asset": "SOLUSDT",
@@ -783,7 +783,7 @@
         "entry_price": 136.553,
         "entry_position_assets": 256.4102564102467,
         "entry_position_usd": 35013.58974358842,
-        "entry_position_fee": 192.57474358973633,
+        "entry_position_fee": 15.75611538461479,
         "entry_rr": 8.417948717948367,
         "entry_reason": "1h psp for high mon SMT -> low nyam, aside tos: t90mo,two,tdo,tmo",
         "psp_key_used": "1h",
@@ -811,7 +811,7 @@
             ]
         ],
         "pnl_usd": 104.10256410256167,
-        "close_position_fee": 192.0021794871722
+        "close_position_fee": 15.709269230768633
     },
     {
         "asset": "SOLUSDT",
@@ -820,7 +820,7 @@
         "entry_price": 132.2,
         "entry_position_assets": 218.34061135371255,
         "entry_position_usd": 28864.628820960796,
-        "entry_position_fee": 158.7554585152844,
+        "entry_position_fee": 12.989082969432356,
         "entry_rr": 5.152838427947584,
         "entry_reason": "2h psp for high mon SMT -> low asia, aside tos: t90mo,two,tdo,tmo",
         "psp_key_used": "2h",
@@ -848,7 +848,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 159.30545851528439
+        "close_position_fee": 13.034082969432356
     },
     {
         "asset": "SOLUSDT",
@@ -857,7 +857,7 @@
         "entry_price": 156.757,
         "entry_position_assets": 568.1818181818578,
         "entry_position_usd": 89066.4772727335,
-        "entry_position_fee": 489.86562500003424,
+        "entry_position_fee": 40.07991477273007,
         "entry_rr": 30.357954545456764,
         "entry_reason": "1h psp for half_high mon SMT -> low asia, aside tos: two,t90mo,tdo,tmo",
         "psp_key_used": "1h",
@@ -885,7 +885,7 @@
             ]
         ],
         "pnl_usd": -100.0,
-        "close_position_fee": 490.41562500003425
+        "close_position_fee": 40.12491477273007
     },
     {
         "asset": "SOLUSDT",
@@ -894,7 +894,7 @@
         "entry_price": 241.71,
         "entry_position_assets": 77.51937984496172,
         "entry_position_usd": 18737.209302325697,
-        "entry_position_fee": 103.05465116279134,
+        "entry_position_fee": 8.431744186046563,
         "entry_rr": 7.023255813953534,
         "entry_reason": "1h psp for high mon SMT -> low nyam, aside tos: t90mo,two,tdo,tmo,tyo",
         "psp_key_used": "1h",
@@ -922,7 +922,7 @@
             ]
         ],
         "pnl_usd": -15.503875968991462,
-        "close_position_fee": 103.13992248062078
+        "close_position_fee": 8.43872093023261
     },
     {
         "asset": "SOLUSDT",
@@ -931,7 +931,7 @@
         "entry_price": 244.31,
         "entry_position_assets": 78.12499999999993,
         "entry_position_usd": 19086.71874999998,
-        "entry_position_fee": 104.97695312499991,
+        "entry_position_fee": 8.589023437499993,
         "entry_rr": 4.148437499999998,
         "entry_reason": "1h psp for high fri SMT -> low asia, aside tos: t90mo,tdo,two,tmo,tyo",
         "psp_key_used": "1h",
@@ -952,14 +952,14 @@
         "closes": [
             [
                 100,
-                240.48,
-                "2024-11-30 11:00",
-                "2024-11-30 06:00",
-                "close because BTCUSDT reached target"
+                239.0,
+                "2024-11-30 15:00",
+                "2024-11-30 10:00",
+                "take_profit"
             ]
         ],
-        "pnl_usd": 299.2187500000007,
-        "close_position_fee": 103.33124999999991
+        "pnl_usd": 414.8437499999998,
+        "close_position_fee": 8.402343749999993
     },
     {
         "asset": "SOLUSDT",
@@ -968,7 +968,7 @@
         "entry_price": 228.96,
         "entry_position_assets": 59.17159763313617,
         "entry_position_usd": 13547.928994082858,
-        "entry_position_fee": 74.51360946745572,
+        "entry_position_fee": 6.096568047337286,
         "entry_rr": 3.437869822485213,
         "entry_reason": "1h psp for high mon SMT -> low nyam, aside tos: t90mo,tdo,two,tyo",
         "psp_key_used": "1h",
@@ -996,7 +996,7 @@
             ]
         ],
         "pnl_usd": 6.508875739645786,
-        "close_position_fee": 74.47781065088768
+        "close_position_fee": 6.093639053254446
     },
     {
         "asset": "SOLUSDT",
@@ -1005,7 +1005,7 @@
         "entry_price": 228.96,
         "entry_position_assets": 59.17159763313617,
         "entry_position_usd": 13547.928994082858,
-        "entry_position_fee": 74.51360946745572,
+        "entry_position_fee": 6.096568047337286,
         "entry_rr": 3.437869822485213,
         "entry_reason": "2h psp for high mon SMT -> low nyam, aside tos: t90mo,tdo,two,tyo",
         "psp_key_used": "2h",
@@ -1033,6 +1033,6 @@
             ]
         ],
         "pnl_usd": 6.508875739645786,
-        "close_position_fee": 74.47781065088768
+        "close_position_fee": 6.093639053254446
     }
 ]

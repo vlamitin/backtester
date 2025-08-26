@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 from typing import List, Tuple
 
 
@@ -33,8 +33,10 @@ class SmtPspTrade:
     close_position_fee: float
 
 
-def smt_psp_trade_decoder(dct):
-    return SmtPspTrade(**dct)
+def smt_psp_trade_decoder(dct: dict):
+    field_names = {f.name for f in fields(SmtPspTrade)}
+    filtered = {k: v for k, v in dct.items() if k in field_names}
+    return SmtPspTrade(**filtered)
 
 
 def json_from_smt_psp_trade(trade: SmtPspTrade) -> str:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeAlias, Callable, List, Tuple, Optional, Dict
 
+from stock_market_research_kit.asset import Asset
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade
 from stock_market_research_kit.triad import Triad, SMTLevels, SMT, Target, TrueOpen
 from utils.date_utils import to_utc_datetime, to_ny_datetime, to_date_str, to_ny_date_str
@@ -799,9 +800,6 @@ def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
         return []
     smt_level, smt_label, smt_type, psp_key, psp_date, change = my_psp_change
 
-    if not smt_types_is_long[smt_type]:
-        return []
-
     def targets_sorter(prev_t: Target, t: Target) -> Target:
         if smt_types_is_long[smt_type] and t[3][0] < prev_t[3][0]:  # we choose more conservative target
             return t
@@ -825,15 +823,6 @@ def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[3][0], stop_a1),
                                        _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[4][0], stop_a2),
                                        _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[5][0], stop_a3))
-
-    smb_to_trade = _filter_by_tos_ratio_and_rr(
-        tos, (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol),
-        (tr.a1.prev_15m_candle[3], tr.a2.prev_15m_candle[3], tr.a3.prev_15m_candle[3]),
-        (rr_pos_a1[0], rr_pos_a2[0], rr_pos_a3[0]),
-        1.5, 0.5, smt_types_is_long[smt_type]
-    )
-    if smb_to_trade == "":
-        return []
 
     reason = f"{psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}"
     entry_time = tr.a1.snapshot_date_readable
@@ -888,6 +877,46 @@ def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     return trades
 
 
+def _close_by_tp_sl_deadlines(at: SmtPspTrade, trade_asset: Asset, stop_after: str) -> Optional[SmtPspTrade]:
+    if to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(stop_after):
+        return _close_trade(
+            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "strategy_stop")
+    if (at.deadline_close and
+            to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(at.deadline_close)):
+        return _close_trade(
+            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "deadline")
+    if at.direction == 'UP':
+        if trade_asset.prev_15m_candle[2] <= at.stop:
+            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop")
+        if trade_asset.prev_15m_candle[1] >= at.take_profit:
+            return _close_trade(
+                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit")
+    if at.direction == 'DOWN':
+        if trade_asset.prev_15m_candle[1] >= at.stop:
+            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop")
+        if trade_asset.prev_15m_candle[2] <= at.take_profit:
+            return _close_trade(
+                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit")
+    return None
+
+
+def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, assets: List[Asset]) -> Optional[SmtPspTrade]:
+    for asset, extremum in [(assets[i], x) for i, x in enumerate(at.psp_extremums)]:
+        if asset.prev_15m_candle[2] <= extremum <= asset.prev_15m_candle[1]:
+            return _close_trade(
+                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
+                f"stop because {asset.symbol} swept PSP"
+            )
+
+
+def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, assets: List[Asset]) -> Optional[SmtPspTrade]:
+    for asset, target in [(assets[i], x) for i, x in enumerate(at.targets)]:
+        if asset.prev_15m_candle[2] <= target <= asset.prev_15m_candle[1]:
+            return _close_trade(
+                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
+                f"close because {asset.symbol} reached target")
+
+
 def strategy01_th(
         stop_after: str, active_trades: List[SmtPspTrade], tr: Triad,
         tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
@@ -898,52 +927,42 @@ def strategy01_th(
         assets = [tr.a1, tr.a2, tr.a3]
         assets_d = {asset.symbol: asset for asset in assets}
         trade_asset = assets_d[at.asset]
-        if to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(stop_after):
-            closed_trades[key] = _close_trade(
-                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "strategy_stop")
-            continue
-        if (at.deadline_close and
-                to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(at.deadline_close)):
-            closed_trades[key] = _close_trade(
-                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "deadline")
-            continue
-        if at.direction == 'UP':
-            if trade_asset.prev_15m_candle[2] <= at.stop:
-                closed_trades[key] = _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop")
-                continue
-            if trade_asset.prev_15m_candle[1] >= at.take_profit:
-                closed_trades[key] = _close_trade(
-                    at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit")
-                continue
-        if at.direction == 'DOWN':
-            if trade_asset.prev_15m_candle[1] >= at.stop:
-                closed_trades[key] = _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop")
-                continue
-            if trade_asset.prev_15m_candle[2] <= at.take_profit:
-                closed_trades[key] = _close_trade(
-                    at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit")
-                continue
 
-        continue_outer = False
-        for asset, extremum in [(assets[i], x) for i, x in enumerate(at.psp_extremums)]:
-            if asset.prev_15m_candle[2] <= extremum <= asset.prev_15m_candle[1]:
-                closed_trades[key] = _close_trade(
-                    at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                    f"stop because {asset.symbol} swept PSP"
-                )
-                continue_outer = True
-                break
-        if continue_outer:
+        by_tp_sp_deadline = _close_by_tp_sl_deadlines(at, trade_asset, stop_after)
+        if by_tp_sp_deadline:
+            closed_trades[key] = by_tp_sp_deadline
             continue
 
-        for asset, target in [(assets[i], x) for i, x in enumerate(at.targets)]:
-            if asset.prev_15m_candle[2] <= target <= asset.prev_15m_candle[1]:
-                closed_trades[key] = _close_trade(
-                    at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                    f"close because {asset.symbol} reached target")
-                continue_outer = True
-                break
-        if continue_outer:
+        by_other_swept_psp = _close_by_other_swept_psp(at, trade_asset, assets)
+        if by_other_swept_psp:
+            closed_trades[key] = by_other_swept_psp
+            continue
+
+        by_other_reached_target = _close_by_other_swept_psp(at, trade_asset, assets)
+        if by_other_reached_target:
+            closed_trades[key] = by_other_reached_target
+            continue
+
+    return (
+        [x for x in active_trades if f"{x.asset}_{x.entry_time}_{x.entry_price}_{x.direction}" not in closed_trades],
+        [closed_trades[x] for x in closed_trades.keys()]
+    )
+
+
+def strategy08_th(
+        stop_after: str, active_trades: List[SmtPspTrade], tr: Triad,
+        tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
+) -> Tuple[List[SmtPspTrade], List[SmtPspTrade]]:
+    closed_trades = {}
+    for at in active_trades:
+        key = f"{at.asset}_{at.entry_time}_{at.entry_price}_{at.direction}"
+        assets = [tr.a1, tr.a2, tr.a3]
+        assets_d = {asset.symbol: asset for asset in assets}
+        trade_asset = assets_d[at.asset]
+
+        by_tp_sp_deadline = _close_by_tp_sl_deadlines(at, trade_asset, stop_after)
+        if by_tp_sp_deadline:
+            closed_trades[key] = by_tp_sp_deadline
             continue
 
     return (
@@ -1003,9 +1022,17 @@ strategy06_wq_smt_conservative_moderate_rr_to_filters = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
-# всё как в strategy03, но торгуем только UP и
-strategy07_wq_smt_conservative_3_assets = SmtPspStrategy(
-    name="07. Closed PSP trigger in weekly SMT - conservative dq target - conservative - pre-take - medium TO filter - UP only",
+# всё как в strategy01, входим в 3 актива и никаких фильтров на rr и tos
+strategy07_wq_smt_conservative_3_assets_no_tos_rr_filters = SmtPspStrategy(
+    name="07. Closed PSP trigger in weekly SMT - conservative dq target - conservative - pre-take - no TO or RR filters",
     trade_opener=strategy07_to,
     trades_handler=strategy01_th
+)
+
+# всё как в strategy07, но, всегда ждём TP и SL
+strategy08_wq_smt_conservative_3_assets_no_tos_rr_filters_no_pretake_prestop = SmtPspStrategy(
+    name="08. Closed PSP trigger in weekly SMT - conservative dq target - conservative - "
+         "no pre-take - no pre-stop - no TO or RR filters",
+    trade_opener=strategy07_to,
+    trades_handler=strategy08_th
 )
