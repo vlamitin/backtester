@@ -2,14 +2,16 @@ from dataclasses import dataclass
 from typing import TypeAlias, Callable, List, Tuple, Optional, Dict
 
 from stock_market_research_kit.asset import Asset
-from stock_market_research_kit.smt_psp_trade import SmtPspTrade, TrueOpens
-from stock_market_research_kit.triad import Triad, SMTLevels, SMT, Target, TrueOpen, to_smt_flags
+from stock_market_research_kit.candle import as_1_candle
+from stock_market_research_kit.smt_psp_trade import SmtPspTrade
+from stock_market_research_kit.triad import Triad, SMTLevels, SMT, Target, TrueOpen, to_smt_flags, percent_from_current
 from utils.date_utils import to_utc_datetime, to_ny_datetime, to_date_str, to_ny_date_str
 
 ONE_RR_IN_USD = 100
 MARKET_ORDER_FEE_PERCENT = 0.045  # HL default
 LIMIT_ORDER_FEE_PERCENT = 0.015  # HL default
 
+TrueOpens: TypeAlias = Tuple[List[TrueOpen], List[TrueOpen], List[TrueOpen]]
 SmtPspChange: TypeAlias = Tuple[
     List[Tuple[int, str, Optional[SMTLevels]]],  # old (level, label, smt levels)
     List[Tuple[int, str, Optional[SMTLevels]]],  # new (level, label, smt levels)
@@ -101,9 +103,9 @@ def _filter_by_psp_change(
     for smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change in psp_change:  # psp_changes
         if change not in psp_change_filter or smt_level != smt_level_filter or psp_key not in psp_key_filter:
             continue
-        if my_psp_change is None or int(psp_key[0]) > int(my_psp_change[3][0]):
+        if my_psp_change is None or int(psp_key[0]) > int(my_psp_change[4][0]):
             my_psp_change = (smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change)
-        if (int(psp_key[0]) == int(my_psp_change[3][0]) and
+        if (int(psp_key[0]) == int(my_psp_change[4][0]) and
                 smt_types_is_long[smt_type] != smt_types_is_long[my_psp_change[2]]):
             my_psp_change = None
 
@@ -236,40 +238,41 @@ def _filter_by_tos(
 
     return result
 
+
 def _open_trade(
         smb: str, trade_asset: Asset, rr_pos: Tuple[float, float, float], my_target: Target,
         my_psp_change: Tuple[int, str, str, str, str, str, str],
         stop: float, psp_extremums: Tuple[float, float, float], take_profit: float,
-        tos: TrueOpens
+        tos: List[TrueOpen]
 ) -> SmtPspTrade:
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
 
     reason = f"{psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}"
     return SmtPspTrade(
         asset=smb,
+        direction="UP" if smt_types_is_long[smt_type] else "DOWN",
+        entry_price=trade_asset.prev_15m_candle[3],
+        stop=stop,
+        take_profit=take_profit,
+        entry_rr=rr_pos[0],
         entry_time=trade_asset.snapshot_date_readable,
         entry_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
-        entry_price=trade_asset.prev_15m_candle[3],
         entry_position_assets=rr_pos[1],
         entry_position_usd=rr_pos[2],
         entry_position_fee=rr_pos[2] * MARKET_ORDER_FEE_PERCENT / 100,
-        entry_rr=rr_pos[0],
         entry_reason=reason,
         entry_tos=tos,
         psp_key_used=psp_key,
         smt_type=smt_type,
         smt_label=smt_label,
         smt_flags=smt_flags,
-        direction="UP" if smt_types_is_long[smt_type] else "DOWN",
         best_entry_time=trade_asset.snapshot_date_readable,
         best_entry_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
         best_entry_price=trade_asset.prev_15m_candle[3],
         best_entry_rr=rr_pos[0],
         best_entry_tos=tos,
-        stop=stop,
         psp_extremums=psp_extremums,
         deadline_close="",
-        take_profit=take_profit,
         targets=(my_target[3][0], my_target[4][0], my_target[5][0]),
         in_trade_range=None,
         closes=[],
@@ -321,6 +324,7 @@ def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     match smb_to_trade:
         case tr.a2.symbol:
@@ -328,14 +332,16 @@ def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             rr_pos = rr_pos_a2
             stop = stop_a2
             take_profit = my_target[4][0]
+            trade_tos = tos[1]
         case tr.a3.symbol:
             trade_asset = tr.a3
             rr_pos = rr_pos_a3
             stop = stop_a3
             take_profit = my_target[5][0]
+            trade_tos = tos[2]
 
     return [_open_trade(smb_to_trade, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)]
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)]
 
 
 def strategy02_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
@@ -381,6 +387,7 @@ def strategy02_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     match smb_to_trade:
         case tr.a2.symbol:
@@ -388,14 +395,16 @@ def strategy02_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             rr_pos = rr_pos_a2
             stop = stop_a2
             take_profit = my_target[4][0]
+            trade_tos = tos[1]
         case tr.a3.symbol:
             trade_asset = tr.a3
             rr_pos = rr_pos_a3
             stop = stop_a3
             take_profit = my_target[5][0]
+            trade_tos = tos[2]
 
     return [_open_trade(smb_to_trade, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)]
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)]
 
 
 def strategy03_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
@@ -441,6 +450,7 @@ def strategy03_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     trades = []
     for smb in (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol):
@@ -450,15 +460,17 @@ def strategy03_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
                 rr_pos = rr_pos_a2
                 stop = stop_a2
                 take_profit = my_target[4][0]
+                trade_tos = tos[1]
             case tr.a3.symbol:
                 trade_asset = tr.a3
                 rr_pos = rr_pos_a3
                 stop = stop_a3
                 take_profit = my_target[5][0]
+                trade_tos = tos[2]
 
         trades.append(
             _open_trade(smb, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)
         )
     return trades
 
@@ -514,6 +526,7 @@ def strategy04_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     match symbol_max_rr:
         case tr.a2.symbol:
@@ -521,14 +534,16 @@ def strategy04_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             rr_pos = rr_pos_a2
             stop = stop_a2
             take_profit = my_target[4][0]
+            trade_tos = tos[1]
         case tr.a3.symbol:
             trade_asset = tr.a3
             rr_pos = rr_pos_a3
             stop = stop_a3
             take_profit = my_target[5][0]
+            trade_tos = tos[2]
 
     return [_open_trade(symbol_max_rr, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)]
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)]
 
 
 def strategy05_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
@@ -574,6 +589,7 @@ def strategy05_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     trades = []
     for smb in (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol):
@@ -583,15 +599,17 @@ def strategy05_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
                 rr_pos = rr_pos_a2
                 stop = stop_a2
                 take_profit = my_target[4][0]
+                trade_tos = tos[1]
             case tr.a3.symbol:
                 trade_asset = tr.a3
                 rr_pos = rr_pos_a3
                 stop = stop_a3
                 take_profit = my_target[5][0]
+                trade_tos = tos[2]
 
         trades.append(
             _open_trade(smb, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)
         )
     return trades
 
@@ -647,6 +665,7 @@ def strategy06_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     match symbol_max_rr:
         case tr.a2.symbol:
@@ -654,14 +673,16 @@ def strategy06_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
             rr_pos = rr_pos_a2
             stop = stop_a2
             take_profit = my_target[4][0]
+            trade_tos = tos[1]
         case tr.a3.symbol:
             trade_asset = tr.a3
             rr_pos = rr_pos_a3
             stop = stop_a3
             take_profit = my_target[5][0]
+            trade_tos = tos[2]
 
     return [_open_trade(symbol_max_rr, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)]
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)]
 
 
 def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
@@ -698,6 +719,7 @@ def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
     rr_pos = rr_pos_a1
     stop = stop_a1
     take_profit = my_target[3][0]
+    trade_tos = tos[0]
 
     trades = []
     for smb in (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol):
@@ -707,15 +729,17 @@ def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
                 rr_pos = rr_pos_a2
                 stop = stop_a2
                 take_profit = my_target[4][0]
+                trade_tos = tos[1]
             case tr.a3.symbol:
                 trade_asset = tr.a3
                 rr_pos = rr_pos_a3
                 stop = stop_a3
                 take_profit = my_target[5][0]
+                trade_tos = tos[2]
 
         trades.append(
             _open_trade(smb, trade_asset, rr_pos, my_target, my_psp_change, stop,
-                        (stop_a1, stop_a2, stop_a3), take_profit, tos)
+                        (stop_a1, stop_a2, stop_a3), take_profit, trade_tos)
         )
     return trades
 
@@ -760,6 +784,47 @@ def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, assets: 
                 f"close because {asset.symbol} reached target")
 
 
+def _with_best_entry(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
+    smb_assets_map = {}
+    trade_tos = []
+    for i, a in enumerate([tr.a1, tr.a2, tr.a3]):
+        smb_assets_map[a.symbol] = a
+        if a.symbol == at.asset:
+            trade_tos = tos[i]
+    asset = smb_assets_map[at.asset]
+    at.in_trade_range = asset.prev_15m_candle if not at.in_trade_range else as_1_candle(
+        [at.in_trade_range, asset.prev_15m_candle]
+    )
+
+    if at.direction == 'UP':
+        if at.in_trade_range[2] < at.entry_price:
+            at.best_entry_time = asset.snapshot_date_readable
+            at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_entry_price = at.in_trade_range[2]
+            at.best_entry_rr = _rr_and_pos_size(at.in_trade_range[2], at.take_profit, at.stop)[0]
+            at.best_entry_tos = []
+            for label, price, perc in trade_tos:
+                if label == asset.symbol:
+                    at.best_entry_tos.append((label, at.in_trade_range[2], perc))
+                else:
+                    at.best_entry_tos.append((label, price, percent_from_current(at.in_trade_range[2], price)))
+    elif at.direction == 'DOWN':
+        if at.in_trade_range[1] > at.entry_price:
+            at.best_entry_time = asset.snapshot_date_readable
+            at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_entry_price = at.in_trade_range[1]
+            at.best_entry_rr = _rr_and_pos_size(at.in_trade_range[1], at.take_profit, at.stop)[0]
+            at.best_entry_tos = []
+            for label, price, perc in trade_tos:
+                if label == asset.symbol:
+                    at.best_entry_tos.append((label, at.in_trade_range[1], perc))
+                else:
+                    at.best_entry_tos.append((label, price, percent_from_current(at.in_trade_range[1], price)))
+
+    at.best_entry_tos = sorted(at.best_entry_tos, key=lambda x: x[1], reverse=True)
+    return at
+
+
 def strategy01_th(
         stop_after: str, active_trades: List[SmtPspTrade], tr: Triad,
         tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
@@ -787,8 +852,10 @@ def strategy01_th(
             closed_trades[key] = by_other_reached_target
             continue
 
+        new_active_trades.append(_with_best_entry(at, tr, tos))
+
     return (
-        [x for x in active_trades if f"{x.asset}_{x.entry_time}_{x.entry_price}_{x.direction}" not in closed_trades],
+        new_active_trades,
         [closed_trades[x] for x in closed_trades.keys()]
     )
 
@@ -798,6 +865,7 @@ def strategy08_th(
         tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 ) -> Tuple[List[SmtPspTrade], List[SmtPspTrade]]:
     closed_trades = {}
+    new_active_trades = []
     for at in active_trades:
         key = f"{at.asset}_{at.entry_time}_{at.entry_price}_{at.direction}"
         assets = [tr.a1, tr.a2, tr.a3]
@@ -809,8 +877,10 @@ def strategy08_th(
             closed_trades[key] = by_tp_sp_deadline
             continue
 
+        new_active_trades.append(_with_best_entry(at, tr, tos))
+
     return (
-        [x for x in active_trades if f"{x.asset}_{x.entry_time}_{x.entry_price}_{x.direction}" not in closed_trades],
+        new_active_trades,
         [closed_trades[x] for x in closed_trades.keys()]
     )
 

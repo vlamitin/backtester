@@ -5,39 +5,37 @@ from typing import List, Tuple, TypeAlias, Optional
 from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.triad import TrueOpen
 
-TrueOpens: TypeAlias = Tuple[List[TrueOpen], List[TrueOpen], List[TrueOpen]]
-
 
 @dataclass
 class SmtPspTrade:
     asset: str
+    direction: str  # UP or DOWN
+    entry_price: float
+    stop: float
+    take_profit: float
+    entry_rr: float
     entry_time: str
     entry_time_ny: str
-    entry_price: float
     entry_position_assets: float
     entry_position_usd: float
     entry_position_fee: float
-    entry_rr: float
     entry_reason: str
-    entry_tos: TrueOpens
+    entry_tos: List[TrueOpen]
     psp_key_used: str
     smt_type: str
     smt_label: str
     smt_flags: str
-    direction: str  # UP or DOWN
 
     best_entry_time: str
     best_entry_time_ny: str
     best_entry_price: float
     best_entry_rr: float
-    best_entry_tos: TrueOpens
+    best_entry_tos: List[TrueOpen]
 
-    stop: float
     psp_extremums: Tuple[float, float, float]
 
     deadline_close: str  # optional
 
-    take_profit: float
     targets: Tuple[float, float, float]
 
     in_trade_range: Optional[InnerCandle]
