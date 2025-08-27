@@ -1,6 +1,11 @@
 import json
 from dataclasses import dataclass, asdict, fields
-from typing import List, Tuple
+from typing import List, Tuple, TypeAlias, Optional
+
+from stock_market_research_kit.candle import InnerCandle
+from stock_market_research_kit.triad import TrueOpen
+
+TrueOpens: TypeAlias = Tuple[List[TrueOpen], List[TrueOpen], List[TrueOpen]]
 
 
 @dataclass
@@ -14,9 +19,18 @@ class SmtPspTrade:
     entry_position_fee: float
     entry_rr: float
     entry_reason: str
+    entry_tos: TrueOpens
     psp_key_used: str
-
+    smt_type: str
+    smt_label: str
+    smt_flags: str
     direction: str  # UP or DOWN
+
+    best_entry_time: str
+    best_entry_time_ny: str
+    best_entry_price: float
+    best_entry_rr: float
+    best_entry_tos: TrueOpens
 
     stop: float
     psp_extremums: Tuple[float, float, float]
@@ -25,6 +39,8 @@ class SmtPspTrade:
 
     take_profit: float
     targets: Tuple[float, float, float]
+
+    in_trade_range: Optional[InnerCandle]
 
     closes: List[
         Tuple[float, float, str, str, str]

@@ -10,6 +10,7 @@ from utils.date_utils import to_utc_datetime, quarters_by_time
 strategy01_2024_snapshot = "scripts/test_snapshots/strategy_1_2024_btc_eth_sol.json"
 strategy03_2024_snapshot = "scripts/test_snapshots/strategy_3_2024_btc_eth_sol.json"
 strategy07_2024_snapshot = "scripts/test_snapshots/strategy_7_2024_btc_eth_sol.json"
+strategy08_2024_snapshot = "scripts/test_snapshots/strategy_8_2024_btc_eth_sol.json"
 strategy03_2025_snapshot = "scripts/test_snapshots/strategy_3_2025_btc_eth_sol.json"
 
 
@@ -80,7 +81,6 @@ def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
         df.groupby("3d_window_start_date")["3d_pnl_cumsum"].transform("last")
     )
 
-
     return df
 
 
@@ -122,7 +122,7 @@ def to_trade_df(trades: List[SmtPspTrade]):
 
 if __name__ == "__main__":
     try:
-        with open(strategy03_2024_snapshot, "r", encoding="utf-8") as f:
+        with open(strategy08_2024_snapshot, "r", encoding="utf-8") as f:
             json_str = f.read()
             trades_list = smt_psp_trades_from_json(json_str)
             trades_df = to_trade_df(trades_list)

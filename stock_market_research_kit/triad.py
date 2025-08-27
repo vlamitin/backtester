@@ -494,7 +494,8 @@ class Triad:
 
         _psps_calculation_took = time.perf_counter() - _psps_calculation_time
         if _psps_calculation_took > 0.02:
-            log_warn_ny(f"psps_calculation took {_psps_calculation_took:.6f} seconds, as_candles is {as_candles.__name__}")
+            log_warn_ny(
+                f"psps_calculation took {_psps_calculation_took:.6f} seconds, as_candles is {as_candles.__name__}")
 
         return psps
 
@@ -824,7 +825,7 @@ class Triad:
         if low_smt:
             low_smt = self.with_4h_psps(next_tick, low_smt)
             low_smt = self.with_day_psps(next_tick, low_smt)
-#         log_info_ny(f"week5_smt took {(time.perf_counter() - _week5_smt_time):.6f} seconds")
+        #         log_info_ny(f"week5_smt took {(time.perf_counter() - _week5_smt_time):.6f} seconds")
         return high_smt, half_smt, low_smt
 
     def mon_smt(self) -> Optional[SMTLevels]:  # high, half, low
@@ -1334,10 +1335,11 @@ def targets_new_appeared(
 
 
 def calc_psp_changed(
+        symbols: Tuple[str, str, str],
         l_old: List[Tuple[int, str, Optional[SMTLevels]]],
         l_new: List[Tuple[int, str, Optional[SMTLevels]]],
-) -> List[Tuple[int, str, str, str, str, str]]:
-    # returns (smt_level, smt_key, smt_type, psp_key, psp_date, possible|closed|confirmed|swept)
+) -> List[Tuple[int, str, str, str, str, str, str]]:
+    # returns (smt_level, smt_key, smt_type, smt_flags, psp_key, psp_date, possible|closed|confirmed|swept)
     result = []
 
     d_old = {}
@@ -1353,68 +1355,68 @@ def calc_psp_changed(
 
         if high_new and high_old:
             result.extend(
-                [(level, label, high_new.type, '15m', x[0], x[1]) for x in
+                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '15m', x[0], x[1]) for x in
                  psps_changed(high_old.psps_15m, high_new.psps_15m)])
             result.extend(
-                [(level, label, high_new.type, '30m', x[0], x[1]) for x in
+                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '30m', x[0], x[1]) for x in
                  psps_changed(high_old.psps_30m, high_new.psps_30m)])
             result.extend(
-                [(level, label, high_new.type, '1h', x[0], x[1]) for x in
+                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '1h', x[0], x[1]) for x in
                  psps_changed(high_old.psps_1h, high_new.psps_1h)])
             result.extend(
-                [(level, label, high_new.type, '2h', x[0], x[1]) for x in
+                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '2h', x[0], x[1]) for x in
                  psps_changed(high_old.psps_2h, high_new.psps_2h)])
             result.extend(
-                [(level, label, high_new.type, '4h', x[0], x[1]) for x in
+                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '4h', x[0], x[1]) for x in
                  psps_changed(high_old.psps_4h, high_new.psps_4h)])
             result.extend(
-                [(level, label, high_new.type, '1d', x[0], x[1]) for x in
+                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '1d', x[0], x[1]) for x in
                  psps_changed(high_old.psps_1d, high_new.psps_1d)])
-            result.extend([(level, label, high_new.type, '1_week', x[0], x[1]) for x in
+            result.extend([(level, label, high_new.type, to_smt_flags(symbols, high_new), '1_week', x[0], x[1]) for x in
                            psps_changed(high_old.psps_1_week, high_new.psps_1_week)])
 
         if half_new and half_old:
             result.extend(
-                [(level, label, half_new.type, '15m', x[0], x[1]) for x in
+                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '15m', x[0], x[1]) for x in
                  psps_changed(half_old.psps_15m, half_new.psps_15m)])
             result.extend(
-                [(level, label, half_new.type, '30m', x[0], x[1]) for x in
+                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '30m', x[0], x[1]) for x in
                  psps_changed(half_old.psps_30m, half_new.psps_30m)])
             result.extend(
-                [(level, label, half_new.type, '1h', x[0], x[1]) for x in
+                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '1h', x[0], x[1]) for x in
                  psps_changed(half_old.psps_1h, half_new.psps_1h)])
             result.extend(
-                [(level, label, half_new.type, '2h', x[0], x[1]) for x in
+                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '2h', x[0], x[1]) for x in
                  psps_changed(half_old.psps_2h, half_new.psps_2h)])
             result.extend(
-                [(level, label, half_new.type, '4h', x[0], x[1]) for x in
+                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '4h', x[0], x[1]) for x in
                  psps_changed(half_old.psps_4h, half_new.psps_4h)])
             result.extend(
-                [(level, label, half_new.type, '1d', x[0], x[1]) for x in
+                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '1d', x[0], x[1]) for x in
                  psps_changed(half_old.psps_1d, half_new.psps_1d)])
-            result.extend([(level, label, half_new.type, '1_week', x[0], x[1]) for x in
+            result.extend([(level, label, half_new.type, to_smt_flags(symbols, half_new), '1_week', x[0], x[1]) for x in
                            psps_changed(half_old.psps_1_week, half_new.psps_1_week)])
 
         if low_new and low_old:
             result.extend(
-                [(level, label, low_new.type, '15m', x[0], x[1]) for x in
+                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '15m', x[0], x[1]) for x in
                  psps_changed(low_old.psps_15m, low_new.psps_15m)])
             result.extend(
-                [(level, label, low_new.type, '30m', x[0], x[1]) for x in
+                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '30m', x[0], x[1]) for x in
                  psps_changed(low_old.psps_30m, low_new.psps_30m)])
             result.extend(
-                [(level, label, low_new.type, '1h', x[0], x[1]) for x in
+                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '1h', x[0], x[1]) for x in
                  psps_changed(low_old.psps_1h, low_new.psps_1h)])
             result.extend(
-                [(level, label, low_new.type, '2h', x[0], x[1]) for x in
+                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '2h', x[0], x[1]) for x in
                  psps_changed(low_old.psps_2h, low_new.psps_2h)])
             result.extend(
-                [(level, label, low_new.type, '4h', x[0], x[1]) for x in
+                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '4h', x[0], x[1]) for x in
                  psps_changed(low_old.psps_4h, low_new.psps_4h)])
             result.extend(
-                [(level, label, low_new.type, '1d', x[0], x[1]) for x in
+                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '1d', x[0], x[1]) for x in
                  psps_changed(low_old.psps_1d, low_new.psps_1d)])
-            result.extend([(level, label, low_new.type, '1_week', x[0], x[1]) for x in
+            result.extend([(level, label, low_new.type, to_smt_flags(symbols, low_new), '1_week', x[0], x[1]) for x in
                            psps_changed(low_old.psps_1_week, low_new.psps_1_week)])
 
     return result
@@ -1483,12 +1485,8 @@ def smt_dict_readable(
     return "\n\n".join(pos_short), "\n\n".join(pos_long)
 
 
-def smt_readable(smt: SMT, label: str, triad: Triad) -> str:
-    have_closed_psps = False
-    have_confirmed_psps = False
-
+def to_smt_flags(symbols: Tuple[str, str, str], smt: SMT) -> str:
     def swept(symbol: str, ql: QuarterLiq) -> str:
-        nonlocal triad
         nonlocal smt
         smt_types_ql_match = {
             'high': 3,
@@ -1497,12 +1495,20 @@ def smt_readable(smt: SMT, label: str, triad: Triad) -> str:
             'low': 5,
         }
         if ql[smt_types_ql_match[smt.type]][1]:
-            return f"{symbol} swept {round(ql[smt_types_ql_match[smt.type]][0], 3)}"
-        return f"{symbol} not swept {round(ql[smt_types_ql_match[smt.type]][0], 3)}"
+            return symbol[0].upper()
+        return symbol[0].lower()
+
+    return f"{swept(symbols[0], smt.a1q)}{swept(symbols[1], smt.a2q)}{swept(symbols[2], smt.a3q)}"
+
+
+def smt_readable(smt: SMT, label: str, triad: Triad) -> str:
+    have_closed_psps = False
+    have_confirmed_psps = False
 
     smt_ago = humanize_timedelta(to_utc_datetime(triad.a1.snapshot_date_readable) - to_utc_datetime(smt.first_appeared))
-    result = f"""<b>{smt.type.capitalize()} {label}</b> at {to_ny_date_str(smt.first_appeared)} (<b>{smt_ago} ago</b>):
-<code>{swept(triad.a1.symbol, smt.a1q)}, {swept(triad.a2.symbol, smt.a2q)}, {swept(triad.a3.symbol, smt.a3q)}</code>"""
+    smt_flags = to_smt_flags((triad.a1.symbol, triad.a2.symbol, triad.a3.symbol), smt)
+    at = f"{to_ny_date_str(smt.first_appeared)} (<b>{smt_ago} ago</b>)"
+    result = f"<b>{smt.type.capitalize()} {smt_flags} {label}</b> at {at}"
 
     def plus_psps(psps: List[PSP], psp_label: str):
         nonlocal result

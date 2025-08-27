@@ -19,6 +19,7 @@ def update_candles(symbols, last_date_utc):
 
 
 def handle_new_candle(triad: Triad):
+    symbols = (triad.a1.symbol, triad.a2.symbol, triad.a3.symbol)
     prev_smt_psp = triad.actual_smt_psp()
     prev_long_targets = triad.long_targets()
     prev_short_targets = triad.short_targets()
@@ -37,7 +38,7 @@ def handle_new_candle(triad: Triad):
 
     new_smts = new_smt_found(prev_smt_psp, smt_psp)
     cancelled_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
-    psp_changes = calc_psp_changed(prev_smt_psp, smt_psp)
+    psp_changes = calc_psp_changed(symbols, prev_smt_psp, smt_psp)
     reached_short_targets = targets_reached(
         (triad.a1.prev_15m_candle, triad.a2.prev_15m_candle, triad.a3.prev_15m_candle),
         prev_short_targets, short_targets)
@@ -107,13 +108,13 @@ def handle_new_candle(triad: Triad):
             'swept': '🛑'
         }
         grouped_psp = {}
-        for _, smt_key, smt_type, psp_key, psp_date, change in psp_changes:
+        for _, smt_key, smt_type, smt_flags, psp_key, psp_date, change in psp_changes:
             if change + psp_key + psp_date not in grouped_psp:
                 grouped_psp[change + psp_key + psp_date] = []
-            grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, psp_key, psp_date, change))
+            grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, smt_flags, psp_key, psp_date, change))
 
         for key in sorted(grouped_psp.keys()):  # we sort for 'possible' to be in the end
-            _, smt_type, psp_key, psp_date, change = grouped_psp[key][0]
+            _, smt_type, _, psp_key, psp_date, change = grouped_psp[key][0]
             dt = to_ny_date_str(psp_date)
             msg = f"\n{psp_emoji_dict[change]}{smt_emoji_dict[smt_type]} {change.capitalize()} {psp_key} PSP on {dt} for "
             msg += " and ".join([f"{x[1]} {x[0]}" for x in grouped_psp[key]])

@@ -15,6 +15,7 @@ def fronttest(
         candles_gen: TriadCandles15mGenerator,
         stop_after: str
 ) -> Dict[str, List[SmtPspTrade]]:
+    symbols = (triad.a1.symbol, triad.a2.symbol, triad.a3.symbol)
     closed_trades: Dict[str, List[SmtPspTrade]] = {}
     active_trades: Dict[str, List[SmtPspTrade]] = {}
 
@@ -63,7 +64,7 @@ def fronttest(
         # _smts_psps_change_time = time.perf_counter()
         new_smts = new_smt_found(prev_smt_psp, smt_psp)
         cancelled_smts = smt_dict_old_smt_cancelled(prev_smt_psp, smt_psp)
-        psp_changed = calc_psp_changed(prev_smt_psp, smt_psp)
+        psp_changed = calc_psp_changed(symbols, prev_smt_psp, smt_psp)
         # log_info_ny(f"smts_psps_change_time took {(time.perf_counter() - _smts_psps_change_time):.6f} seconds")
 
         # _targets_change_time = time.perf_counter()
