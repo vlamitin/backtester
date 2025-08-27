@@ -7,11 +7,13 @@ from stock_market_research_kit.candle_with_stat import perc_all_and_sma20, show_
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, smt_psp_trades_from_json
 from utils.date_utils import to_utc_datetime, quarters_by_time
 
-strategy01_2024_snapshot = "scripts/test_snapshots/strategy_1_2024_btc_eth_sol.json"
-strategy03_2024_snapshot = "scripts/test_snapshots/strategy_3_2024_btc_eth_sol.json"
-strategy07_2024_snapshot = "scripts/test_snapshots/strategy_7_2024_btc_eth_sol.json"
-strategy08_2024_snapshot = "scripts/test_snapshots/strategy_8_2024_btc_eth_sol.json"
-strategy03_2025_snapshot = "scripts/test_snapshots/strategy_3_2025_btc_eth_sol.json"
+strategy01_2024_snapshot = "scripts/test_snapshots/strategy_01_2024_btc_eth_sol.json"
+strategy03_2024_snapshot = "scripts/test_snapshots/strategy_03_2024_btc_eth_sol.json"
+strategy07_2024_snapshot = "scripts/test_snapshots/strategy_07_2024_btc_eth_sol.json"
+strategy08_2024_snapshot = "scripts/test_snapshots/strategy_08_2024_btc_eth_sol.json"
+strategy09_2024_snapshot = "scripts/test_snapshots/strategy_09_2024_btc_eth_sol.json"
+
+strategy03_2025_snapshot = "scripts/test_snapshots/strategy_03_2025_btc_eth_sol.json"
 
 
 def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
@@ -87,6 +89,8 @@ def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
 def to_trade_df(trades: List[SmtPspTrade]):
     df = pd.DataFrame(trades, columns=[
         'entry_time', 'asset', 'pnl_usd', 'direction', 'entry_rr', 'psp_key_used',
+        'smt_type', 'smt_label', 'smt_flags',
+        'best_entry_time', 'best_entry_time_ny', 'best_entry_price', 'best_entry_rr',
         'entry_position_usd',
         'entry_position_fee',
         'close_position_fee'
@@ -95,6 +99,10 @@ def to_trade_df(trades: List[SmtPspTrade]):
     df["close_time"] = df.index.map(lambda i: trades[i].closes[0][2])
     df['minutes_in_market'] = df.apply(
         lambda row: (to_utc_datetime(row['close_time']) - to_utc_datetime(row['entry_time'])).total_seconds() / 60,
+        axis=1
+    )
+    df['best_entry_minutes_in_market'] = df.apply(
+        lambda row: (to_utc_datetime(row['close_time']) - to_utc_datetime(row['best_entry_time'])).total_seconds() / 60,
         axis=1
     )
     df['entry_yq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[0].name)
@@ -106,6 +114,8 @@ def to_trade_df(trades: List[SmtPspTrade]):
     df['minutes_in_market_perc'], _ = perc_all_and_sma20(df['minutes_in_market'])
     df['entry_position_usd_perc'], _ = perc_all_and_sma20(df['entry_position_usd'])
     df['pnl_minus_fees'] = df['pnl_usd'] - df['entry_position_fee'] - df['close_position_fee']
+    df['entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].entry_tos]))
+    df['best_entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].best_entry_tos]))
 
     df = with_3d_window_stagnation(df)
 
@@ -122,7 +132,7 @@ def to_trade_df(trades: List[SmtPspTrade]):
 
 if __name__ == "__main__":
     try:
-        with open(strategy08_2024_snapshot, "r", encoding="utf-8") as f:
+        with open(strategy09_2024_snapshot, "r", encoding="utf-8") as f:
             json_str = f.read()
             trades_list = smt_psp_trades_from_json(json_str)
             trades_df = to_trade_df(trades_list)
@@ -137,6 +147,18 @@ if __name__ == "__main__":
 
             print("asset mean median count --")
             print(trades_df.groupby("asset")["pnl_usd"].agg(["mean", "median", "count"]))
+            print("\n")
+
+            print("smt_type mean median count --")
+            print(trades_df.groupby("smt_type")["pnl_usd"].agg(["mean", "median", "count"]))
+            print("\n")
+
+            print("smt_label mean median count --")
+            print(trades_df.groupby("smt_label")["pnl_usd"].agg(["mean", "median", "count"]))
+            print("\n")
+
+            print("smt_flags mean median count --")
+            print(trades_df.groupby("smt_flags")["pnl_usd"].agg(["mean", "median", "count"]))
             print("\n")
 
             # print("direction mean median count pnl_minus_fees --")
@@ -178,6 +200,14 @@ if __name__ == "__main__":
 
             print("psp_key_used mean median count --")
             print(trades_df.groupby("psp_key_used")["pnl_usd"].agg(["mean", "median", "count"]))
+            print("\n")
+
+            print("entry_tos mean median count --")
+            print(trades_df.groupby("entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
+            print("\n")
+
+            print("best_entry_tos mean median count --")
+            print(trades_df.groupby("best_entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
             print("\n")
 
             #             print("psp_key_used mean median count pnl_minus_fees --")

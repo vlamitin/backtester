@@ -35,7 +35,7 @@ def fronttest(
         a1_candle, a2_candle, a3_candle = next(candles_gen)
         if _counter % (4 * 24 * 1) == 0:
             log_info_ny(
-                f"candle {a1_candle[5]}, handled {_counter // (4 * 24)} days, strategies: {'; '.join([f'trades: {x[0]}, pnl: {round(x[1], 2)}' for x in _tc_pnl])}. Took {(time.perf_counter() - _prev_handle_day_time):.3f} seconds")
+                f"candle {a1_candle[5]}, handled {_counter // (4 * 24)} days, strategies: {'; '.join([f'{i + 1}) {x[0]}/{round(x[1], 2)}' for i, x in enumerate(_tc_pnl)])}. Took {(time.perf_counter() - _prev_handle_day_time):.3f} seconds")
             _prev_handle_day_time = time.perf_counter()
         _counter += 1
 
