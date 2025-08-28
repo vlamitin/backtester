@@ -1,0 +1,3519 @@
+[
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 177.47,
+        "stop": 174.55,
+        "take_profit": 189.61,
+        "entry_rr": 4.1575342465753655,
+        "entry_time": "2025-02-18 00:00",
+        "entry_time_ny": "2025-02-17 19:00",
+        "entry_position_assets": 34.2465753424659,
+        "entry_position_usd": 6077.739726027424,
+        "entry_position_fee": 2.7349828767123405,
+        "entry_reason": "1d psp for low week2 SMT -> high mon",
+        "entry_tos": [
+            [
+                "tmo",
+                197.14,
+                11.08
+            ],
+            [
+                "two",
+                178.72,
+                0.7
+            ],
+            [
+                "SOLUSDT",
+                177.47,
+                0
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-02-18 05:15",
+        "best_entry_time_ny": [
+            "2025-02-18 00:15"
+        ],
+        "best_entry_price": 174.59,
+        "best_entry_rr": 375.500000000075,
+        "best_entry_tos": [
+            [
+                "tmo",
+                197.14,
+                12.92
+            ],
+            [
+                "two",
+                178.72,
+                2.37
+            ],
+            [
+                "tdo",
+                175.76,
+                0.67
+            ],
+            [
+                "SOLUSDT",
+                174.59,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            95150.6,
+            2632.81,
+            174.55
+        ],
+        "deadline_close": "",
+        "targets": [
+            97000.0,
+            2848.76,
+            189.61
+        ],
+        "in_trade_range": [
+            177.47,
+            178.99,
+            174.59,
+            174.7,
+            3302874.0,
+            "2025-02-18 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                174.55,
+                "2025-02-18 05:30",
+                "2025-02-18 00:30",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.00000000000001,
+        "close_position_fee": 2.6899828767123406
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 95743.2,
+        "stop": 95150.6,
+        "take_profit": 97000.0,
+        "entry_rr": 2.1208234897064147,
+        "entry_time": "2025-02-18 00:00",
+        "entry_time_ny": "2025-02-17 19:00",
+        "entry_position_assets": 0.16874789065136933,
+        "entry_position_usd": 16156.463044212183,
+        "entry_position_fee": 7.270408369895482,
+        "entry_reason": "1d psp for low week2 SMT -> high mon",
+        "entry_tos": [
+            [
+                "two",
+                95845.8,
+                0.11
+            ],
+            [
+                "tmo",
+                95779.9,
+                0.04
+            ],
+            [
+                "BTCUSDT",
+                95743.2,
+                0
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-02-18 08:45",
+        "best_entry_time_ny": [
+            "2025-02-18 03:45"
+        ],
+        "best_entry_price": 95199.9,
+        "best_entry_rr": 36.513184584187236,
+        "best_entry_tos": [
+            [
+                "tdo",
+                96042.0,
+                0.88
+            ],
+            [
+                "two",
+                95845.8,
+                0.68
+            ],
+            [
+                "tmo",
+                95779.9,
+                0.61
+            ],
+            [
+                "t90mo",
+                95393.6,
+                0.2
+            ],
+            [
+                "BTCUSDT",
+                95199.9,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            95150.6,
+            2632.81,
+            174.55
+        ],
+        "deadline_close": "",
+        "targets": [
+            97000.0,
+            2848.76,
+            189.61
+        ],
+        "in_trade_range": [
+            95743.1,
+            96296.5,
+            95199.9,
+            95329.5,
+            33667.566,
+            "2025-02-18 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                95150.6,
+                "2025-02-18 09:00",
+                "2025-02-18 04:00",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -99.99999999999999,
+        "close_position_fee": 7.225408369895482
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 2743.0,
+        "stop": 2632.81,
+        "take_profit": 2848.76,
+        "entry_rr": 0.9597967147654067,
+        "entry_time": "2025-02-18 00:00",
+        "entry_time_ny": "2025-02-17 19:00",
+        "entry_position_assets": 0.9075233687267442,
+        "entry_position_usd": 2489.3366004174595,
+        "entry_position_fee": 1.1202014701878569,
+        "entry_reason": "1d psp for low week2 SMT -> high mon",
+        "entry_tos": [
+            [
+                "ETHUSDT",
+                2743.0,
+                0
+            ],
+            [
+                "two",
+                2736.43,
+                -0.24
+            ],
+            [
+                "tmo",
+                2614.64,
+                -4.68
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-02-18 16:30",
+        "best_entry_time_ny": [
+            "2025-02-18 11:30"
+        ],
+        "best_entry_price": 2650.31,
+        "best_entry_rr": 11.340000000000016,
+        "best_entry_tos": [
+            [
+                "two",
+                2736.43,
+                3.25
+            ],
+            [
+                "tdo",
+                2700.39,
+                1.89
+            ],
+            [
+                "t90mo",
+                2698.31,
+                1.81
+            ],
+            [
+                "ETHUSDT",
+                2650.31,
+                0
+            ],
+            [
+                "tmo",
+                2614.64,
+                -1.35
+            ]
+        ],
+        "psp_extremums": [
+            95150.6,
+            2632.81,
+            174.55
+        ],
+        "deadline_close": "",
+        "targets": [
+            97000.0,
+            2848.76,
+            189.61
+        ],
+        "in_trade_range": [
+            2742.99,
+            2755.85,
+            2650.31,
+            2658.71,
+            2318091.867,
+            "2025-02-18 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                2632.81,
+                "2025-02-18 16:45",
+                "2025-02-18 11:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 1.0752014701878567
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 82352.8,
+        "stop": 81501.4,
+        "take_profit": 85176.5,
+        "entry_rr": 3.316537467700221,
+        "entry_time": "2025-03-31 00:00",
+        "entry_time_ny": "2025-03-30 20:00",
+        "entry_position_assets": 0.11745360582569764,
+        "entry_position_usd": 9672.633309842513,
+        "entry_position_fee": 4.352684989429131,
+        "entry_reason": "1d psp for low week3 SMT -> half_high week4",
+        "entry_tos": [
+            [
+                "BTCUSDT",
+                82352.8,
+                0
+            ],
+            [
+                "t90mo",
+                81923.0,
+                -0.52
+            ],
+            [
+                "tmo",
+                81820.5,
+                -0.65
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-03-31 00:30",
+        "best_entry_time_ny": [
+            "2025-03-30 20:30"
+        ],
+        "best_entry_price": 81918.3,
+        "best_entry_rr": 7.815303430078985,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                81923.0,
+                0.01
+            ],
+            [
+                "BTCUSDT",
+                81918.3,
+                0
+            ],
+            [
+                "tmo",
+                81820.5,
+                -0.12
+            ]
+        ],
+        "psp_extremums": [
+            81501.4,
+            1766.04,
+            122.81
+        ],
+        "deadline_close": "",
+        "targets": [
+            85176.5,
+            1943.12,
+            134.965
+        ],
+        "in_trade_range": [
+            82353.1,
+            82416.0,
+            81918.3,
+            81951.3,
+            3378.385,
+            "2025-03-31 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                81501.4,
+                "2025-03-31 00:45",
+                "2025-03-30 20:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 4.307684989429131
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 124.73,
+        "stop": 122.81,
+        "take_profit": 134.965,
+        "entry_rr": 5.330729166666662,
+        "entry_time": "2025-03-31 00:00",
+        "entry_time_ny": "2025-03-30 20:00",
+        "entry_position_assets": 52.083333333333286,
+        "entry_position_usd": 6496.354166666661,
+        "entry_position_fee": 2.9233593749999973,
+        "entry_reason": "1d psp for low week3 SMT -> half_high week4",
+        "entry_tos": [
+            [
+                "tmo",
+                127.83,
+                2.49
+            ],
+            [
+                "SOLUSDT",
+                124.73,
+                0
+            ],
+            [
+                "t90mo",
+                123.94,
+                -0.63
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-03-31 00:30",
+        "best_entry_time_ny": [
+            "2025-03-30 20:30"
+        ],
+        "best_entry_price": 124.0,
+        "best_entry_rr": 9.214285714285735,
+        "best_entry_tos": [
+            [
+                "tmo",
+                127.83,
+                3.09
+            ],
+            [
+                "SOLUSDT",
+                124.0,
+                0
+            ],
+            [
+                "t90mo",
+                123.94,
+                -0.05
+            ]
+        ],
+        "psp_extremums": [
+            81501.4,
+            1766.04,
+            122.81
+        ],
+        "deadline_close": "",
+        "targets": [
+            85176.5,
+            1943.12,
+            134.965
+        ],
+        "in_trade_range": [
+            124.74,
+            125.07,
+            124.0,
+            124.27,
+            398292.0,
+            "2025-03-31 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                122.81,
+                "2025-03-31 00:45",
+                "2025-03-30 20:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 2.878359374999997
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 1821.59,
+        "stop": 1775.92,
+        "take_profit": 1853.34,
+        "entry_rr": 0.6952047295817847,
+        "entry_time": "2025-04-01 00:00",
+        "entry_time_ny": "2025-03-31 20:00",
+        "entry_position_assets": 2.18962119553318,
+        "entry_position_usd": 3988.5920735712853,
+        "entry_position_fee": 1.7948664331070783,
+        "entry_reason": "1d psp for low week3 SMT -> high mon",
+        "entry_tos": [
+            [
+                "tmo",
+                2023.51,
+                11.08
+            ],
+            [
+                "two",
+                1823.6,
+                0.11
+            ],
+            [
+                "t90mo",
+                1822.86,
+                0.07
+            ],
+            [
+                "ETHUSDT",
+                1821.59,
+                0
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-01 06:30",
+        "best_entry_time_ny": [
+            "2025-04-01 02:30"
+        ],
+        "best_entry_price": 1816.64,
+        "best_entry_rr": 0.9012770137524507,
+        "best_entry_tos": [
+            [
+                "tmo",
+                2023.51,
+                11.39
+            ],
+            [
+                "t90mo",
+                1846.82,
+                1.66
+            ],
+            [
+                "tyo",
+                1834.25,
+                0.97
+            ],
+            [
+                "tdo",
+                1834.25,
+                0.97
+            ],
+            [
+                "two",
+                1823.6,
+                0.38
+            ],
+            [
+                "ETHUSDT",
+                1816.64,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            81222.0,
+            1775.92,
+            122.58
+        ],
+        "deadline_close": "",
+        "targets": [
+            83895.8,
+            1853.34,
+            127.81
+        ],
+        "in_trade_range": [
+            1821.59,
+            1849.9,
+            1816.64,
+            1847.08,
+            716604.381,
+            "2025-04-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                1853.34,
+                "2025-04-01 06:45",
+                "2025-04-01 02:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 69.52047295817847,
+        "close_position_fee": 1.8261506459382588
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 82517.5,
+        "stop": 81222.0,
+        "take_profit": 83895.8,
+        "entry_rr": 1.0639135468930938,
+        "entry_time": "2025-04-01 00:00",
+        "entry_time_ny": "2025-03-31 20:00",
+        "entry_position_assets": 0.0771902740254728,
+        "entry_position_usd": 6369.548436896951,
+        "entry_position_fee": 2.866296796603628,
+        "entry_reason": "1d psp for low week3 SMT -> high mon",
+        "entry_tos": [
+            [
+                "two",
+                82528.9,
+                0.01
+            ],
+            [
+                "BTCUSDT",
+                82517.5,
+                0
+            ],
+            [
+                "t90mo",
+                82317.4,
+                -0.24
+            ],
+            [
+                "tmo",
+                81820.5,
+                -0.84
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-01 08:15",
+        "best_entry_time_ny": [
+            "2025-04-01 04:15"
+        ],
+        "best_entry_price": 82383.3,
+        "best_entry_rr": 1.302419702058035,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                83249.9,
+                1.05
+            ],
+            [
+                "tdo",
+                82930.0,
+                0.66
+            ],
+            [
+                "tyo",
+                82929.9,
+                0.66
+            ],
+            [
+                "two",
+                82528.9,
+                0.18
+            ],
+            [
+                "BTCUSDT",
+                82383.3,
+                0
+            ],
+            [
+                "tmo",
+                81820.5,
+                -0.68
+            ]
+        ],
+        "psp_extremums": [
+            81222.0,
+            1775.92,
+            122.58
+        ],
+        "deadline_close": "",
+        "targets": [
+            83895.8,
+            1853.34,
+            127.81
+        ],
+        "in_trade_range": [
+            82517.5,
+            83666.0,
+            82383.3,
+            83658.4,
+            32080.748,
+            "2025-04-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                83895.8,
+                "2025-04-01 08:30",
+                "2025-04-01 04:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 106.39135468930938,
+        "close_position_fee": 2.914172906213817
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 124.48,
+        "stop": 122.58,
+        "take_profit": 127.81,
+        "entry_rr": 1.7526315789473623,
+        "entry_time": "2025-04-01 00:00",
+        "entry_time_ny": "2025-03-31 20:00",
+        "entry_position_assets": 52.63157894736826,
+        "entry_position_usd": 6551.578947368402,
+        "entry_position_fee": 2.9482105263157807,
+        "entry_reason": "1d psp for low week3 SMT -> high mon",
+        "entry_tos": [
+            [
+                "tmo",
+                127.83,
+                2.69
+            ],
+            [
+                "two",
+                125.65,
+                0.94
+            ],
+            [
+                "t90mo",
+                125.1,
+                0.5
+            ],
+            [
+                "SOLUSDT",
+                124.48,
+                0
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-01 08:15",
+        "best_entry_time_ny": [
+            "2025-04-01 04:15"
+        ],
+        "best_entry_price": 123.65,
+        "best_entry_rr": 3.8878504672896894,
+        "best_entry_tos": [
+            [
+                "tmo",
+                127.83,
+                3.38
+            ],
+            [
+                "t90mo",
+                126.57,
+                2.36
+            ],
+            [
+                "tdo",
+                126.01,
+                1.91
+            ],
+            [
+                "tyo",
+                126.0,
+                1.9
+            ],
+            [
+                "two",
+                125.65,
+                1.62
+            ],
+            [
+                "SOLUSDT",
+                123.65,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            81222.0,
+            1775.92,
+            122.58
+        ],
+        "deadline_close": "",
+        "targets": [
+            83895.8,
+            1853.34,
+            127.81
+        ],
+        "in_trade_range": [
+            124.47,
+            127.78,
+            123.65,
+            127.68,
+            4582464.0,
+            "2025-04-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                127.81,
+                "2025-04-01 08:30",
+                "2025-04-01 04:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 175.26315789473622,
+        "close_position_fee": 3.0270789473684117
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 1806.99,
+        "stop": 1766.04,
+        "take_profit": 1943.12,
+        "entry_rr": 3.324297924297918,
+        "entry_time": "2025-03-31 00:00",
+        "entry_time_ny": "2025-03-30 20:00",
+        "entry_position_assets": 2.442002442002439,
+        "entry_position_usd": 4412.673992673987,
+        "entry_position_fee": 1.9857032967032942,
+        "entry_reason": "1d psp for low week3 SMT -> half_high week4",
+        "entry_tos": [
+            [
+                "tmo",
+                2023.51,
+                11.98
+            ],
+            [
+                "ETHUSDT",
+                1806.99,
+                0
+            ],
+            [
+                "t90mo",
+                1793.01,
+                -0.77
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-02 20:00",
+        "best_entry_time_ny": [
+            "2025-04-02 16:00"
+        ],
+        "best_entry_price": 1775.92,
+        "best_entry_rr": 16.923076923076717,
+        "best_entry_tos": [
+            [
+                "tmo",
+                2023.51,
+                13.94
+            ],
+            [
+                "t90mo",
+                1896.9,
+                6.81
+            ],
+            [
+                "tdo",
+                1875.4,
+                5.6
+            ],
+            [
+                "tyo",
+                1834.25,
+                3.28
+            ],
+            [
+                "two",
+                1823.6,
+                2.68
+            ],
+            [
+                "ETHUSDT",
+                1775.92,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            81501.4,
+            1766.04,
+            122.81
+        ],
+        "deadline_close": "",
+        "targets": [
+            85176.5,
+            1943.12,
+            134.965
+        ],
+        "in_trade_range": [
+            1806.99,
+            1927.79,
+            1775.92,
+            1910.56,
+            14328918.349,
+            "2025-03-31 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                1943.12,
+                "2025-04-02 20:15",
+                "2025-04-02 16:15",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 332.42979242979175,
+        "close_position_fee": 2.1352967032967003
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 1816.48,
+        "stop": 1747.47,
+        "take_profit": 1866.83,
+        "entry_rr": 0.7296044051586714,
+        "entry_time": "2025-04-04 00:00",
+        "entry_time_ny": "2025-04-03 20:00",
+        "entry_position_assets": 1.4490653528474136,
+        "entry_position_usd": 2632.1982321402697,
+        "entry_position_fee": 1.1844892044631212,
+        "entry_reason": "1d psp for low week3 SMT -> high thu",
+        "entry_tos": [
+            [
+                "tmo",
+                2023.51,
+                11.4
+            ],
+            [
+                "tyo",
+                1834.25,
+                0.98
+            ],
+            [
+                "two",
+                1823.6,
+                0.39
+            ],
+            [
+                "ETHUSDT",
+                1816.48,
+                0
+            ],
+            [
+                "t90mo",
+                1810.84,
+                -0.31
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-06 13:45",
+        "best_entry_time_ny": [
+            "2025-04-06 09:45"
+        ],
+        "best_entry_price": 1754.47,
+        "best_entry_rr": 16.051428571428556,
+        "best_entry_tos": [
+            [
+                "tmo",
+                2023.51,
+                15.33
+            ],
+            [
+                "tyo",
+                1834.25,
+                4.55
+            ],
+            [
+                "two",
+                1823.6,
+                3.94
+            ],
+            [
+                "tdo",
+                1809.1,
+                3.11
+            ],
+            [
+                "t90mo",
+                1786.8,
+                1.84
+            ],
+            [
+                "ETHUSDT",
+                1754.47,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            81172.2,
+            1747.47,
+            112.17
+        ],
+        "deadline_close": "",
+        "targets": [
+            84812.8,
+            1866.83,
+            125.28
+        ],
+        "in_trade_range": [
+            1816.48,
+            1834.7,
+            1754.47,
+            1763.09,
+            10075846.431,
+            "2025-04-04 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                1747.47,
+                "2025-04-06 14:00",
+                "2025-04-06 10:00",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 1.1394892044631213
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 83181.5,
+        "stop": 81172.2,
+        "take_profit": 84812.8,
+        "entry_rr": 0.8118747822624798,
+        "entry_time": "2025-04-04 00:00",
+        "entry_time_ny": "2025-04-03 20:00",
+        "entry_position_assets": 0.049768576121037106,
+        "entry_position_usd": 4139.824814612048,
+        "entry_position_fee": 1.8629211665754215,
+        "entry_reason": "1d psp for low week3 SMT -> high thu",
+        "entry_tos": [
+            [
+                "BTCUSDT",
+                83181.5,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -0.3
+            ],
+            [
+                "t90mo",
+                82774.9,
+                -0.49
+            ],
+            [
+                "two",
+                82528.9,
+                -0.78
+            ],
+            [
+                "tmo",
+                81820.5,
+                -1.64
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-06 17:30",
+        "best_entry_time_ny": [
+            "2025-04-06 13:30"
+        ],
+        "best_entry_price": 81504.2,
+        "best_entry_rr": 9.965662650602427,
+        "best_entry_tos": [
+            [
+                "tdo",
+                83301.7,
+                2.21
+            ],
+            [
+                "tyo",
+                82929.9,
+                1.75
+            ],
+            [
+                "two",
+                82528.9,
+                1.26
+            ],
+            [
+                "tmo",
+                81820.5,
+                0.39
+            ],
+            [
+                "t90mo",
+                81576.5,
+                0.09
+            ],
+            [
+                "BTCUSDT",
+                81504.2,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            81172.2,
+            1747.47,
+            112.17
+        ],
+        "deadline_close": "",
+        "targets": [
+            84812.8,
+            1866.83,
+            125.28
+        ],
+        "in_trade_range": [
+            83181.7,
+            84686.2,
+            81504.2,
+            81576.5,
+            542606.756,
+            "2025-04-04 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                81172.2,
+                "2025-04-06 17:45",
+                "2025-04-06 13:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -99.99999999999999,
+        "close_position_fee": 1.8179211665754216
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 117.08,
+        "stop": 112.17,
+        "take_profit": 125.28,
+        "entry_rr": 1.6700610997963357,
+        "entry_time": "2025-04-04 00:00",
+        "entry_time_ny": "2025-04-03 20:00",
+        "entry_position_assets": 20.366598778004086,
+        "entry_position_usd": 2384.5213849287184,
+        "entry_position_fee": 1.0730346232179233,
+        "entry_reason": "1d psp for low week3 SMT -> high thu",
+        "entry_tos": [
+            [
+                "tmo",
+                127.83,
+                9.18
+            ],
+            [
+                "tyo",
+                126.0,
+                7.62
+            ],
+            [
+                "two",
+                125.65,
+                7.32
+            ],
+            [
+                "SOLUSDT",
+                117.08,
+                0
+            ],
+            [
+                "t90mo",
+                116.58,
+                -0.43
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "bEs",
+        "best_entry_time": "2025-04-06 17:30",
+        "best_entry_time_ny": [
+            "2025-04-06 13:30"
+        ],
+        "best_entry_price": 112.7,
+        "best_entry_rr": 23.73584905660372,
+        "best_entry_tos": [
+            [
+                "tmo",
+                127.83,
+                13.43
+            ],
+            [
+                "tyo",
+                126.0,
+                11.8
+            ],
+            [
+                "two",
+                125.65,
+                11.49
+            ],
+            [
+                "tdo",
+                119.94,
+                6.42
+            ],
+            [
+                "t90mo",
+                112.9,
+                0.18
+            ],
+            [
+                "SOLUSDT",
+                112.7,
+                0
+            ]
+        ],
+        "psp_extremums": [
+            81172.2,
+            1747.47,
+            112.17
+        ],
+        "deadline_close": "",
+        "targets": [
+            84812.8,
+            1866.83,
+            125.28
+        ],
+        "in_trade_range": [
+            117.09,
+            123.96,
+            112.7,
+            112.9,
+            63173230.0,
+            "2025-04-04 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                112.17,
+                "2025-04-06 17:45",
+                "2025-04-06 13:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -99.99999999999999,
+        "close_position_fee": 1.0280346232179232
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 1799.22,
+        "stop": 1742.15,
+        "take_profit": 1826.71,
+        "entry_rr": 0.4816891536709311,
+        "entry_time": "2025-04-29 00:00",
+        "entry_time_ny": "2025-04-28 20:00",
+        "entry_position_assets": 1.7522340984755582,
+        "entry_position_usd": 3152.654634659194,
+        "entry_position_fee": 1.418694585596637,
+        "entry_reason": "1d psp for half_low week3 SMT -> high mon",
+        "entry_tos": [
+            [
+                "tyo",
+                1834.25,
+                1.95
+            ],
+            [
+                "ETHUSDT",
+                1799.22,
+                0
+            ],
+            [
+                "t90mo",
+                1797.48,
+                -0.1
+            ],
+            [
+                "two",
+                1792.69,
+                -0.36
+            ],
+            [
+                "tmo",
+                1593.09,
+                -11.46
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-04-29 08:15",
+        "best_entry_time_ny": [
+            "2025-04-29 04:15"
+        ],
+        "best_entry_price": 1786.68,
+        "best_entry_rr": 0.8989445317763305,
+        "best_entry_tos": [
+            [
+                "tyo",
+                1834.25,
+                2.66
+            ],
+            [
+                "tdo",
+                1801.26,
+                0.82
+            ],
+            [
+                "two",
+                1792.69,
+                0.34
+            ],
+            [
+                "t90mo",
+                1792.62,
+                0.33
+            ],
+            [
+                "ETHUSDT",
+                1786.68,
+                0
+            ],
+            [
+                "tmo",
+                1593.09,
+                -10.84
+            ]
+        ],
+        "psp_extremums": [
+            92700.0,
+            1742.15,
+            144.53
+        ],
+        "deadline_close": "",
+        "targets": [
+            95578.8,
+            1826.71,
+            153.35
+        ],
+        "in_trade_range": [
+            1799.21,
+            1826.0,
+            1786.68,
+            1822.88,
+            1481062.938,
+            "2025-04-29 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                1826.71,
+                "2025-04-29 08:30",
+                "2025-04-29 04:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 48.16891536709311,
+        "close_position_fee": 1.440370597511829
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 147.76,
+        "stop": 144.53,
+        "take_profit": 153.35,
+        "entry_rr": 1.730650154798768,
+        "entry_time": "2025-04-29 00:00",
+        "entry_time_ny": "2025-04-28 20:00",
+        "entry_position_assets": 30.959752321981522,
+        "entry_position_usd": 4574.613003095989,
+        "entry_position_fee": 2.0585758513931953,
+        "entry_reason": "1d psp for half_low week3 SMT -> high mon",
+        "entry_tos": [
+            [
+                "SOLUSDT",
+                147.76,
+                0
+            ],
+            [
+                "two",
+                147.62,
+                -0.09
+            ],
+            [
+                "t90mo",
+                147.59,
+                -0.12
+            ],
+            [
+                "tmo",
+                127.31,
+                -13.84
+            ],
+            [
+                "tyo",
+                126.0,
+                -14.73
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-04-30 12:45",
+        "best_entry_time_ny": [
+            "2025-04-30 08:45"
+        ],
+        "best_entry_price": 144.79,
+        "best_entry_rr": 32.923076923078085,
+        "best_entry_tos": [
+            [
+                "tdo",
+                148.1,
+                2.29
+            ],
+            [
+                "t90mo",
+                147.75,
+                2.04
+            ],
+            [
+                "two",
+                147.62,
+                1.95
+            ],
+            [
+                "SOLUSDT",
+                144.79,
+                0
+            ],
+            [
+                "tmo",
+                127.31,
+                -12.07
+            ],
+            [
+                "tyo",
+                126.0,
+                -12.98
+            ]
+        ],
+        "psp_extremums": [
+            92700.0,
+            1742.15,
+            144.53
+        ],
+        "deadline_close": "",
+        "targets": [
+            95578.8,
+            1826.71,
+            153.35
+        ],
+        "in_trade_range": [
+            147.76,
+            150.37,
+            144.79,
+            145.41,
+            24037926.1,
+            "2025-04-29 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                144.53,
+                "2025-04-30 13:00",
+                "2025-04-30 09:00",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 2.0135758513931954
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 147.47,
+        "stop": 140.25,
+        "take_profit": 148.64,
+        "entry_rr": 0.16204986149584316,
+        "entry_time": "2025-05-01 00:00",
+        "entry_time_ny": "2025-04-30 20:00",
+        "entry_position_assets": 13.850415512465377,
+        "entry_position_usd": 2042.5207756232692,
+        "entry_position_fee": 0.9191343490304711,
+        "entry_reason": "1d psp for half_low week3 SMT -> high wed",
+        "entry_tos": [
+            [
+                "t90mo",
+                147.77,
+                0.2
+            ],
+            [
+                "two",
+                147.62,
+                0.1
+            ],
+            [
+                "SOLUSDT",
+                147.47,
+                0
+            ],
+            [
+                "tmo",
+                127.31,
+                -13.67
+            ],
+            [
+                "tyo",
+                126.0,
+                -14.56
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-01 00:00",
+        "best_entry_time_ny": "2025-04-30 20:00",
+        "best_entry_price": 147.47,
+        "best_entry_rr": 0.16204986149584316,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                147.77,
+                0.2
+            ],
+            [
+                "two",
+                147.62,
+                0.1
+            ],
+            [
+                "SOLUSDT",
+                147.47,
+                0
+            ],
+            [
+                "tmo",
+                127.31,
+                -13.67
+            ],
+            [
+                "tyo",
+                126.0,
+                -14.56
+            ]
+        ],
+        "psp_extremums": [
+            92848.1,
+            1730.6,
+            140.25
+        ],
+        "deadline_close": "",
+        "targets": [
+            95186.5,
+            1816.0,
+            148.64
+        ],
+        "in_trade_range": [
+            147.47,
+            148.6,
+            147.47,
+            148.15,
+            842465.44,
+            "2025-05-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                148.64,
+                "2025-05-01 01:30",
+                "2025-04-30 21:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 16.204986149584318,
+        "close_position_fee": 0.9264265927977839
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 1792.71,
+        "stop": 1730.6,
+        "take_profit": 1816.0,
+        "entry_rr": 0.3749798744163567,
+        "entry_time": "2025-05-01 00:00",
+        "entry_time_ny": "2025-04-30 20:00",
+        "entry_position_assets": 1.6100466913540459,
+        "entry_position_usd": 2886.3468040573116,
+        "entry_position_fee": 1.29885606182579,
+        "entry_reason": "1d psp for half_low week3 SMT -> high wed",
+        "entry_tos": [
+            [
+                "tyo",
+                1834.25,
+                2.32
+            ],
+            [
+                "t90mo",
+                1795.63,
+                0.16
+            ],
+            [
+                "two",
+                1792.69,
+                -0.0
+            ],
+            [
+                "ETHUSDT",
+                1792.71,
+                0
+            ],
+            [
+                "tmo",
+                1593.09,
+                -11.14
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-01 02:30",
+        "best_entry_time_ny": [
+            "2025-04-30 22:30"
+        ],
+        "best_entry_price": 1791.55,
+        "best_entry_rr": 0.40114848236259276,
+        "best_entry_tos": [
+            [
+                "tyo",
+                1834.25,
+                2.38
+            ],
+            [
+                "t90mo",
+                1795.63,
+                0.23
+            ],
+            [
+                "two",
+                1792.69,
+                0.06
+            ],
+            [
+                "ETHUSDT",
+                1791.55,
+                0
+            ],
+            [
+                "tmo",
+                1593.09,
+                -11.08
+            ]
+        ],
+        "psp_extremums": [
+            92848.1,
+            1730.6,
+            140.25
+        ],
+        "deadline_close": "",
+        "targets": [
+            95186.5,
+            1816.0,
+            148.64
+        ],
+        "in_trade_range": [
+            1792.71,
+            1815.93,
+            1791.55,
+            1814.48,
+            343552.567,
+            "2025-05-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                1816.0,
+                "2025-05-01 02:45",
+                "2025-04-30 22:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 37.49798744163567,
+        "close_position_fee": 1.3157301561745263
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 94125.1,
+        "stop": 92848.1,
+        "take_profit": 95186.5,
+        "entry_rr": 0.8311667971808882,
+        "entry_time": "2025-05-01 00:00",
+        "entry_time_ny": "2025-04-30 20:00",
+        "entry_position_assets": 0.07830853563038372,
+        "entry_position_usd": 7370.798747063431,
+        "entry_position_fee": 3.316859436178544,
+        "entry_reason": "1d psp for half_low week3 SMT -> high wed",
+        "entry_tos": [
+            [
+                "two",
+                94498.9,
+                0.4
+            ],
+            [
+                "t90mo",
+                94205.4,
+                0.09
+            ],
+            [
+                "BTCUSDT",
+                94125.1,
+                0
+            ],
+            [
+                "tmo",
+                83568.4,
+                -11.22
+            ],
+            [
+                "tyo",
+                82929.9,
+                -11.89
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-01 09:15",
+        "best_entry_time_ny": [
+            "2025-05-01 05:15"
+        ],
+        "best_entry_price": 94086.7,
+        "best_entry_rr": 0.8879379945099392,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                94866.8,
+                0.83
+            ],
+            [
+                "tdo",
+                94737.6,
+                0.69
+            ],
+            [
+                "two",
+                94498.9,
+                0.44
+            ],
+            [
+                "BTCUSDT",
+                94086.7,
+                0
+            ],
+            [
+                "tmo",
+                83568.4,
+                -11.18
+            ],
+            [
+                "tyo",
+                82929.9,
+                -11.86
+            ]
+        ],
+        "psp_extremums": [
+            92848.1,
+            1730.6,
+            140.25
+        ],
+        "deadline_close": "",
+        "targets": [
+            95186.5,
+            1816.0,
+            148.64
+        ],
+        "in_trade_range": [
+            94125.2,
+            95180.9,
+            94086.7,
+            95133.8,
+            39749.968,
+            "2025-05-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                95186.5,
+                "2025-05-01 09:30",
+                "2025-05-01 05:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 83.11667971808882,
+        "close_position_fee": 3.354261942051684
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 94969.0,
+        "stop": 92700.0,
+        "take_profit": 95578.8,
+        "entry_rr": 0.2687527545174098,
+        "entry_time": "2025-04-29 00:00",
+        "entry_time_ny": "2025-04-28 20:00",
+        "entry_position_assets": 0.044072278536800354,
+        "entry_position_usd": 4185.500220361393,
+        "entry_position_fee": 1.8834750991626268,
+        "entry_reason": "1d psp for half_low week3 SMT -> high mon",
+        "entry_tos": [
+            [
+                "t90mo",
+                95027.1,
+                0.06
+            ],
+            [
+                "BTCUSDT",
+                94969.0,
+                0
+            ],
+            [
+                "two",
+                94498.9,
+                -0.5
+            ],
+            [
+                "tmo",
+                83568.4,
+                -12.0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -12.68
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-01 09:45",
+        "best_entry_time_ny": [
+            "2025-05-01 05:45"
+        ],
+        "best_entry_price": 92848.1,
+        "best_entry_rr": 18.43821742066097,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                94866.8,
+                2.17
+            ],
+            [
+                "tdo",
+                94737.6,
+                2.04
+            ],
+            [
+                "two",
+                94498.9,
+                1.78
+            ],
+            [
+                "BTCUSDT",
+                92848.1,
+                0
+            ],
+            [
+                "tmo",
+                83568.4,
+                -9.99
+            ],
+            [
+                "tyo",
+                82929.9,
+                -10.68
+            ]
+        ],
+        "psp_extremums": [
+            92700.0,
+            1742.15,
+            144.53
+        ],
+        "deadline_close": "",
+        "targets": [
+            95578.8,
+            1826.71,
+            153.35
+        ],
+        "in_trade_range": [
+            94969.0,
+            95466.0,
+            92848.1,
+            95386.1,
+            364075.476,
+            "2025-04-29 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                95578.8,
+                "2025-05-01 10:00",
+                "2025-05-01 06:00",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 26.875275451740983,
+        "close_position_fee": 1.8955689731159102
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 2526.87,
+        "stop": 2346.99,
+        "take_profit": 2546.97,
+        "entry_rr": 0.11174116077384866,
+        "entry_time": "2025-05-20 00:00",
+        "entry_time_ny": "2025-05-19 20:00",
+        "entry_position_assets": 0.5559261730042248,
+        "entry_position_usd": 1404.7531687791854,
+        "entry_position_fee": 0.6321389259506334,
+        "entry_reason": "1d psp for low week2 SMT -> high mon",
+        "entry_tos": [
+            [
+                "ETHUSDT",
+                2526.87,
+                0
+            ],
+            [
+                "two",
+                2521.55,
+                -0.21
+            ],
+            [
+                "t90mo",
+                2517.04,
+                -0.39
+            ],
+            [
+                "tmo",
+                2515.66,
+                -0.44
+            ],
+            [
+                "tyo",
+                1834.25,
+                -27.41
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-20 00:15",
+        "best_entry_time_ny": [
+            "2025-05-19 20:15"
+        ],
+        "best_entry_price": 2522.42,
+        "best_entry_rr": 0.1399418571509986,
+        "best_entry_tos": [
+            [
+                "ETHUSDT",
+                2522.42,
+                0
+            ],
+            [
+                "two",
+                2521.55,
+                -0.03
+            ],
+            [
+                "t90mo",
+                2517.04,
+                -0.21
+            ],
+            [
+                "tmo",
+                2515.66,
+                -0.27
+            ],
+            [
+                "tyo",
+                1834.25,
+                -27.28
+            ]
+        ],
+        "psp_extremums": [
+            102038.8,
+            2346.99,
+            159.28
+        ],
+        "deadline_close": "",
+        "targets": [
+            107114.3,
+            2546.97,
+            174.24
+        ],
+        "in_trade_range": [
+            2526.87,
+            2545.0,
+            2522.42,
+            2542.36,
+            82088.363,
+            "2025-05-20 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                2546.97,
+                "2025-05-20 00:30",
+                "2025-05-19 20:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 11.174116077384866,
+        "close_position_fee": 0.6371672781854566
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 105531.6,
+        "stop": 102038.8,
+        "take_profit": 107114.3,
+        "entry_rr": 0.4531321575813089,
+        "entry_time": "2025-05-20 00:00",
+        "entry_time_ny": "2025-05-19 20:00",
+        "entry_position_assets": 0.02863032524049471,
+        "entry_position_usd": 3021.4040311497915,
+        "entry_position_fee": 1.3596318140174062,
+        "entry_reason": "1d psp for low week2 SMT -> high mon",
+        "entry_tos": [
+            [
+                "BTCUSDT",
+                105531.6,
+                0
+            ],
+            [
+                "t90mo",
+                105429.9,
+                -0.1
+            ],
+            [
+                "two",
+                105408.5,
+                -0.12
+            ],
+            [
+                "tmo",
+                104314.2,
+                -1.15
+            ],
+            [
+                "tyo",
+                82929.9,
+                -21.42
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-20 19:45",
+        "best_entry_time_ny": [
+            "2025-05-20 15:45"
+        ],
+        "best_entry_price": 104115.2,
+        "best_entry_rr": 1.4443748795993134,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                106080.0,
+                1.89
+            ],
+            [
+                "tdo",
+                105720.0,
+                1.54
+            ],
+            [
+                "two",
+                105408.5,
+                1.24
+            ],
+            [
+                "tmo",
+                104314.2,
+                0.19
+            ],
+            [
+                "BTCUSDT",
+                104115.2,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -20.35
+            ]
+        ],
+        "psp_extremums": [
+            102038.8,
+            2346.99,
+            159.28
+        ],
+        "deadline_close": "",
+        "targets": [
+            107114.3,
+            2546.97,
+            174.24
+        ],
+        "in_trade_range": [
+            105531.5,
+            106800.0,
+            104115.2,
+            106476.9,
+            176984.626,
+            "2025-05-20 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                107114.3,
+                "2025-05-20 20:00",
+                "2025-05-20 16:00",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 45.313215758130895,
+        "close_position_fee": 1.3800227611085651
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 166.76,
+        "stop": 159.28,
+        "take_profit": 174.24,
+        "entry_rr": 1.0000000000000038,
+        "entry_time": "2025-05-20 00:00",
+        "entry_time_ny": "2025-05-19 20:00",
+        "entry_position_assets": 13.36898395721927,
+        "entry_position_usd": 2229.411764705885,
+        "entry_position_fee": 1.0032352941176483,
+        "entry_reason": "1d psp for low week2 SMT -> high mon",
+        "entry_tos": [
+            [
+                "tmo",
+                173.06,
+                3.78
+            ],
+            [
+                "SOLUSDT",
+                166.76,
+                0
+            ],
+            [
+                "two",
+                166.59,
+                -0.1
+            ],
+            [
+                "t90mo",
+                166.17,
+                -0.35
+            ],
+            [
+                "tyo",
+                126.0,
+                -24.44
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-05-21 16:30",
+        "best_entry_time_ny": [
+            "2025-05-21 12:30"
+        ],
+        "best_entry_price": 164.4,
+        "best_entry_rr": 1.921874999999999,
+        "best_entry_tos": [
+            [
+                "tmo",
+                173.06,
+                5.27
+            ],
+            [
+                "tdo",
+                169.91,
+                3.35
+            ],
+            [
+                "two",
+                166.59,
+                1.33
+            ],
+            [
+                "SOLUSDT",
+                164.4,
+                0
+            ],
+            [
+                "tyo",
+                126.0,
+                -23.36
+            ]
+        ],
+        "psp_extremums": [
+            102038.8,
+            2346.99,
+            159.28
+        ],
+        "deadline_close": "",
+        "targets": [
+            107114.3,
+            2546.97,
+            174.24
+        ],
+        "in_trade_range": [
+            166.76,
+            173.66,
+            164.4,
+            172.37,
+            37860161.75,
+            "2025-05-20 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                174.24,
+                "2025-05-21 16:45",
+                "2025-05-21 12:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 100.00000000000038,
+        "close_position_fee": 1.0482352941176485
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 156.35,
+        "stop": 152.06,
+        "take_profit": 162.2,
+        "entry_rr": 1.3636363636363649,
+        "entry_time": "2025-06-01 00:00",
+        "entry_time_ny": "2025-05-31 20:00",
+        "entry_position_assets": 23.310023310023354,
+        "entry_position_usd": 3644.5221445221514,
+        "entry_position_fee": 1.6400349650349682,
+        "entry_reason": "1d psp for half_low week1 SMT -> half_high fri",
+        "entry_tos": [
+            [
+                "two",
+                174.92,
+                11.88
+            ],
+            [
+                "tmo",
+                173.06,
+                10.69
+            ],
+            [
+                "t90mo",
+                156.75,
+                0.26
+            ],
+            [
+                "SOLUSDT",
+                156.35,
+                0
+            ],
+            [
+                "tyo",
+                126.0,
+                -19.41
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week1 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-06-01 09:15",
+        "best_entry_time_ny": [
+            "2025-06-01 05:15"
+        ],
+        "best_entry_price": 152.25,
+        "best_entry_rr": 52.368421052632144,
+        "best_entry_tos": [
+            [
+                "two",
+                174.92,
+                14.89
+            ],
+            [
+                "tmo",
+                173.06,
+                13.67
+            ],
+            [
+                "t90mo",
+                155.46,
+                2.11
+            ],
+            [
+                "tdo",
+                154.63,
+                1.56
+            ],
+            [
+                "SOLUSDT",
+                152.25,
+                0
+            ],
+            [
+                "tyo",
+                126.0,
+                -17.24
+            ]
+        ],
+        "psp_extremums": [
+            103032.1,
+            2474.0,
+            152.06
+        ],
+        "deadline_close": "",
+        "targets": [
+            105029.35,
+            2598.9849999999997,
+            162.2
+        ],
+        "in_trade_range": [
+            156.36,
+            156.65,
+            152.25,
+            152.69,
+            4613599.47,
+            "2025-06-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                152.06,
+                "2025-06-01 09:30",
+                "2025-06-01 05:30",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 1.5950349650349682
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 2527.08,
+        "stop": 2474.0,
+        "take_profit": 2598.9849999999997,
+        "entry_rr": 1.354653353428784,
+        "entry_time": "2025-06-01 00:00",
+        "entry_time_ny": "2025-05-31 20:00",
+        "entry_position_assets": 1.8839487565938233,
+        "entry_position_usd": 4760.889223813119,
+        "entry_position_fee": 2.1424001507159036,
+        "entry_reason": "1d psp for half_low week1 SMT -> half_high fri",
+        "entry_tos": [
+            [
+                "two",
+                2561.31,
+                1.35
+            ],
+            [
+                "t90mo",
+                2533.39,
+                0.25
+            ],
+            [
+                "ETHUSDT",
+                2527.08,
+                0
+            ],
+            [
+                "tmo",
+                2515.66,
+                -0.45
+            ],
+            [
+                "tyo",
+                1834.25,
+                -27.42
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week1 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-06-01 12:30",
+        "best_entry_time_ny": [
+            "2025-06-01 08:30"
+        ],
+        "best_entry_price": 2476.01,
+        "best_entry_rr": 61.18159203979408,
+        "best_entry_tos": [
+            [
+                "two",
+                2561.31,
+                3.45
+            ],
+            [
+                "tmo",
+                2515.66,
+                1.6
+            ],
+            [
+                "tdo",
+                2512.13,
+                1.46
+            ],
+            [
+                "t90mo",
+                2498.5,
+                0.91
+            ],
+            [
+                "ETHUSDT",
+                2476.01,
+                0
+            ],
+            [
+                "tyo",
+                1834.25,
+                -25.92
+            ]
+        ],
+        "psp_extremums": [
+            103032.1,
+            2474.0,
+            152.06
+        ],
+        "deadline_close": "",
+        "targets": [
+            105029.35,
+            2598.9849999999997,
+            162.2
+        ],
+        "in_trade_range": [
+            2527.08,
+            2529.67,
+            2476.01,
+            2492.31,
+            1486378.623,
+            "2025-06-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                2474.0,
+                "2025-06-01 12:45",
+                "2025-06-01 08:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.00000000000001,
+        "close_position_fee": 2.0974001507159037
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 104544.7,
+        "stop": 103032.1,
+        "take_profit": 105029.35,
+        "entry_rr": 0.3204085680285677,
+        "entry_time": "2025-06-01 00:00",
+        "entry_time_ny": "2025-05-31 20:00",
+        "entry_position_assets": 0.06611133148221643,
+        "entry_position_usd": 6911.589316408872,
+        "entry_position_fee": 3.110215192383992,
+        "entry_reason": "1d psp for half_low week1 SMT -> half_high fri",
+        "entry_tos": [
+            [
+                "two",
+                109297.9,
+                4.55
+            ],
+            [
+                "t90mo",
+                104593.6,
+                0.05
+            ],
+            [
+                "BTCUSDT",
+                104544.7,
+                0
+            ],
+            [
+                "tmo",
+                104314.2,
+                -0.22
+            ],
+            [
+                "tyo",
+                82929.9,
+                -20.68
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "half_low",
+        "smt_label": "week1 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-06-01 16:00",
+        "best_entry_time_ny": [
+            "2025-06-01 12:00"
+        ],
+        "best_entry_price": 103704.1,
+        "best_entry_rr": 1.9720982142857142,
+        "best_entry_tos": [
+            [
+                "two",
+                109297.9,
+                5.39
+            ],
+            [
+                "tdo",
+                104336.4,
+                0.61
+            ],
+            [
+                "tmo",
+                104314.2,
+                0.59
+            ],
+            [
+                "BTCUSDT",
+                103704.1,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -20.03
+            ]
+        ],
+        "psp_extremums": [
+            103032.1,
+            2474.0,
+            152.06
+        ],
+        "deadline_close": "",
+        "targets": [
+            105029.35,
+            2598.9849999999997,
+            162.2
+        ],
+        "in_trade_range": [
+            104544.6,
+            104760.0,
+            103704.1,
+            104664.0,
+            56263.3,
+            "2025-06-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                105029.35,
+                "2025-06-01 16:15",
+                "2025-06-01 12:15",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 32.04085680285677,
+        "close_position_fee": 3.1246335779452776
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 148.54,
+        "stop": 140.73,
+        "take_profit": 152.89,
+        "entry_rr": 0.5569782330345702,
+        "entry_time": "2025-06-14 00:00",
+        "entry_time_ny": "2025-06-13 20:00",
+        "entry_position_assets": 12.80409731113956,
+        "entry_position_usd": 1901.9206145966702,
+        "entry_position_fee": 0.8558642765685016,
+        "entry_reason": "1d psp for low week1 SMT -> high fri",
+        "entry_tos": [
+            [
+                "two",
+                158.98,
+                7.03
+            ],
+            [
+                "tmo",
+                154.35,
+                3.91
+            ],
+            [
+                "SOLUSDT",
+                148.54,
+                0
+            ],
+            [
+                "t90mo",
+                148.12,
+                -0.28
+            ],
+            [
+                "tyo",
+                126.0,
+                -15.17
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week1 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-06-15 15:30",
+        "best_entry_time_ny": [
+            "2025-06-15 11:30"
+        ],
+        "best_entry_price": 141.87,
+        "best_entry_rr": 9.666666666666526,
+        "best_entry_tos": [
+            [
+                "two",
+                158.98,
+                12.06
+            ],
+            [
+                "tmo",
+                154.35,
+                8.8
+            ],
+            [
+                "tdo",
+                145.67,
+                2.68
+            ],
+            [
+                "t90mo",
+                145.65,
+                2.66
+            ],
+            [
+                "SOLUSDT",
+                141.87,
+                0
+            ],
+            [
+                "tyo",
+                126.0,
+                -11.19
+            ]
+        ],
+        "psp_extremums": [
+            102614.0,
+            2433.8,
+            140.73
+        ],
+        "deadline_close": "",
+        "targets": [
+            106180.9,
+            2657.66,
+            152.89
+        ],
+        "in_trade_range": [
+            148.54,
+            152.63,
+            141.87,
+            151.89,
+            24623863.47,
+            "2025-06-14 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                152.89,
+                "2025-06-15 15:45",
+                "2025-06-15 11:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 55.697823303457014,
+        "close_position_fee": 0.8809282970550573
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 106027.3,
+        "stop": 102614.0,
+        "take_profit": 106180.9,
+        "entry_rr": 0.04500043945741398,
+        "entry_time": "2025-06-14 00:00",
+        "entry_time_ny": "2025-06-13 20:00",
+        "entry_position_assets": 0.02929716110508889,
+        "entry_position_usd": 3106.2988896375914,
+        "entry_position_fee": 1.397834500336916,
+        "entry_reason": "1d psp for low week1 SMT -> high fri",
+        "entry_tos": [
+            [
+                "two",
+                109935.9,
+                3.69
+            ],
+            [
+                "tmo",
+                106271.0,
+                0.23
+            ],
+            [
+                "BTCUSDT",
+                106027.3,
+                0
+            ],
+            [
+                "t90mo",
+                105818.6,
+                -0.2
+            ],
+            [
+                "tyo",
+                82929.9,
+                -21.78
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week1 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-06-16 04:15",
+        "best_entry_time_ny": [
+            "2025-06-16 00:15"
+        ],
+        "best_entry_price": 104225.4,
+        "best_entry_rr": 1.2135410202308596,
+        "best_entry_tos": [
+            [
+                "tmo",
+                106271.0,
+                1.96
+            ],
+            [
+                "tdo",
+                105865.6,
+                1.57
+            ],
+            [
+                "BTCUSDT",
+                104225.4,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -20.43
+            ]
+        ],
+        "psp_extremums": [
+            102614.0,
+            2433.8,
+            140.73
+        ],
+        "deadline_close": "",
+        "targets": [
+            106180.9,
+            2657.66,
+            152.89
+        ],
+        "in_trade_range": [
+            106027.3,
+            106173.6,
+            104225.4,
+            105986.9,
+            177766.083,
+            "2025-06-14 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                106180.9,
+                "2025-06-16 04:30",
+                "2025-06-16 00:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 4.500043945741398,
+        "close_position_fee": 1.3998595201124997
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 2578.09,
+        "stop": 2433.8,
+        "take_profit": 2657.66,
+        "entry_rr": 0.5514588675583875,
+        "entry_time": "2025-06-14 00:00",
+        "entry_time_ny": "2025-06-13 20:00",
+        "entry_position_assets": 0.6930487213251093,
+        "entry_position_usd": 1786.7419779610511,
+        "entry_position_fee": 0.8040338900824731,
+        "entry_reason": "1d psp for low week1 SMT -> high fri",
+        "entry_tos": [
+            [
+                "two",
+                2642.58,
+                2.5
+            ],
+            [
+                "ETHUSDT",
+                2578.09,
+                0
+            ],
+            [
+                "t90mo",
+                2573.25,
+                -0.19
+            ],
+            [
+                "tmo",
+                2537.05,
+                -1.59
+            ],
+            [
+                "tyo",
+                1834.25,
+                -28.85
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week1 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-06-16 19:00",
+        "best_entry_time_ny": [
+            "2025-06-16 15:00"
+        ],
+        "best_entry_price": 2486.68,
+        "best_entry_rr": 3.2333585476550897,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                2636.61,
+                6.03
+            ],
+            [
+                "tdo",
+                2567.6,
+                3.25
+            ],
+            [
+                "tmo",
+                2537.05,
+                2.03
+            ],
+            [
+                "ETHUSDT",
+                2486.68,
+                0
+            ],
+            [
+                "tyo",
+                1834.25,
+                -26.24
+            ]
+        ],
+        "psp_extremums": [
+            102614.0,
+            2433.8,
+            140.73
+        ],
+        "deadline_close": "",
+        "targets": [
+            106180.9,
+            2657.66,
+            152.89
+        ],
+        "in_trade_range": [
+            2578.1,
+            2656.51,
+            2486.68,
+            2652.85,
+            11729359.094,
+            "2025-06-14 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                2657.66,
+                "2025-06-16 19:15",
+                "2025-06-16 15:15",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 55.145886755838745,
+        "close_position_fee": 0.8288495391226004
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 3808.67,
+        "stop": 3670.0,
+        "take_profit": 3832.61,
+        "entry_rr": 0.17264008076728954,
+        "entry_time": "2025-07-31 00:00",
+        "entry_time_ny": "2025-07-30 20:00",
+        "entry_position_assets": 0.7211365111415587,
+        "entry_position_usd": 2746.5709958895204,
+        "entry_position_fee": 1.2359569481502841,
+        "entry_reason": "1d psp for low week3 SMT -> high wed",
+        "entry_tos": [
+            [
+                "ETHUSDT",
+                3808.67,
+                0
+            ],
+            [
+                "two",
+                3787.23,
+                -0.56
+            ],
+            [
+                "t90mo",
+                3787.1,
+                -0.57
+            ],
+            [
+                "tmo",
+                2963.66,
+                -22.19
+            ],
+            [
+                "tyo",
+                1834.25,
+                -51.84
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-07-31 00:30",
+        "best_entry_time_ny": [
+            "2025-07-30 20:30"
+        ],
+        "best_entry_price": 3799.78,
+        "best_entry_rr": 0.2529665587918006,
+        "best_entry_tos": [
+            [
+                "ETHUSDT",
+                3799.78,
+                0
+            ],
+            [
+                "two",
+                3787.23,
+                -0.33
+            ],
+            [
+                "t90mo",
+                3787.1,
+                -0.33
+            ],
+            [
+                "tmo",
+                2963.66,
+                -22.0
+            ],
+            [
+                "tyo",
+                1834.25,
+                -51.73
+            ]
+        ],
+        "psp_extremums": [
+            115700.0,
+            3670.0,
+            170.0
+        ],
+        "deadline_close": "",
+        "targets": [
+            118763.5,
+            3832.61,
+            182.48
+        ],
+        "in_trade_range": [
+            3808.67,
+            3824.87,
+            3799.78,
+            3823.56,
+            103768.81,
+            "2025-07-31 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                3832.61,
+                "2025-07-31 00:45",
+                "2025-07-30 20:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 17.264008076728956,
+        "close_position_fee": 1.2437257517848124
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 117771.0,
+        "stop": 115700.0,
+        "take_profit": 118763.5,
+        "entry_rr": 0.4792370835345244,
+        "entry_time": "2025-07-31 00:00",
+        "entry_time_ny": "2025-07-30 20:00",
+        "entry_position_assets": 0.04828585224529213,
+        "entry_position_usd": 5686.6731047803,
+        "entry_position_fee": 2.5590028971511347,
+        "entry_reason": "1d psp for low week3 SMT -> high wed",
+        "entry_tos": [
+            [
+                "tmo",
+                118593.1,
+                0.7
+            ],
+            [
+                "two",
+                118081.6,
+                0.26
+            ],
+            [
+                "BTCUSDT",
+                117771.0,
+                0
+            ],
+            [
+                "t90mo",
+                117516.9,
+                -0.22
+            ],
+            [
+                "tyo",
+                82929.9,
+                -29.58
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-07-31 07:15",
+        "best_entry_time_ny": [
+            "2025-07-31 03:15"
+        ],
+        "best_entry_price": 117713.5,
+        "best_entry_rr": 0.5214800099329525,
+        "best_entry_tos": [
+            [
+                "tmo",
+                118593.1,
+                0.75
+            ],
+            [
+                "tdo",
+                118429.0,
+                0.61
+            ],
+            [
+                "t90mo",
+                118350.0,
+                0.54
+            ],
+            [
+                "two",
+                118081.6,
+                0.31
+            ],
+            [
+                "BTCUSDT",
+                117713.5,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -29.55
+            ]
+        ],
+        "psp_extremums": [
+            115700.0,
+            3670.0,
+            170.0
+        ],
+        "deadline_close": "",
+        "targets": [
+            118763.5,
+            3832.61,
+            182.48
+        ],
+        "in_trade_range": [
+            117771.1,
+            118711.3,
+            117713.5,
+            118695.2,
+            26044.242,
+            "2025-07-31 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                118763.5,
+                "2025-07-31 07:30",
+                "2025-07-31 03:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 47.92370835345244,
+        "close_position_fee": 2.5805685659101885
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 177.68,
+        "stop": 170.0,
+        "take_profit": 182.48,
+        "entry_rr": 0.6249999999999972,
+        "entry_time": "2025-07-31 00:00",
+        "entry_time_ny": "2025-07-30 20:00",
+        "entry_position_assets": 13.020833333333321,
+        "entry_position_usd": 2313.5416666666647,
+        "entry_position_fee": 1.041093749999999,
+        "entry_reason": "1d psp for low week3 SMT -> high wed",
+        "entry_tos": [
+            [
+                "two",
+                184.17,
+                3.65
+            ],
+            [
+                "SOLUSDT",
+                177.68,
+                0
+            ],
+            [
+                "t90mo",
+                177.23,
+                -0.25
+            ],
+            [
+                "tmo",
+                160.47,
+                -9.69
+            ],
+            [
+                "tyo",
+                126.0,
+                -29.09
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week3 SMT",
+        "smt_flags": "beS",
+        "best_entry_time": "2025-07-31 09:45",
+        "best_entry_time_ny": [
+            "2025-07-31 05:45"
+        ],
+        "best_entry_price": 177.52,
+        "best_entry_rr": 0.6595744680851028,
+        "best_entry_tos": [
+            [
+                "two",
+                184.17,
+                3.75
+            ],
+            [
+                "t90mo",
+                180.9,
+                1.9
+            ],
+            [
+                "tdo",
+                180.22,
+                1.52
+            ],
+            [
+                "SOLUSDT",
+                177.52,
+                0
+            ],
+            [
+                "tmo",
+                160.47,
+                -9.6
+            ],
+            [
+                "tyo",
+                126.0,
+                -29.02
+            ]
+        ],
+        "psp_extremums": [
+            115700.0,
+            3670.0,
+            170.0
+        ],
+        "deadline_close": "",
+        "targets": [
+            118763.5,
+            3832.61,
+            182.48
+        ],
+        "in_trade_range": [
+            177.67,
+            182.32,
+            177.52,
+            182.1,
+            4455893.57,
+            "2025-07-31 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                182.48,
+                "2025-07-31 10:00",
+                "2025-07-31 06:00",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 62.49999999999972,
+        "close_position_fee": 1.0692187499999988
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "entry_price": 4777.91,
+        "stop": 4702.47,
+        "take_profit": 4957.67,
+        "entry_rr": 2.382820784729602,
+        "entry_time": "2025-08-25 00:00",
+        "entry_time_ny": "2025-08-24 20:00",
+        "entry_position_assets": 1.3255567338282148,
+        "entry_position_usd": 6333.390774125166,
+        "entry_position_fee": 2.8500258483563243,
+        "entry_reason": "1d psp for low week2 SMT -> high week3",
+        "entry_tos": [
+            [
+                "t90mo",
+                4794.0,
+                0.34
+            ],
+            [
+                "ETHUSDT",
+                4777.91,
+                0
+            ],
+            [
+                "tmo",
+                4221.68,
+                -11.64
+            ],
+            [
+                "tyo",
+                1834.25,
+                -61.61
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "BEs",
+        "best_entry_time": "2025-08-25 00:30",
+        "best_entry_time_ny": [
+            "2025-08-24 20:30"
+        ],
+        "best_entry_price": 4757.43,
+        "best_entry_rr": 3.6433770014555975,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                4794.0,
+                0.77
+            ],
+            [
+                "ETHUSDT",
+                4757.43,
+                0
+            ],
+            [
+                "tmo",
+                4221.68,
+                -11.26
+            ],
+            [
+                "tyo",
+                1834.25,
+                -61.44
+            ]
+        ],
+        "psp_extremums": [
+            110484.0,
+            4702.47,
+            201.01
+        ],
+        "deadline_close": "",
+        "targets": [
+            117732.3,
+            4957.67,
+            212.22
+        ],
+        "in_trade_range": [
+            4778.33,
+            4796.8,
+            4757.43,
+            4759.54,
+            86640.588,
+            "2025-08-25 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                4702.47,
+                "2025-08-25 00:45",
+                "2025-08-24 20:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 2.8050258483563244
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "entry_price": 206.08,
+        "stop": 201.01,
+        "take_profit": 212.22,
+        "entry_rr": 1.211045364891511,
+        "entry_time": "2025-08-25 00:00",
+        "entry_time_ny": "2025-08-24 20:00",
+        "entry_position_assets": 19.723865877711948,
+        "entry_position_usd": 4064.6942800788784,
+        "entry_position_fee": 1.8291124260354952,
+        "entry_reason": "1d psp for low week2 SMT -> high week3",
+        "entry_tos": [
+            [
+                "t90mo",
+                206.76,
+                0.33
+            ],
+            [
+                "SOLUSDT",
+                206.08,
+                0
+            ],
+            [
+                "tmo",
+                183.4,
+                -11.01
+            ],
+            [
+                "tyo",
+                126.0,
+                -38.86
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "BEs",
+        "best_entry_time": "2025-08-25 02:15",
+        "best_entry_time_ny": [
+            "2025-08-24 22:15"
+        ],
+        "best_entry_price": 202.32,
+        "best_entry_rr": 7.557251908396938,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                206.76,
+                2.19
+            ],
+            [
+                "SOLUSDT",
+                202.32,
+                0
+            ],
+            [
+                "tmo",
+                183.4,
+                -9.35
+            ],
+            [
+                "tyo",
+                126.0,
+                -37.72
+            ]
+        ],
+        "psp_extremums": [
+            110484.0,
+            4702.47,
+            201.01
+        ],
+        "deadline_close": "",
+        "targets": [
+            117732.3,
+            4957.67,
+            212.22
+        ],
+        "in_trade_range": [
+            206.09,
+            210.2,
+            202.32,
+            210.09,
+            5337682.27,
+            "2025-08-25 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                212.22,
+                "2025-08-25 02:30",
+                "2025-08-24 22:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 121.10453648915109,
+        "close_position_fee": 1.8836094674556134
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "entry_price": 113446.2,
+        "stop": 110484.0,
+        "take_profit": 117732.3,
+        "entry_rr": 1.4469313348187192,
+        "entry_time": "2025-08-25 00:00",
+        "entry_time_ny": "2025-08-24 20:00",
+        "entry_position_assets": 0.03375869286341236,
+        "entry_position_usd": 3829.7954223212514,
+        "entry_position_fee": 1.7234079400445632,
+        "entry_reason": "1d psp for low week2 SMT -> high week3",
+        "entry_tos": [
+            [
+                "tmo",
+                118678.0,
+                4.61
+            ],
+            [
+                "t90mo",
+                113591.0,
+                0.13
+            ],
+            [
+                "BTCUSDT",
+                113446.2,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -26.9
+            ]
+        ],
+        "psp_key_used": "1d",
+        "smt_type": "low",
+        "smt_label": "week2 SMT",
+        "smt_flags": "BEs",
+        "best_entry_time": "2025-08-25 20:00",
+        "best_entry_time_ny": [
+            "2025-08-25 16:00"
+        ],
+        "best_entry_price": 110532.2,
+        "best_entry_rr": 149.37966804980167,
+        "best_entry_tos": [
+            [
+                "tmo",
+                118678.0,
+                7.37
+            ],
+            [
+                "tdo",
+                112867.8,
+                2.11
+            ],
+            [
+                "t90mo",
+                112675.4,
+                1.94
+            ],
+            [
+                "BTCUSDT",
+                110532.2,
+                0
+            ],
+            [
+                "tyo",
+                82929.9,
+                -24.97
+            ]
+        ],
+        "psp_extremums": [
+            110484.0,
+            4702.47,
+            201.01
+        ],
+        "deadline_close": "",
+        "targets": [
+            117732.3,
+            4957.67,
+            212.22
+        ],
+        "in_trade_range": [
+            113446.2,
+            113621.3,
+            110532.2,
+            110619.9,
+            147699.759,
+            "2025-08-25 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                110484.0,
+                "2025-08-25 20:15",
+                "2025-08-25 16:15",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 1.678407940044563
+    }
+]
