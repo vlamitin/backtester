@@ -95,13 +95,15 @@ def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: 
 
 def _filter_by_psp_change(
         smt_level_filter: int,
+        smt_type_filter: List[str],
         psp_change: List[Tuple[int, str, str, str, str, str, str]],
         psp_change_filter: List[str],  # 'closed'|'confirmed' etc
         psp_key_filter: List[str]  #
 ) -> Optional[Tuple[int, str, str, str, str, str, str]]:
     my_psp_change = None
     for smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change in psp_change:  # psp_changes
-        if change not in psp_change_filter or smt_level != smt_level_filter or psp_key not in psp_key_filter:
+        if (change not in psp_change_filter or smt_level != smt_level_filter
+                or psp_key not in psp_key_filter or smt_type not in smt_type_filter):
             continue
         if my_psp_change is None or int(psp_key[0]) > int(my_psp_change[4][0]):
             my_psp_change = (smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change)
@@ -310,7 +312,9 @@ def _open_trade(
 
 
 def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
-    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    my_psp_change = _filter_by_psp_change(
+        4, ['high', 'low', 'half_low'],  spc[4], ['closed'], ['1h', '2h', '4h']
+    )
     if not my_psp_change:
         return []
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
@@ -373,7 +377,9 @@ def strategy01_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 
 
 def strategy02_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
-    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    my_psp_change = _filter_by_psp_change(
+        4, ['high', 'low', 'half_low'],  spc[4], ['closed'], ['1h', '2h', '4h']
+    )
     if not my_psp_change:
         return []
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
@@ -436,7 +442,9 @@ def strategy02_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 
 
 def strategy03_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
-    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    my_psp_change = _filter_by_psp_change(
+        4, ['high', 'low', 'half_low'],  spc[4], ['closed'], ['1h', '2h', '4h']
+    )
     if not my_psp_change:
         return []
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
@@ -504,7 +512,9 @@ def strategy03_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 
 
 def strategy04_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
-    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    my_psp_change = _filter_by_psp_change(
+        4, ['high', 'low', 'half_low'],  spc[4], ['closed'], ['1h', '2h', '4h']
+    )
     if not my_psp_change:
         return []
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
@@ -575,7 +585,9 @@ def strategy04_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 
 
 def strategy05_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
-    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    my_psp_change = _filter_by_psp_change(
+        4, ['high', 'low', 'half_low'],  spc[4], ['closed'], ['1h', '2h', '4h']
+    )
     if not my_psp_change:
         return []
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
@@ -643,7 +655,9 @@ def strategy05_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 
 
 def strategy06_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
-    my_psp_change = _filter_by_psp_change(4, spc[4], ['closed'], ['1h', '2h', '4h'])
+    my_psp_change = _filter_by_psp_change(
+        4, ['high', 'low', 'half_low'],  spc[4], ['closed'], ['1h', '2h', '4h']
+    )
     if not my_psp_change:
         return []
     smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
@@ -714,16 +728,21 @@ def strategy06_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
 
 
 def strategy07_to_constructor(
+        direction_filter: str,
         smt_lvl_filter: int, psp_change_filter: str, psp_keys_filter: List[str],
         target_lvl_filter: List[int], allow_half_target: bool, tsg: Callable[[bool], TargetSorter]
 ) -> TOpener:
     def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
         my_psp_change = _filter_by_psp_change(
-            smt_lvl_filter, spc[4], [psp_change_filter], psp_keys_filter
+            smt_lvl_filter, ['high', 'low', 'half_low'], spc[4], [psp_change_filter], psp_keys_filter
         )
         if not my_psp_change:
             return []
+
         smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+        if (direction_filter == "UP" and not smt_types_is_long[smt_type] or
+                direction_filter == "DOWN" and smt_types_is_long[smt_type]):
+            return []
 
         my_target = _filter_by_target(
             smt_types_is_long[smt_type], allow_half_target, tc, target_lvl_filter, tsg(smt_types_is_long[smt_type])
@@ -967,11 +986,11 @@ strategy06 = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
-# всё как в strategy01, входим в 3 актива и никаких фильтров на rr и tos и разрешены
+# всё как в strategy01, входим в 3 актива и никаких фильтров на rr и tos
 strategy07 = SmtPspStrategy(
     name="07. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        4, 'closed', ['1h', '2h', '4h'], [5], False,
+        "", 4, 'closed', ['1h', '2h', '4h'], [5], False,
         _closest_targets_sorter
     ),
     trades_handler=strategy01_th
@@ -981,7 +1000,7 @@ strategy07 = SmtPspStrategy(
 strategy08 = SmtPspStrategy(
     name="08. Trigger cPSP in wd smt - closest dq no-half target - no pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        4, 'closed', ['1h', '2h', '4h'], [5], False,
+        "", 4, 'closed', ['1h', '2h', '4h'], [5], False,
         _closest_targets_sorter
     ),
     trades_handler=strategy08_th
@@ -991,7 +1010,7 @@ strategy08 = SmtPspStrategy(
 strategy09 = SmtPspStrategy(
     name="09. Trigger cPSP in wd smt - closest dq target - pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        4, 'closed', ['1h', '2h', '4h'], [5], True,
+        "", 4, 'closed', ['1h', '2h', '4h'], [5], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy01_th
@@ -1001,7 +1020,7 @@ strategy09 = SmtPspStrategy(
 strategy10 = SmtPspStrategy(
     name="10. Trigger cPSP in wd smt - closest dq target - no pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        4, 'closed', ['1h', '2h', '4h'], [5], True,
+        "", 4, 'closed', ['1h', '2h', '4h'], [5], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy08_th
@@ -1011,7 +1030,7 @@ strategy10 = SmtPspStrategy(
 strategy11 = SmtPspStrategy(
     name="11. Trigger cPSP in wd smt - closest dq+wd target - pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
+        "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy01_th
@@ -1021,7 +1040,7 @@ strategy11 = SmtPspStrategy(
 strategy12 = SmtPspStrategy(
     name="12. Trigger cPSP in wd smt - closest dq+wd target - no pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
+        "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy08_th
@@ -1031,7 +1050,7 @@ strategy12 = SmtPspStrategy(
 strategy13 = SmtPspStrategy(
     name="13. Trigger cPSP in mw smt - closest wd target - pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        3, 'closed', ['4h', '1d'], [4], True,
+        "", 3, 'closed', ['4h', '1d'], [4], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy01_th
@@ -1041,7 +1060,7 @@ strategy13 = SmtPspStrategy(
 strategy14 = SmtPspStrategy(
     name="14. Trigger cPSP in wd smt - closest dq target - no pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        3, 'closed', ['4h', '1d'], [4], True,
+        "", 3, 'closed', ['4h', '1d'], [4], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy08_th
@@ -1051,7 +1070,7 @@ strategy14 = SmtPspStrategy(
 strategy15 = SmtPspStrategy(
     name="15. Trigger cPSP in wd smt - closest dq+wd target - pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        3, 'closed', ['4h', '1d'], [3, 4], True,
+        "", 3, 'closed', ['4h', '1d'], [3, 4], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy01_th
@@ -1061,7 +1080,87 @@ strategy15 = SmtPspStrategy(
 strategy16 = SmtPspStrategy(
     name="16. Trigger cPSP in wd smt - closest dq+wd target - no pre-take/stop - no TO+RR filter",
     trade_opener=strategy07_to_constructor(
-        3, 'closed', ['4h', '1d'], [3, 4], True,
+        "", 3, 'closed', ['4h', '1d'], [3, 4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy08_th
+)
+
+# всё как в strategy13, но confirmed свечки
+strategy17 = SmtPspStrategy(
+    name="17. Trigger CPSP in mw smt - closest wd target - pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "", 3, 'confirmed', ['4h', '1d'], [4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy01_th
+)
+
+# всё как в strategy14, но но confirmed свечки
+strategy18 = SmtPspStrategy(
+    name="18. Trigger CPSP in wd smt - closest dq target - no pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "", 3, 'confirmed', ['4h', '1d'], [4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy08_th
+)
+
+# всё как в strategy13, но только 1d up
+strategy19 = SmtPspStrategy(
+    name="19. Trigger cPSP in mw smt - only 1d UP - closest wd target - pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "UP", 3, 'closed', ['1d'], [4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy01_th
+)
+
+# всё как в strategy14, но только 1d up
+strategy20 = SmtPspStrategy(
+    name="14. Trigger cPSP in wd smt - only 1d UP - closest dq target - no pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "UP", 3, 'closed', ['1d'], [4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy08_th
+)
+
+# всё как в strategy15, но только 1d up
+strategy21 = SmtPspStrategy(
+    name="15. Trigger cPSP in wd smt - only 1d UP - closest dq+wd target - pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "UP", 3, 'closed', ['1d'], [3, 4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy01_th
+)
+
+# всё как в strategy16, но только 1d up
+strategy22 = SmtPspStrategy(
+    name="16. Trigger cPSP in wd smt - only 1d UP - closest dq+wd target - no pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "UP", 3, 'closed', ['1d'], [3, 4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy08_th
+)
+
+# всё как в strategy17, но только 1d up
+strategy23 = SmtPspStrategy(
+    name="17. Trigger CPSP in mw smt - only 1d UP - closest wd target - pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "UP", 3, 'confirmed', ['1d'], [4], True,
+        _closest_targets_sorter
+    ),
+    trades_handler=strategy01_th
+)
+
+# всё как в strategy18, но только 1d up
+strategy24 = SmtPspStrategy(
+    name="18. Trigger CPSP in wd smt - only 1d UP - closest dq target - no pre-take/stop - no TO+RR filter",
+    trade_opener=strategy07_to_constructor(
+        "UP", 3, 'confirmed', ['1d'], [4], True,
         _closest_targets_sorter
     ),
     trades_handler=strategy08_th

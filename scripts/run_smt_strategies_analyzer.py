@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,13 @@ strategy03_2024_snapshot = "scripts/test_snapshots/strategy_03_2024_btc_eth_sol.
 strategy07_2024_snapshot = "scripts/test_snapshots/strategy_07_2024_btc_eth_sol.json"
 strategy08_2024_snapshot = "scripts/test_snapshots/strategy_08_2024_btc_eth_sol.json"
 strategy09_2024_snapshot = "scripts/test_snapshots/strategy_09_2024_btc_eth_sol.json"
+strategy10_2024_snapshot = "scripts/test_snapshots/strategy_10_2024_btc_eth_sol.json"
+strategy11_2024_snapshot = "scripts/test_snapshots/strategy_11_2024_btc_eth_sol.json"
+strategy12_2024_snapshot = "scripts/test_snapshots/strategy_12_2024_btc_eth_sol.json"
+strategy13_2024_snapshot = "scripts/test_snapshots/strategy_13_2024_btc_eth_sol.json"
+strategy14_2024_snapshot = "scripts/test_snapshots/strategy_14_2024_btc_eth_sol.json"
+strategy15_2024_snapshot = "scripts/test_snapshots/strategy_15_2024_btc_eth_sol.json"
+strategy16_2024_snapshot = "scripts/test_snapshots/strategy_16_2024_btc_eth_sol.json"
 
 strategy03_2025_snapshot = "scripts/test_snapshots/strategy_03_2025_btc_eth_sol.json"
 
@@ -86,6 +93,23 @@ def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def item_shifted(smb: str, arr1: List[Tuple[str, float, float]], arr2: List[Tuple[str, float, float]]) -> bool:
+    common = {(x[0], x[1]) for x in arr1} & {(x[0], x[1]) for x in arr2}
+
+    filtered1 = [x[0] for x in arr1 if (x[0], x[1]) in common or x[0] == smb]
+    filtered2 = [x[0] for x in arr2 if (x[0], x[1]) in common or x[0] == smb]
+
+    idx1 = filtered1.index(smb)
+    idx2 = filtered2.index(smb)
+
+    neighbors1 = (filtered1[idx1 - 1] if idx1 > 0 else None,
+                  filtered1[idx1 + 1] if idx1 < len(filtered1) - 1 else None)
+    neighbors2 = (filtered2[idx2 - 1] if idx2 > 0 else None,
+                  filtered2[idx2 + 1] if idx2 < len(filtered2) - 1 else None)
+
+    return neighbors1 != neighbors2
+
+
 def to_trade_df(trades: List[SmtPspTrade]):
     df = pd.DataFrame(trades, columns=[
         'entry_time', 'asset', 'pnl_usd', 'direction', 'entry_rr', 'psp_key_used',
@@ -117,6 +141,61 @@ def to_trade_df(trades: List[SmtPspTrade]):
     df['entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].entry_tos]))
     df['best_entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].best_entry_tos]))
 
+    # # чем больше TO, которые с нужной от нас стороны, и чем они ближе к нашей цене, тем лучше
+    # entry_tos_aside_coefs1 = []
+    # # best_entry_tos_aside_coefs1 = []
+    # # чем больше TO, которые с нужной от нас стороны, и чем они дальше от нашей цены, тем лучше
+    # entry_tos_aside_coefs2 = []
+    # # best_entry_tos_aside_coefs2 = []
+    # for trade in trades:
+    #     asset_i = next(i for i, x in enumerate(trade.best_entry_tos) if x[0] == trade.asset)
+    #     coef1 = 0
+    #     coef2 = 0
+    #     aside_tos = trade.best_entry_tos[asset_i + 1:] if trade.direction == "UP" else trade.best_entry_tos[:asset_i]
+    #     for to in aside_tos:
+    #         # if abs(to[2]) < 0.1:
+    #         #     coef1 += 1.5
+    #         #     coef2 += 0.2
+    #         #     continue
+    #         # if abs(to[2]) < 0.2:
+    #         #     coef1 += 1
+    #         #     coef2 += 0.5
+    #         #     continue
+    #         # if abs(to[2]) < 0.3:
+    #         #     coef1 += 0.5
+    #         #     coef2 += 1
+    #         #     continue
+    #         coef1 += 0.2
+    #         coef2 += 1.5
+    #     entry_tos_aside_coefs1.append(coef1)
+    #     entry_tos_aside_coefs2.append(coef2)
+    # df["entry_tos_aside_coefs1"] = df.index.map(lambda i: entry_tos_aside_coefs1[i])
+    # df['entry_tos_aside_coefs1_perc'], _ = perc_all_and_sma20(df['entry_tos_aside_coefs1'])
+    # df["entry_tos_aside_coefs2"] = df.index.map(lambda i: entry_tos_aside_coefs2[i])
+    # df['entry_tos_aside_coefs2_perc'], _ = perc_all_and_sma20(df['entry_tos_aside_coefs2'])
+
+
+    # with_shift_in_tos = []
+    # prev_tos_in_shifted = []
+    # for trade in trades:
+    #     if trade.pnl_usd < 0:
+    #         continue
+    #     if trade.best_entry_rr == trade.entry_rr:
+    #         continue
+    #     if item_shifted(trade.asset, trade.entry_tos, trade.best_entry_tos):
+    #         with_shift_in_tos.append(trade)
+    #         asset_i = next(i for i, x in enumerate(trade.best_entry_tos) if x[0] == trade.asset)
+    #         if trade.direction == "UP":
+    #             prev_tos_in_shifted.append(trade.best_entry_tos[asset_i - 1])
+    #         else:
+    #             prev_tos_in_shifted.append(trade.best_entry_tos[asset_i + 1])
+    #
+    # pref_tos_df = pd.DataFrame(prev_tos_in_shifted, columns=["to_label", "price", "percent"])
+    # pref_tos_df["abs_percent"] = pref_tos_df["percent"].abs()
+    # pref_tos_grouped_mmc = pref_tos_df.groupby("to_label")["abs_percent"].agg(["count", "mean", "median"])
+    # pref_tos_percents = np.array([abs(x[2]) for x in prev_tos_in_shifted])
+    # pref_tos_mean, pref_tos_median = np.mean(pref_tos_percents), np.median(pref_tos_percents)
+
     df = with_3d_window_stagnation(df)
 
     first_cols = [
@@ -127,15 +206,31 @@ def to_trade_df(trades: List[SmtPspTrade]):
     cols = first_cols + [c for c in df.columns if c not in first_cols]
     df = df[cols]
 
+    df1 = df[[
+        'asset', 'pnl_usd', 'direction', 'entry_rr', 'psp_key_used', 'smt_type', 'smt_label', 'smt_flags',
+        'entry_yq',
+        'entry_mw',
+        'entry_wd',
+        'entry_dq',
+        'entry_q90m',
+        'entry_rr_perc',
+        'entry_tos',
+    ]]
+
     return df
 
 
 if __name__ == "__main__":
     try:
-        with open(strategy09_2024_snapshot, "r", encoding="utf-8") as f:
+        with open(strategy11_2024_snapshot, "r", encoding="utf-8") as f:
             json_str = f.read()
             trades_list = smt_psp_trades_from_json(json_str)
             trades_df = to_trade_df(trades_list)
+
+            # show_corr_charts("bla", trades_df, trades_df, [
+            #     "entry_tos_aside_coefs1",
+            #     "entry_tos_aside_coefs2",
+            # ], ["pnl_usd"])
 
             print("cum pnl --")
             print(trades_df['cum_pnl_usd'].iloc[-1])
@@ -166,12 +261,28 @@ if __name__ == "__main__":
             # print("\n")
 
             print("entry_position_usd_perc --")
-            print([float(x) for x in np.percentile(trades_df['entry_position_usd'], [10, 30, 50, 70, 90])])
+            print([float(x) for x in np.percentile(trades_df['entry_position_usd'], [10, 30, 70, 90])])
             print("\n")
 
             print("entry_position_usd_perc mean median count --")
             print(trades_df.groupby("entry_position_usd_perc")["pnl_usd"].agg(["mean", "median", "count"]))
             print("\n")
+            #
+            # print("entry_tos_aside_coefs1_perc --")
+            # print([float(x) for x in np.percentile(trades_df['entry_tos_aside_coefs1'], [10, 30, 70, 90])])
+            # print("\n")
+            #
+            # print("entry_tos_aside_coefs1_perc mean median count --")
+            # print(trades_df.groupby("entry_tos_aside_coefs1_perc")["pnl_usd"].agg(["mean", "median", "count"]))
+            # print("\n")
+            #
+            # print("entry_tos_aside_coefs2_perc --")
+            # print([float(x) for x in np.percentile(trades_df['entry_tos_aside_coefs2'], [10, 30, 70, 90])])
+            # print("\n")
+            #
+            # print("entry_tos_aside_coefs2_perc mean median count --")
+            # print(trades_df.groupby("entry_tos_aside_coefs2_perc")["pnl_usd"].agg(["mean", "median", "count"]))
+            # print("\n")
 
             #
             # print("entry_position_usd_perc mean median count pnl_minus_fees --")
@@ -179,11 +290,19 @@ if __name__ == "__main__":
             # print("\n")
 
             print("entry_rr_perc --")
-            print([float(x) for x in np.percentile(trades_df['entry_rr'], [10, 30, 50, 70, 90])])
+            print([float(x) for x in np.percentile(trades_df['entry_rr'], [10, 30, 70, 90])])
             print("\n")
 
             print("entry_rr_perc mean median count --")
             print(trades_df.groupby("entry_rr_perc")["pnl_usd"].agg(["mean", "median", "count"]))
+            print("\n")
+
+            print("entry_wd + entry_rr_perc mean median count --")
+            print(
+                trades_df.groupby(["entry_wd", "entry_rr_perc"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
             print("\n")
 
             #             print("entry_rr_perc mean median count pnl_minus_fees --")
@@ -191,24 +310,49 @@ if __name__ == "__main__":
             #             print("\n")
 
             print("minutes_in_market_perc --")
-            print([float(x) for x in np.percentile(trades_df['minutes_in_market'], [10, 30, 50, 70, 90])])
+            print([float(x) for x in np.percentile(trades_df['minutes_in_market'], [10, 30, 70, 90])])
             print("\n")
 
             print("minutes_in_market_perc mean median count --")
             print(trades_df.groupby("minutes_in_market_perc")["pnl_usd"].agg(["mean", "median", "count"]))
             print("\n")
 
+            print("entry_wd + minutes_in_market_perc mean median count --")
+            print(
+                trades_df.groupby(["entry_wd", "minutes_in_market_perc"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
+            print("\n")
+
+            print("entry_rr_perc + minutes_in_market_perc mean median count --")
+            print(
+                trades_df.groupby(["entry_rr_perc", "minutes_in_market_perc"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
+            print("\n")
+
+            print("entry_rr_perc < 90 and >=90 + minutes_in_market_perc + entry_wd mean median count --")
+            print(
+                trades_df[trades_df["entry_rr_perc"].isin(['<p90', '>=p90'])]
+                .groupby(["entry_rr_perc", "minutes_in_market_perc", "entry_wd"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
+            print("\n")
+
             print("psp_key_used mean median count --")
             print(trades_df.groupby("psp_key_used")["pnl_usd"].agg(["mean", "median", "count"]))
             print("\n")
-
-            print("entry_tos mean median count --")
-            print(trades_df.groupby("entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("best_entry_tos mean median count --")
-            print(trades_df.groupby("best_entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
+            #
+            # print("entry_tos mean median count --")
+            # print(trades_df.groupby("entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
+            # print("\n")
+            #
+            # print("best_entry_tos mean median count --")
+            # print(trades_df.groupby("best_entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
+            # print("\n")
 
             #             print("psp_key_used mean median count pnl_minus_fees --")
             #             print(trades_df.groupby("psp_key_used")["pnl_minus_fees"].agg(["mean", "median", "count"]))
@@ -257,6 +401,14 @@ if __name__ == "__main__":
             print("psp_key_used + direction mean median count --")
             print(
                 trades_df.groupby(["psp_key_used", "direction"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
+            print("\n")
+
+            print("psp_key_used + direction mean median count --")
+            print(
+                trades_df.groupby(["smt_type", "smt_label", "asset", "smt_flags"])["pnl_usd"]
                 .agg(["mean", "median", "count"])
                 .reset_index()
             )
@@ -313,6 +465,22 @@ if __name__ == "__main__":
             print("psp_key_used + direction + entry_q90m mean median count --")
             print(
                 trades_df.groupby(["psp_key_used", "direction", "entry_q90m"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
+            print("\n")
+
+            print("entry_wd + entry_dq mean median count --")
+            print(
+                trades_df.groupby(["entry_wd", "entry_dq"])["pnl_usd"]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+            )
+            print("\n")
+
+            print("entry_wd + smt_label mean median count --")
+            print(
+                trades_df.groupby(["entry_wd", "smt_label"])["pnl_usd"]
                 .agg(["mean", "median", "count"])
                 .reset_index()
             )

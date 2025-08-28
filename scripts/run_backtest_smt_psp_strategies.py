@@ -8,7 +8,8 @@ from stock_market_research_kit.smt_psp_strategy import strategy01, \
     strategy04, strategy06, \
     strategy05, \
     strategy07, \
-    strategy08, strategy09, strategy10, strategy11, strategy12, strategy13, strategy14, strategy15, strategy16
+    strategy08, strategy09, strategy10, strategy11, strategy12, strategy13, strategy14, strategy15, strategy16, \
+    strategy17, strategy18, strategy19, strategy20, strategy21, strategy22, strategy23, strategy24
 from stock_market_research_kit.smt_psp_trade import json_from_smt_psp_trades
 from stock_market_research_kit.triad import new_triad
 
@@ -28,11 +29,39 @@ strategy13_2024_snapshot = "scripts/test_snapshots/strategy_13_2024_btc_eth_sol.
 strategy14_2024_snapshot = "scripts/test_snapshots/strategy_14_2024_btc_eth_sol.json"
 strategy15_2024_snapshot = "scripts/test_snapshots/strategy_15_2024_btc_eth_sol.json"
 strategy16_2024_snapshot = "scripts/test_snapshots/strategy_16_2024_btc_eth_sol.json"
+strategy17_2024_snapshot = "scripts/test_snapshots/strategy_17_2024_btc_eth_sol.json"
+strategy18_2024_snapshot = "scripts/test_snapshots/strategy_18_2024_btc_eth_sol.json"
+strategy19_2024_snapshot = "scripts/test_snapshots/strategy_19_2024_btc_eth_sol.json"
+strategy20_2024_snapshot = "scripts/test_snapshots/strategy_20_2024_btc_eth_sol.json"
+strategy21_2024_snapshot = "scripts/test_snapshots/strategy_21_2024_btc_eth_sol.json"
+strategy22_2024_snapshot = "scripts/test_snapshots/strategy_22_2024_btc_eth_sol.json"
+strategy23_2024_snapshot = "scripts/test_snapshots/strategy_23_2024_btc_eth_sol.json"
+strategy24_2024_snapshot = "scripts/test_snapshots/strategy_24_2024_btc_eth_sol.json"
 
 strategy01_2025_snapshot = "scripts/test_snapshots/strategy_01_2025_btc_eth_sol.json"
 strategy02_2025_snapshot = "scripts/test_snapshots/strategy_02_2025_btc_eth_sol.json"
 strategy03_2025_snapshot = "scripts/test_snapshots/strategy_03_2025_btc_eth_sol.json"
 strategy04_2025_snapshot = "scripts/test_snapshots/strategy_04_2025_btc_eth_sol.json"
+strategy05_2025_snapshot = "scripts/test_snapshots/strategy_05_2025_btc_eth_sol.json"
+strategy06_2025_snapshot = "scripts/test_snapshots/strategy_06_2025_btc_eth_sol.json"
+strategy07_2025_snapshot = "scripts/test_snapshots/strategy_07_2025_btc_eth_sol.json"
+strategy08_2025_snapshot = "scripts/test_snapshots/strategy_08_2025_btc_eth_sol.json"
+strategy09_2025_snapshot = "scripts/test_snapshots/strategy_09_2025_btc_eth_sol.json"
+strategy10_2025_snapshot = "scripts/test_snapshots/strategy_10_2025_btc_eth_sol.json"
+strategy11_2025_snapshot = "scripts/test_snapshots/strategy_11_2025_btc_eth_sol.json"
+strategy12_2025_snapshot = "scripts/test_snapshots/strategy_12_2025_btc_eth_sol.json"
+strategy13_2025_snapshot = "scripts/test_snapshots/strategy_13_2025_btc_eth_sol.json"
+strategy14_2025_snapshot = "scripts/test_snapshots/strategy_14_2025_btc_eth_sol.json"
+strategy15_2025_snapshot = "scripts/test_snapshots/strategy_15_2025_btc_eth_sol.json"
+strategy16_2025_snapshot = "scripts/test_snapshots/strategy_16_2025_btc_eth_sol.json"
+strategy17_2025_snapshot = "scripts/test_snapshots/strategy_17_2025_btc_eth_sol.json"
+strategy18_2025_snapshot = "scripts/test_snapshots/strategy_18_2025_btc_eth_sol.json"
+strategy19_2025_snapshot = "scripts/test_snapshots/strategy_19_2025_btc_eth_sol.json"
+strategy20_2025_snapshot = "scripts/test_snapshots/strategy_20_2025_btc_eth_sol.json"
+strategy21_2025_snapshot = "scripts/test_snapshots/strategy_21_2025_btc_eth_sol.json"
+strategy22_2025_snapshot = "scripts/test_snapshots/strategy_22_2025_btc_eth_sol.json"
+strategy23_2025_snapshot = "scripts/test_snapshots/strategy_23_2025_btc_eth_sol.json"
+strategy24_2025_snapshot = "scripts/test_snapshots/strategy_24_2025_btc_eth_sol.json"
 
 
 def candles_generator_reverse(symbol: str, from_year: int, to_year: int, to_: str) -> Candles15mGenerator:
@@ -91,6 +120,14 @@ def backtest_strategy_full_2024():
             strategy14,
             strategy15,
             strategy16,
+            strategy17,
+            strategy18,
+            strategy19,
+            strategy20,
+            strategy21,
+            strategy22,
+            strategy23,
+            strategy24,
         ],
         candles_generator(symbols, 2024, '2024-01-01 00:00', '2025-01-01 00:00'),
         '2025-01-01 00:00'
@@ -112,6 +149,14 @@ def backtest_strategy_full_2024():
     strategy14_trades = closed_trades[strategy14.name]
     strategy15_trades = closed_trades[strategy15.name]
     strategy16_trades = closed_trades[strategy16.name]
+    strategy17_trades = closed_trades[strategy17.name]
+    strategy18_trades = closed_trades[strategy18.name]
+    strategy19_trades = closed_trades[strategy19.name]
+    strategy20_trades = closed_trades[strategy20.name]
+    strategy21_trades = closed_trades[strategy21.name]
+    strategy22_trades = closed_trades[strategy22.name]
+    strategy23_trades = closed_trades[strategy23.name]
+    strategy24_trades = closed_trades[strategy24.name]
 
     with open(strategy01_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy01_trades))
@@ -145,11 +190,146 @@ def backtest_strategy_full_2024():
         f.write(json_from_smt_psp_trades(strategy15_trades))
     with open(strategy16_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy16_trades))
+    with open(strategy17_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy17_trades))
+    with open(strategy18_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy18_trades))
+    with open(strategy19_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy19_trades))
+    with open(strategy20_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy20_trades))
+    with open(strategy21_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy21_trades))
+    with open(strategy22_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy22_trades))
+    with open(strategy23_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy23_trades))
+    with open(strategy24_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy24_trades))
+
+
+def backtest_strategy_full_2025():
+    symbols = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
+    triad = new_triad(
+        symbols,
+        (
+            candles_generator_reverse(symbols[0], 2024, 2025, '2025-01-01 00:00'),
+            candles_generator_reverse(symbols[1], 2024, 2025, '2025-01-01 00:00'),
+            candles_generator_reverse(symbols[2], 2024, 2025, '2025-01-01 00:00'),
+        )
+    )
+
+    closed_trades = fronttest(
+        triad,
+        [
+            strategy01,
+            strategy02,
+            strategy03,
+            strategy04,
+            strategy05,
+            strategy06,
+            strategy07,
+            strategy08,
+            strategy09,
+            strategy10,
+            strategy11,
+            strategy12,
+            strategy13,
+            strategy14,
+            strategy15,
+            strategy16,
+            strategy17,
+            strategy18,
+            strategy19,
+            strategy20,
+            strategy21,
+            strategy22,
+            strategy23,
+            strategy24,
+        ],
+        candles_generator(symbols, 2025, '2025-01-01 00:00', '2025-08-28 00:00'),
+        '2025-08-28 00:00'
+    )
+
+    strategy01_trades = closed_trades[strategy01.name]
+    strategy02_trades = closed_trades[strategy02.name]
+    strategy03_trades = closed_trades[strategy03.name]
+    strategy04_trades = closed_trades[strategy04.name]
+    strategy05_trades = closed_trades[strategy05.name]
+    strategy06_trades = closed_trades[strategy06.name]
+    strategy07_trades = closed_trades[strategy07.name]
+    strategy08_trades = closed_trades[strategy08.name]
+    strategy09_trades = closed_trades[strategy09.name]
+    strategy10_trades = closed_trades[strategy10.name]
+    strategy11_trades = closed_trades[strategy11.name]
+    strategy12_trades = closed_trades[strategy12.name]
+    strategy13_trades = closed_trades[strategy13.name]
+    strategy14_trades = closed_trades[strategy14.name]
+    strategy15_trades = closed_trades[strategy15.name]
+    strategy16_trades = closed_trades[strategy16.name]
+    strategy17_trades = closed_trades[strategy17.name]
+    strategy18_trades = closed_trades[strategy18.name]
+    strategy19_trades = closed_trades[strategy19.name]
+    strategy20_trades = closed_trades[strategy20.name]
+    strategy21_trades = closed_trades[strategy21.name]
+    strategy22_trades = closed_trades[strategy22.name]
+    strategy23_trades = closed_trades[strategy23.name]
+    strategy24_trades = closed_trades[strategy24.name]
+
+    with open(strategy01_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy01_trades))
+    with open(strategy02_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy02_trades))
+    with open(strategy03_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy03_trades))
+    with open(strategy04_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy04_trades))
+    with open(strategy05_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy05_trades))
+    with open(strategy06_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy06_trades))
+    with open(strategy07_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy07_trades))
+    with open(strategy08_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy08_trades))
+    with open(strategy09_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy09_trades))
+    with open(strategy10_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy10_trades))
+    with open(strategy11_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy11_trades))
+    with open(strategy12_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy12_trades))
+    with open(strategy13_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy13_trades))
+    with open(strategy14_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy14_trades))
+    with open(strategy15_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy15_trades))
+    with open(strategy16_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy16_trades))
+    with open(strategy17_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy17_trades))
+    with open(strategy18_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy18_trades))
+    with open(strategy19_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy19_trades))
+    with open(strategy20_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy20_trades))
+    with open(strategy21_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy21_trades))
+    with open(strategy22_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy22_trades))
+    with open(strategy23_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy23_trades))
+    with open(strategy24_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy24_trades))
 
 
 if __name__ == "__main__":
     try:
-        backtest_strategy_full_2024()
+        # backtest_strategy_full_2024()
+        backtest_strategy_full_2025()
 
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")

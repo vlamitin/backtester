@@ -160,22 +160,22 @@ def to_candle_df(candles: List[InnerCandle]):
     df['volume_perc_all'], df['volume_perc_sma20'] = perc_all_and_sma20(df['volume'])
 
     df['perf'] = (df['close'] - df['open']) / df['open'] * 100
-    perf_perc = [float(x) for x in np.percentile(df['perf'], [10, 30, 50, 70, 90])]
+    perf_perc = [float(x) for x in np.percentile(df['perf'], [10, 30, 70, 90])]
     df['perf_perc_all'], df['perf_perc_sma20'] = perc_all_and_sma20(df['perf'])
 
     df['volat'] = (df['high'] - df['low']) / df['open'] * 100
-    volat_perc = [float(x) for x in np.percentile(df['volat'], [10, 30, 50, 70, 90])]
+    volat_perc = [float(x) for x in np.percentile(df['volat'], [10, 30, 70, 90])]
     df['volat_perc_all'], df['volat_perc_sma20'] = perc_all_and_sma20(df['volat'])
 
     candle_range = (df['high'] - df['low']).replace(0, np.nan)
 
     df['upper_wick_fraction'] = (df['high'] - np.maximum(df['open'], df['close'])) / candle_range * 100
-    upper_wick_fraction_perc = [float(x) for x in np.percentile(df['upper_wick_fraction'], [10, 30, 50, 70, 90])]
+    upper_wick_fraction_perc = [float(x) for x in np.percentile(df['upper_wick_fraction'], [10, 30, 70, 90])]
     df['upper_wick_fraction_perc_all'], df['upper_wick_fraction_perc_sma20'] = perc_all_and_sma20(
         df['upper_wick_fraction'])
 
     df['body_fraction'] = np.abs(df['open'] - df['close']) / candle_range * 100
-    body_fraction_perc = [float(x) for x in np.percentile(df['body_fraction'], [10, 30, 50, 70, 90])]
+    body_fraction_perc = [float(x) for x in np.percentile(df['body_fraction'], [10, 30, 70, 90])]
     df['body_fraction_perc_all'], df['body_fraction_perc_sma20'] = perc_all_and_sma20(
         df['body_fraction'])
     df['body_fraction_popular_groups'] = group_by_popular(df['body_fraction'])
@@ -183,15 +183,15 @@ def to_candle_df(candles: List[InnerCandle]):
     # df['body_fraction'].value_counts()
 
     df['lower_wick_fraction'] = (np.minimum(df['open'], df['close']) - df['low']) / candle_range * 100
-    lower_wick_fraction_perc = [float(x) for x in np.percentile(df['lower_wick_fraction'], [10, 30, 50, 70, 90])]
+    lower_wick_fraction_perc = [float(x) for x in np.percentile(df['lower_wick_fraction'], [10, 30, 70, 90])]
     df['lower_wick_fraction_perc_all'], df['lower_wick_fraction_perc_sma20'] = perc_all_and_sma20(
         df['lower_wick_fraction'])
 
     df['min_safe_stop_bull'] = (df['open'] - df['low']) / df['open'] * 100
-    min_safe_stop_bull_percentiles = np.percentile(df['min_safe_stop_bull'], [10, 30, 50, 70, 90])
+    min_safe_stop_bull_percentiles = np.percentile(df['min_safe_stop_bull'], [10, 30, 70, 90])
 
     df['min_safe_stop_bear'] = (df['high'] - df['open']) / df['open'] * 100
-    min_safe_stop_bear_percentiles = np.percentile(df['min_safe_stop_bear'], [10, 30, 50, 70, 90])
+    min_safe_stop_bear_percentiles = np.percentile(df['min_safe_stop_bear'], [10, 30, 70, 90])
 
     return df
 
@@ -232,6 +232,7 @@ def show_corr_charts(title, df1, df2, columns1, columns2):
             df1[f"target_{col2}"] = df2[col2]
             corr, p_value = stats.pearsonr(df1[col1], df1[f"target_{col2}"])
             if -0.25 < corr < 0.25:
+                print(f"{col1} correlates with {col2} - corr: '{corr}', p_value: '{p_value}'")
                 continue
             pairs.append((col1, f"target_{col2}", corr, p_value))
 
