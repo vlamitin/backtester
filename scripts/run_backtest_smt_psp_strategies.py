@@ -271,146 +271,146 @@ def backtest_strategy_full_2025():
     closed_trades = fronttest(
         triad,
         [
-            # strategy01,
-            # strategy02,
-            # strategy03,
-            # strategy04,
-            # strategy05,
-            # strategy06,
-            # strategy07,
-            # strategy08,
-            # strategy09,
-            # strategy10,
-            # strategy11,
-            # strategy12,
-            # strategy13,
-            # strategy14,
-            # strategy15,
-            # strategy16,
-            # strategy17,
-            # strategy18,
-            # strategy19,
-            # strategy20,
-            # strategy21,
-            # strategy22,
-            # strategy23,
-            # strategy24,
-            strategy25,
-            strategy26,
-            strategy27,
-            strategy28,
-            strategy29,
-            strategy30,
-            strategy31,
-            strategy32,
+            strategy01,
+            strategy02,
+            strategy03,
+            strategy04,
+            strategy05,
+            strategy06,
+            strategy07,
+            strategy08,
+            strategy09,
+            strategy10,
+            strategy11,
+            strategy12,
+            strategy13,
+            strategy14,
+            strategy15,
+            strategy16,
+            strategy17,
+            strategy18,
+            strategy19,
+            strategy20,
+            strategy21,
+            strategy22,
+            strategy23,
+            strategy24,
+            # strategy25,
+            # strategy26,
+            # strategy27,
+            # strategy28,
+            # strategy29,
+            # strategy30,
+            # strategy31,
+            # strategy32,
         ],
         candles_generator(symbols, 2025, '2025-01-01 00:00', '2025-08-29 00:00'),
         '2025-08-29 00:00'
     )
 
-    # strategy01_trades = closed_trades[strategy01.name]
-    # strategy02_trades = closed_trades[strategy02.name]
-    # strategy03_trades = closed_trades[strategy03.name]
-    # strategy04_trades = closed_trades[strategy04.name]
-    # strategy05_trades = closed_trades[strategy05.name]
-    # strategy06_trades = closed_trades[strategy06.name]
-    # strategy07_trades = closed_trades[strategy07.name]
-    # strategy08_trades = closed_trades[strategy08.name]
-    # strategy09_trades = closed_trades[strategy09.name]
-    # strategy10_trades = closed_trades[strategy10.name]
-    # strategy11_trades = closed_trades[strategy11.name]
-    # strategy12_trades = closed_trades[strategy12.name]
-    # strategy13_trades = closed_trades[strategy13.name]
-    # strategy14_trades = closed_trades[strategy14.name]
-    # strategy15_trades = closed_trades[strategy15.name]
-    # strategy16_trades = closed_trades[strategy16.name]
-    # strategy17_trades = closed_trades[strategy17.name]
-    # strategy18_trades = closed_trades[strategy18.name]
-    # strategy19_trades = closed_trades[strategy19.name]
-    # strategy20_trades = closed_trades[strategy20.name]
-    # strategy21_trades = closed_trades[strategy21.name]
-    # strategy22_trades = closed_trades[strategy22.name]
-    # strategy23_trades = closed_trades[strategy23.name]
-    # strategy24_trades = closed_trades[strategy24.name]
-    strategy25_trades = closed_trades[strategy25.name]
-    strategy26_trades = closed_trades[strategy26.name]
-    strategy27_trades = closed_trades[strategy27.name]
-    strategy28_trades = closed_trades[strategy28.name]
-    strategy29_trades = closed_trades[strategy29.name]
-    strategy30_trades = closed_trades[strategy30.name]
-    strategy31_trades = closed_trades[strategy31.name]
-    strategy32_trades = closed_trades[strategy32.name]
+    strategy01_trades = closed_trades[strategy01.name]
+    strategy02_trades = closed_trades[strategy02.name]
+    strategy03_trades = closed_trades[strategy03.name]
+    strategy04_trades = closed_trades[strategy04.name]
+    strategy05_trades = closed_trades[strategy05.name]
+    strategy06_trades = closed_trades[strategy06.name]
+    strategy07_trades = closed_trades[strategy07.name]
+    strategy08_trades = closed_trades[strategy08.name]
+    strategy09_trades = closed_trades[strategy09.name]
+    strategy10_trades = closed_trades[strategy10.name]
+    strategy11_trades = closed_trades[strategy11.name]
+    strategy12_trades = closed_trades[strategy12.name]
+    strategy13_trades = closed_trades[strategy13.name]
+    strategy14_trades = closed_trades[strategy14.name]
+    strategy15_trades = closed_trades[strategy15.name]
+    strategy16_trades = closed_trades[strategy16.name]
+    strategy17_trades = closed_trades[strategy17.name]
+    strategy18_trades = closed_trades[strategy18.name]
+    strategy19_trades = closed_trades[strategy19.name]
+    strategy20_trades = closed_trades[strategy20.name]
+    strategy21_trades = closed_trades[strategy21.name]
+    strategy22_trades = closed_trades[strategy22.name]
+    strategy23_trades = closed_trades[strategy23.name]
+    strategy24_trades = closed_trades[strategy24.name]
+    # strategy25_trades = closed_trades[strategy25.name]
+    # strategy26_trades = closed_trades[strategy26.name]
+    # strategy27_trades = closed_trades[strategy27.name]
+    # strategy28_trades = closed_trades[strategy28.name]
+    # strategy29_trades = closed_trades[strategy29.name]
+    # strategy30_trades = closed_trades[strategy30.name]
+    # strategy31_trades = closed_trades[strategy31.name]
+    # strategy32_trades = closed_trades[strategy32.name]
 
-    # with open(strategy01_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy01_trades))
-    # with open(strategy02_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy02_trades))
-    # with open(strategy03_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy03_trades))
-    # with open(strategy04_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy04_trades))
-    # with open(strategy05_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy05_trades))
-    # with open(strategy06_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy06_trades))
-    # with open(strategy07_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy07_trades))
-    # with open(strategy08_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy08_trades))
-    # with open(strategy09_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy09_trades))
-    # with open(strategy10_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy10_trades))
-    # with open(strategy11_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy11_trades))
-    # with open(strategy12_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy12_trades))
-    # with open(strategy13_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy13_trades))
-    # with open(strategy14_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy14_trades))
-    # with open(strategy15_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy15_trades))
-    # with open(strategy16_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy16_trades))
-    # with open(strategy17_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy17_trades))
-    # with open(strategy18_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy18_trades))
-    # with open(strategy19_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy19_trades))
-    # with open(strategy20_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy20_trades))
-    # with open(strategy21_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy21_trades))
-    # with open(strategy22_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy22_trades))
-    # with open(strategy23_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy23_trades))
-    # with open(strategy24_2025_snapshot, "w", encoding="utf-8") as f:
-    #     f.write(json_from_smt_psp_trades(strategy24_trades))
-    with open(strategy25_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy25_trades))
-    with open(strategy26_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy26_trades))
-    with open(strategy27_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy27_trades))
-    with open(strategy28_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy28_trades))
-    with open(strategy29_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy29_trades))
-    with open(strategy30_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy30_trades))
-    with open(strategy31_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy31_trades))
-    with open(strategy32_2025_snapshot, "w", encoding="utf-8") as f:
-        f.write(json_from_smt_psp_trades(strategy32_trades))
+    with open(strategy01_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy01_trades))
+    with open(strategy02_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy02_trades))
+    with open(strategy03_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy03_trades))
+    with open(strategy04_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy04_trades))
+    with open(strategy05_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy05_trades))
+    with open(strategy06_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy06_trades))
+    with open(strategy07_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy07_trades))
+    with open(strategy08_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy08_trades))
+    with open(strategy09_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy09_trades))
+    with open(strategy10_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy10_trades))
+    with open(strategy11_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy11_trades))
+    with open(strategy12_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy12_trades))
+    with open(strategy13_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy13_trades))
+    with open(strategy14_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy14_trades))
+    with open(strategy15_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy15_trades))
+    with open(strategy16_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy16_trades))
+    with open(strategy17_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy17_trades))
+    with open(strategy18_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy18_trades))
+    with open(strategy19_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy19_trades))
+    with open(strategy20_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy20_trades))
+    with open(strategy21_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy21_trades))
+    with open(strategy22_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy22_trades))
+    with open(strategy23_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy23_trades))
+    with open(strategy24_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy24_trades))
+    # with open(strategy25_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy25_trades))
+    # with open(strategy26_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy26_trades))
+    # with open(strategy27_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy27_trades))
+    # with open(strategy28_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy28_trades))
+    # with open(strategy29_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy29_trades))
+    # with open(strategy30_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy30_trades))
+    # with open(strategy31_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy31_trades))
+    # with open(strategy32_2025_snapshot, "w", encoding="utf-8") as f:
+    #     f.write(json_from_smt_psp_trades(strategy32_trades))
 
 
 if __name__ == "__main__":
     try:
-        backtest_strategy_full_2024()
-        # backtest_strategy_full_2025()
+        # backtest_strategy_full_2024()
+        backtest_strategy_full_2025()
 
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")

@@ -31,6 +31,14 @@ strategy21_2024_snapshot = "scripts/test_snapshots/strategy_21_2024_btc_eth_sol.
 strategy22_2024_snapshot = "scripts/test_snapshots/strategy_22_2024_btc_eth_sol.json"
 strategy23_2024_snapshot = "scripts/test_snapshots/strategy_23_2024_btc_eth_sol.json"
 strategy24_2024_snapshot = "scripts/test_snapshots/strategy_24_2024_btc_eth_sol.json"
+strategy25_2024_snapshot = "scripts/test_snapshots/strategy_25_2024_btc_eth_sol.json"
+strategy26_2024_snapshot = "scripts/test_snapshots/strategy_26_2024_btc_eth_sol.json"
+strategy27_2024_snapshot = "scripts/test_snapshots/strategy_27_2024_btc_eth_sol.json"
+strategy28_2024_snapshot = "scripts/test_snapshots/strategy_28_2024_btc_eth_sol.json"
+strategy29_2024_snapshot = "scripts/test_snapshots/strategy_29_2024_btc_eth_sol.json"
+strategy30_2024_snapshot = "scripts/test_snapshots/strategy_30_2024_btc_eth_sol.json"
+strategy31_2024_snapshot = "scripts/test_snapshots/strategy_31_2024_btc_eth_sol.json"
+strategy32_2024_snapshot = "scripts/test_snapshots/strategy_32_2024_btc_eth_sol.json"
 
 strategy01_2025_snapshot = "scripts/test_snapshots/strategy_01_2025_btc_eth_sol.json"
 strategy02_2025_snapshot = "scripts/test_snapshots/strategy_02_2025_btc_eth_sol.json"
@@ -56,6 +64,14 @@ strategy21_2025_snapshot = "scripts/test_snapshots/strategy_21_2025_btc_eth_sol.
 strategy22_2025_snapshot = "scripts/test_snapshots/strategy_22_2025_btc_eth_sol.json"
 strategy23_2025_snapshot = "scripts/test_snapshots/strategy_23_2025_btc_eth_sol.json"
 strategy24_2025_snapshot = "scripts/test_snapshots/strategy_24_2025_btc_eth_sol.json"
+strategy25_2025_snapshot = "scripts/test_snapshots/strategy_25_2025_btc_eth_sol.json"
+strategy26_2025_snapshot = "scripts/test_snapshots/strategy_26_2025_btc_eth_sol.json"
+strategy27_2025_snapshot = "scripts/test_snapshots/strategy_27_2025_btc_eth_sol.json"
+strategy28_2025_snapshot = "scripts/test_snapshots/strategy_28_2025_btc_eth_sol.json"
+strategy29_2025_snapshot = "scripts/test_snapshots/strategy_29_2025_btc_eth_sol.json"
+strategy30_2025_snapshot = "scripts/test_snapshots/strategy_30_2025_btc_eth_sol.json"
+strategy31_2025_snapshot = "scripts/test_snapshots/strategy_31_2025_btc_eth_sol.json"
+strategy32_2025_snapshot = "scripts/test_snapshots/strategy_32_2025_btc_eth_sol.json"
 
 
 def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
