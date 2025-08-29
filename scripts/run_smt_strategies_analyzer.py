@@ -20,7 +20,22 @@ strategy14_2024_snapshot = "scripts/test_snapshots/strategy_14_2024_btc_eth_sol.
 strategy15_2024_snapshot = "scripts/test_snapshots/strategy_15_2024_btc_eth_sol.json"
 strategy16_2024_snapshot = "scripts/test_snapshots/strategy_16_2024_btc_eth_sol.json"
 
-strategy03_2025_snapshot = "scripts/test_snapshots/strategy_03_2025_btc_eth_sol.json"
+strategy09_2025_snapshot = "scripts/test_snapshots/strategy_09_2025_btc_eth_sol.json"
+strategy10_2025_snapshot = "scripts/test_snapshots/strategy_10_2025_btc_eth_sol.json"
+strategy11_2025_snapshot = "scripts/test_snapshots/strategy_11_2025_btc_eth_sol.json"
+strategy12_2025_snapshot = "scripts/test_snapshots/strategy_12_2025_btc_eth_sol.json"
+strategy13_2025_snapshot = "scripts/test_snapshots/strategy_13_2025_btc_eth_sol.json"
+strategy14_2025_snapshot = "scripts/test_snapshots/strategy_14_2025_btc_eth_sol.json"
+strategy15_2025_snapshot = "scripts/test_snapshots/strategy_15_2025_btc_eth_sol.json"
+strategy16_2025_snapshot = "scripts/test_snapshots/strategy_16_2025_btc_eth_sol.json"
+strategy17_2025_snapshot = "scripts/test_snapshots/strategy_17_2025_btc_eth_sol.json"
+strategy18_2025_snapshot = "scripts/test_snapshots/strategy_18_2025_btc_eth_sol.json"
+strategy19_2025_snapshot = "scripts/test_snapshots/strategy_19_2025_btc_eth_sol.json"
+strategy20_2025_snapshot = "scripts/test_snapshots/strategy_20_2025_btc_eth_sol.json"
+strategy21_2025_snapshot = "scripts/test_snapshots/strategy_21_2025_btc_eth_sol.json"
+strategy22_2025_snapshot = "scripts/test_snapshots/strategy_22_2025_btc_eth_sol.json"
+strategy23_2025_snapshot = "scripts/test_snapshots/strategy_23_2025_btc_eth_sol.json"
+strategy24_2025_snapshot = "scripts/test_snapshots/strategy_24_2025_btc_eth_sol.json"
 
 
 def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
@@ -222,7 +237,7 @@ def to_trade_df(trades: List[SmtPspTrade]):
 
 if __name__ == "__main__":
     try:
-        with open(strategy11_2024_snapshot, "r", encoding="utf-8") as f:
+        with open(strategy09_2025_snapshot, "r", encoding="utf-8") as f:
             json_str = f.read()
             trades_list = smt_psp_trades_from_json(json_str)
             trades_df = to_trade_df(trades_list)

@@ -377,8 +377,8 @@ class Triad:
         a3_candles = as_candles(smt.a3_sweep_candles_15m)
 
         _as_1_candle_took = time.perf_counter() - _as_1_candle_time
-        if _as_1_candle_took > 0.05:
-            log_warn_ny(f"as_1_candle took {_as_1_candle_took:.6f} seconds, as_candles is {as_candles.__name__}")
+        # if _as_1_candle_took > 0.05:
+        #     log_warn_ny(f"as_1_candle took {_as_1_candle_took:.6f} seconds, as_candles is {as_candles.__name__}")
 
         if len(a1_candles) == 0:
             return []
@@ -493,9 +493,9 @@ class Triad:
                 a3_min, a3_max = min(a3_min, a3_candles[i][2]), max(a3_max, a3_candles[i][1])
 
         _psps_calculation_took = time.perf_counter() - _psps_calculation_time
-        if _psps_calculation_took > 0.02:
-            log_warn_ny(
-                f"psps_calculation took {_psps_calculation_took:.6f} seconds, as_candles is {as_candles.__name__}")
+        # if _psps_calculation_took > 0.02:
+        #     log_warn_ny(
+        #         f"psps_calculation took {_psps_calculation_took:.6f} seconds, as_candles is {as_candles.__name__}")
 
         return psps
 
