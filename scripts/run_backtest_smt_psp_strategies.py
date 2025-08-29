@@ -409,8 +409,8 @@ def backtest_strategy_full_2025():
 
 if __name__ == "__main__":
     try:
-        # backtest_strategy_full_2024()
-        backtest_strategy_full_2025()
+        backtest_strategy_full_2024()
+        # backtest_strategy_full_2025()
 
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
