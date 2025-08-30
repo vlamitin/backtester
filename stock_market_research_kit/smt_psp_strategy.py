@@ -99,6 +99,7 @@ def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: 
     else:
         pnl = trade.entry_position_usd / trade.entry_price * (trade.entry_price - close_price)
     trade.pnl_usd = pnl
+
     trade.close_position_fee = close_price * trade.entry_position_assets * MARKET_ORDER_FEE_PERCENT / 100
     trade.closes.append((100, close_price, time_str, to_ny_date_str(time_str), reason))
 
@@ -986,7 +987,7 @@ def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, assets: 
                 f"close because {asset.symbol} reached target")
 
 
-def _with_best_entry(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
+def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
     smb_assets_map = {}
     trade_tos = []
     for i, a in enumerate([tr.a1, tr.a2, tr.a3]):
@@ -999,31 +1000,56 @@ def _with_best_entry(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
     )
 
     if at.direction == 'UP':
-        if asset.prev_15m_candle[2] < at.entry_price:
+        candle_max_pnl = at.entry_position_usd / at.entry_price * (asset.prev_15m_candle[1] - at.entry_price)
+        if candle_max_pnl > at.best_pnl:
+            at.best_pnl = candle_max_pnl
+            at.best_pnl_time = asset.snapshot_date_readable
+            at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_pnl_price = asset.prev_15m_candle[1]
+            at.best_pnl_tos = []
+            for label, price, perc in trade_tos:
+                if label == asset.symbol:
+                    at.best_pnl_tos.append((label, asset.prev_15m_candle[1], 0))
+                else:
+                    at.best_pnl_tos.append((label, price, percent_from_current(asset.prev_15m_candle[1], price)))
+        if asset.prev_15m_candle[2] < at.best_entry_price:
             at.best_entry_time = asset.snapshot_date_readable
-            at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable),
-            at.best_entry_price = at._in_trade_range[2]
-            at.best_entry_rr = _rr_and_pos_size(at._in_trade_range[2], at.take_profit, at.stop)[0]
+            at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable)
+            at.best_entry_price = asset.prev_15m_candle[2]
+            at.best_entry_rr = _rr_and_pos_size(asset.prev_15m_candle[2], at.take_profit, at.stop)[0]
             at.best_entry_tos = []
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
-                    at.best_entry_tos.append((label, at._in_trade_range[2], perc))
+                    at.best_entry_tos.append((label, asset.prev_15m_candle[2], 0))
                 else:
-                    at.best_entry_tos.append((label, price, percent_from_current(at._in_trade_range[2], price)))
+                    at.best_entry_tos.append((label, price, percent_from_current(asset.prev_15m_candle[2], price)))
     elif at.direction == 'DOWN':
-        if asset.prev_15m_candle[1] > at.entry_price:
+        candle_max_pnl = at.entry_position_usd / at.entry_price * (at.entry_price - asset.prev_15m_candle[1])
+        if candle_max_pnl > at.best_pnl:
+            at.best_pnl = candle_max_pnl
+            at.best_pnl_time = asset.snapshot_date_readable
+            at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_pnl_price = asset.prev_15m_candle[1]
+            at.best_pnl_tos = []
+            for label, price, perc in trade_tos:
+                if label == asset.symbol:
+                    at.best_pnl_tos.append((label, asset.prev_15m_candle[1], 0))
+                else:
+                    at.best_pnl_tos.append((label, price, percent_from_current(asset.prev_15m_candle[1], price)))
+        if asset.prev_15m_candle[1] > at.best_entry_price:
             at.best_entry_time = asset.snapshot_date_readable
             at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable),
-            at.best_entry_price = at._in_trade_range[1]
-            at.best_entry_rr = _rr_and_pos_size(at._in_trade_range[1], at.take_profit, at.stop)[0]
+            at.best_entry_price = asset.prev_15m_candle[1]
+            at.best_entry_rr = _rr_and_pos_size(asset.prev_15m_candle[1], at.take_profit, at.stop)[0]
             at.best_entry_tos = []
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
-                    at.best_entry_tos.append((label, at._in_trade_range[1], perc))
+                    at.best_entry_tos.append((label, asset.prev_15m_candle[1], perc))
                 else:
-                    at.best_entry_tos.append((label, price, percent_from_current(at._in_trade_range[1], price)))
+                    at.best_entry_tos.append((label, price, percent_from_current(asset.prev_15m_candle[1], price)))
 
     at.best_entry_tos = sorted(at.best_entry_tos, key=lambda x: x[1], reverse=True)
+    at.best_pnl_tos = sorted(at.best_pnl_tos, key=lambda x: x[1], reverse=True)
     return at
 
 
@@ -1085,7 +1111,7 @@ def strategy01_th(
             closed_trades.append(by_other_reached_target)
             continue
 
-        new_active_trades.append(_with_best_entry(at, tr, tos))
+        new_active_trades.append(_with_best(at, tr, tos))
 
     return (
         new_active_trades,
@@ -1110,7 +1136,7 @@ def strategy08_th(
             closed_trades[key] = by_tp_sp_deadline
             continue
 
-        new_active_trades.append(_with_best_entry(at, tr, tos))
+        new_active_trades.append(_with_best(at, tr, tos))
 
     return (
         new_active_trades,
