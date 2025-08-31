@@ -93,15 +93,19 @@ def _price_and_pos_size(rr: float, target: float, stop: float) -> Tuple[float, f
     return price, pos_size_assets, pos_size_assets * price
 
 
-def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: str) -> SmtPspTrade:
-    if trade.direction == 'UP':
-        pnl = trade.entry_position_usd / trade.entry_price * (close_price - trade.entry_price)
-    else:
-        pnl = trade.entry_position_usd / trade.entry_price * (trade.entry_price - close_price)
-    trade.pnl_usd = pnl
+# TODO handle multiple closes!
+def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: str, close_half: bool) -> SmtPspTrade:
+    percent_to_close = 100 - trade.percent_closed() if not close_half else (100 - trade.percent_closed()) / 2
+    part_to_close = percent_to_close / 100
+    trade.closes.append((percent_to_close, close_price, time_str, to_ny_date_str(time_str), reason))
+    trade.close_position_fee += (close_price *
+                                 trade.entry_position_assets * MARKET_ORDER_FEE_PERCENT / 100) * part_to_close
 
-    trade.close_position_fee = close_price * trade.entry_position_assets * MARKET_ORDER_FEE_PERCENT / 100
-    trade.closes.append((100, close_price, time_str, to_ny_date_str(time_str), reason))
+    if trade.direction == 'UP':
+        pnl = part_to_close * trade.entry_position_usd / trade.entry_price * (close_price - trade.entry_price)
+    else:
+        pnl = part_to_close * trade.entry_position_usd / trade.entry_price * (trade.entry_price - close_price)
+    trade.pnl_usd += pnl
 
     return trade
 
@@ -300,7 +304,7 @@ def _open_market_trade(
     reason = f"{psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}"
     return SmtPspTrade(
         asset=trade_asset.symbol,
-        direction=my_target[1],
+        direction="UP" if my_target[1] in ["high", "half_high"] else "DOWN",
         signal_time=trade_asset.snapshot_date_readable,
         signal_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
         limit_price_history=None,
@@ -358,7 +362,7 @@ def _open_limit_trade(
     alo.entry_order_type = "LIMIT"
     alo.entry_price = alo.limit_price_history[-1]
     alo.stop = alo.limit_stop
-    alo.take_profit = alo.limit_take_profit,
+    alo.take_profit = alo.limit_take_profit
     alo.entry_rr = alo.limit_rr
     alo.entry_time = trade_asset.snapshot_date_readable
     alo.entry_time_ny = to_ny_date_str(trade_asset.snapshot_date_readable)
@@ -401,7 +405,7 @@ def _limit_trade_from_alo(
     trade_tos = tos[asset_i]
 
     if alo.limit_chase_to_label is not None:  # we're chasing some true open
-        my_to = next(to for to in trade_tos if to[0] == alo.limit_chase_to_label)
+        my_to = next((to for to in trade_tos if to[0] == alo.limit_chase_to_label), None)
         if not my_to:  # ещё не появилось или наступил первый квартал и наоборот ушло
             return None, None
 
@@ -469,7 +473,7 @@ def _open_limit_orders(
     ) -> SmtPspTrade:
         return SmtPspTrade(
             asset=trade_asset.symbol,
-            direction=my_target[1],
+            direction="UP" if my_target[1] in ["high", "half_high"] else "DOWN",
             signal_time=trade_asset.snapshot_date_readable,
             signal_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
             limit_price_history=[price] if price is not None else [],
@@ -890,23 +894,23 @@ def strategy07_to_constructor(
 def _close_by_tp_sl_deadlines(at: SmtPspTrade, trade_asset: Asset, stop_after: str) -> Optional[SmtPspTrade]:
     if to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(stop_after):
         return _close_trade(
-            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "strategy_stop")
+            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "strategy_stop", False)
     if (at.deadline_close and
             to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(at.deadline_close)):
         return _close_trade(
-            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "deadline")
+            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "deadline", False)
     if at.direction == 'UP':
         if trade_asset.prev_15m_candle[2] <= at.stop:
-            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop")
+            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop", False)
         if trade_asset.prev_15m_candle[1] >= at.take_profit:
             return _close_trade(
-                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit")
+                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit", False)
     if at.direction == 'DOWN':
         if trade_asset.prev_15m_candle[1] >= at.stop:
-            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop")
+            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop", False)
         if trade_asset.prev_15m_candle[2] <= at.take_profit:
             return _close_trade(
-                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit")
+                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit", False)
     return None
 
 
@@ -962,8 +966,9 @@ def _cancel_by_smt_psp_change(alo: SmtPspTrade, trade_asset: Asset, spc: SmtPspC
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_smt_cancelled"
             )
 
-    for _, smt_label, smt_type, _, psp_key, _ in spc[3]:  # possible|closed|confirmed|swept
-        if smt_label == alo.smt_label and smt_type == alo.smt_type and psp_key == alo.psp_key_used:
+    for _, smt_label, smt_type, _, psp_key, _, psp_change in spc[4]:  # possible|closed|confirmed|swept
+        if (psp_change == 'swept' and smt_label == alo.smt_label and smt_type == alo.smt_type
+                and psp_key == alo.psp_key_used):
             return _cancel_order(
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_psp_swept"
             )
@@ -975,7 +980,7 @@ def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, assets: List[
         if asset.prev_15m_candle[2] <= extremum <= asset.prev_15m_candle[1]:
             return _close_trade(
                 at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                f"stop because {asset.symbol} swept PSP"
+                f"stop because {asset.symbol} swept PSP", True
             )
 
 
@@ -984,7 +989,8 @@ def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, assets: 
         if asset.prev_15m_candle[2] <= target <= asset.prev_15m_candle[1]:
             return _close_trade(
                 at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                f"close because {asset.symbol} reached target")
+                f"close because {asset.symbol} reached target", True
+            )
 
 
 def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
@@ -1098,49 +1104,33 @@ def strategy01_th(
 
         by_tp_sp_deadline = _close_by_tp_sl_deadlines(at, trade_asset, stop_after)
         if by_tp_sp_deadline:
-            closed_trades.append(by_tp_sp_deadline)
-            continue
+            if by_tp_sp_deadline.percent_closed() == 100:
+                closed_trades.append(by_tp_sp_deadline)
+                continue
+            else:
+                at = by_tp_sp_deadline
 
         by_other_swept_psp = _close_by_other_swept_psp(at, trade_asset, assets)
         if by_other_swept_psp:
-            closed_trades.append(by_other_swept_psp)
-            continue
+            if by_tp_sp_deadline.percent_closed() == 100:
+                closed_trades.append(by_other_swept_psp)
+                continue
+            else:
+                at = by_other_swept_psp
 
         by_other_reached_target = _close_by_other_reached_target(at, trade_asset, assets)
         if by_other_reached_target:
-            closed_trades.append(by_other_reached_target)
-            continue
+            if by_tp_sp_deadline.percent_closed() == 100:
+                closed_trades.append(by_other_reached_target)
+                continue
+            else:
+                at = by_other_reached_target
 
         new_active_trades.append(_with_best(at, tr, tos))
 
     return (
         new_active_trades,
         closed_trades
-    )
-
-
-def strategy08_th(
-        stop_after: str, active_trades: List[SmtPspTrade], tr: Triad,
-        tos: TrueOpens, spc: SmtPspChange, tc: TargetChange
-) -> Tuple[List[SmtPspTrade], List[SmtPspTrade]]:
-    closed_trades = {}
-    new_active_trades = []
-    for at in active_trades:
-        key = f"{at.asset}_{at.entry_time}_{at.entry_price}_{at.direction}"
-        assets = [tr.a1, tr.a2, tr.a3]
-        assets_d = {asset.symbol: asset for asset in assets}
-        trade_asset = assets_d[at.asset]
-
-        by_tp_sp_deadline = _close_by_tp_sl_deadlines(at, trade_asset, stop_after)
-        if by_tp_sp_deadline:
-            closed_trades[key] = by_tp_sp_deadline
-            continue
-
-        new_active_trades.append(_with_best(at, tr, tos))
-
-    return (
-        new_active_trades,
-        [closed_trades[x] for x in closed_trades.keys()]
     )
 
 
@@ -1222,7 +1212,7 @@ strategy08 = SmtPspStrategy(
         "", 4, 'closed', ['1h', '2h', '4h'], [5], False,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy07, но можно half цели
@@ -1242,7 +1232,7 @@ strategy10 = SmtPspStrategy(
         "", 4, 'closed', ['1h', '2h', '4h'], [5], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy07, но wd+dq цели
@@ -1262,7 +1252,7 @@ strategy12 = SmtPspStrategy(
         "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy09, но wd smt + mw target
@@ -1282,7 +1272,7 @@ strategy14 = SmtPspStrategy(
         "", 3, 'closed', ['4h', '1d'], [4], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy11, но mw smt и mw+wd цели
@@ -1302,7 +1292,7 @@ strategy16 = SmtPspStrategy(
         "", 3, 'closed', ['4h', '1d'], [3, 4], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy13, но confirmed свечки
@@ -1322,7 +1312,7 @@ strategy18 = SmtPspStrategy(
         "", 3, 'confirmed', ['4h', '1d'], [4], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy13, но только 1d up
@@ -1342,7 +1332,7 @@ strategy20 = SmtPspStrategy(
         "UP", 3, 'closed', ['1d'], [4], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy15, но только 1d up
@@ -1362,7 +1352,7 @@ strategy22 = SmtPspStrategy(
         "UP", 3, 'closed', ['1d'], [3, 4], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy17, но только 1d up
@@ -1382,7 +1372,7 @@ strategy24 = SmtPspStrategy(
         "UP", 3, 'confirmed', ['1d'], [4], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy11, но только 4h свечки
@@ -1402,7 +1392,7 @@ strategy26 = SmtPspStrategy(
         "", 4, 'closed', ['4h'], [4, 5], True,
         _closest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # всё как в strategy25, furthest target
@@ -1422,7 +1412,7 @@ strategy28 = SmtPspStrategy(
         "", 4, 'closed', ['4h'], [4, 5], True,
         _furthest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # confirmed wd 1h 2h 4h свечки, furthest wd + dq цели, с pretake
@@ -1442,7 +1432,7 @@ strategy30 = SmtPspStrategy(
         "", 4, 'confirmed', ['1h', '2h', '4h'], [4, 5], True,
         _furthest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )
 
 # mw confirmed 4h + 1d свечки, furthest mw + wd цели, c pretake
@@ -1462,5 +1452,5 @@ strategy32 = SmtPspStrategy(
         "", 3, 'confirmed', ['4h', '1d'], [3, 4], True,
         _furthest_targets_sorter
     ),
-    trades_handler=strategy08_th
+    trades_handler=strategy01_th
 )

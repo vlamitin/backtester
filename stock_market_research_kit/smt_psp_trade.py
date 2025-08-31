@@ -66,10 +66,13 @@ class SmtPspTrade:
     _in_trade_range: Optional[InnerCandle]
 
     closes: List[
-        Tuple[float, float, str, str, str]
+        Tuple[int, float, str, str, str]
     ]  # list of closes in (position_percent, price, time, time_ny, reason) format
     pnl_usd: float
     close_position_fee: float
+
+    def percent_closed(self) -> int:
+        return sum([x[0] for x in self.closes])
 
 
 def smt_psp_trade_decoder(dct: dict):

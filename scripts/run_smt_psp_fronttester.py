@@ -113,8 +113,8 @@ def fronttest(
             active_trades[s.name].extend(s_active_trades)
 
         _handle_strategies_took = time.perf_counter() - _handle_strategies_time
-        if _handle_strategies_took > 0.02:
-            log_warn_ny(f"handle_strategies took {_handle_strategies_took:.6f} seconds")
+        # if _handle_strategies_took > 0.02:
+        #     log_warn_ny(f"handle_strategies took {_handle_strategies_took:.6f} seconds")
 
         prev_smt_psp = smt_psp
         prev_long_targets = long_targets
