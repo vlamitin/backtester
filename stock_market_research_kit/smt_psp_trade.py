@@ -39,11 +39,13 @@ class SmtPspTrade:
     entry_reason: str
     entry_tos: List[TrueOpen]
     psp_key_used: str
+    psp_date: str
     smt_type: str
     smt_level: int
     smt_label: str
     smt_flags: str
     target_level: int
+    target_direction: str
     target_label: str
 
     best_pnl: float

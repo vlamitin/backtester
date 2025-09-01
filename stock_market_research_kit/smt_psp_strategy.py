@@ -329,11 +329,13 @@ def _open_market_trade(
         entry_reason=reason,
         entry_tos=tos,
         psp_key_used=psp_key,
+        psp_date=psp_date,
         smt_type=smt_type,
         smt_level=smt_level,
         smt_label=smt_label,
         smt_flags=smt_flags,
         target_level=my_target[0],
+        target_direction=my_target[1],
         target_label=my_target[2],
         best_pnl=0,
         best_pnl_time=trade_asset.snapshot_date_readable,
@@ -410,6 +412,12 @@ def _limit_trade_from_alo(
             return None, None
 
         to_price = _to_limit_price(alo.direction, my_to[1], alo.limit_stop, alo.limit_take_profit)
+        if alo.direction == "UP":
+            if not alo.limit_stop < to_price < alo.limit_take_profit:  # появилась, но не в нашем ренже
+                return None, alo  # ждём следующего такого True Open
+        else:
+            if not alo.limit_take_profit < to_price < alo.limit_stop:  # появилась, но не в нашем ренже
+                return None, alo  # ждём следующего такого True Open
 
         def update_limit():
             alo.limit_price_history.append(to_price)  # апдейтим лимитку и ждём
@@ -418,32 +426,15 @@ def _limit_trade_from_alo(
             alo.limit_position_assets = to_rr_pos[1]
             alo.limit_position_usd = to_rr_pos[2]
 
-        if len(alo.limit_price_history) > 0:  # это to не могли поставить целью раньше, а теперь она появилась
-            if alo.limit_price_history[-1] != to_price:  # это не тот же True Open (прошлого цикла)
-                update_limit()
+        if len(alo.limit_price_history) == 0:  # это to не могли поставить целью раньше, а теперь она появилась
+            update_limit()
+        elif alo.limit_price_history[-1] != to_price:  # это не тот же True Open (прошлого цикла)
+            update_limit()
 
-        if alo.direction == "UP":
-            if not alo.limit_stop < to_price < alo.limit_take_profit:  # появилась, но не в нашем ренже
-                return None, alo  # ждём следующего такого True Open
-            if to_price < trade_asset.prev_15m_candle[3]:  # появилась, но мы не aside её
-                update_limit()
-                return None, alo
-        else:
-            if not alo.limit_take_profit < to_price < alo.limit_stop:  # появилась, но не в нашем ренже
-                return None, alo  # ждём следующего такого True Open
-            if to_price > trade_asset.prev_15m_candle[3]:  # появилась, но мы не aside её
-                update_limit()
-                return None, alo
-    elif alo.limit_chase_rr is not None:
-        current_rr_pos = _rr_and_pos_size(trade_asset.prev_15m_candle[3], alo.limit_take_profit, alo.limit_stop)
-        if current_rr_pos[0] < alo.limit_chase_rr:
-            return None, alo  # ждём когда rr будет больше
+    # не открыли лимитку
+    if not trade_asset.prev_15m_candle[2] < alo.limit_price_history[-1] < trade_asset.prev_15m_candle[1]:
+        return None, alo
 
-    to_rr_pos = _rr_and_pos_size(trade_asset.prev_15m_candle[3], alo.limit_take_profit, alo.limit_stop)
-    alo.limit_price_history.append(trade_asset.prev_15m_candle[3])
-    alo.limit_rr = to_rr_pos[0]
-    alo.limit_position_assets = to_rr_pos[1]
-    alo.limit_position_usd = to_rr_pos[2]
     return _open_limit_trade(alo, trade_asset, trade_tos), None  # открываем сделку
 
 
@@ -498,11 +489,13 @@ def _open_limit_orders(
             entry_reason=f"{reason} limit for {psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}",
             entry_tos=[],
             psp_key_used=psp_key,
+            psp_date=psp_date,
             smt_type=smt_type,
             smt_level=smt_level,
             smt_label=smt_label,
             smt_flags=smt_flags,
             target_level=my_target[0],
+            target_direction=my_target[1],
             target_label=my_target[2],
             best_pnl=0,
             best_pnl_time="",
@@ -538,7 +531,7 @@ def _open_limit_orders(
     all_tos = ['tyo', 'tmo', 'two', 'tdo', 't90mo']
 
     for to in tos:
-        if to[0] in aside_tos:
+        if to[0] in aside_tos or to[0] == trade_asset.symbol:
             continue
         if my_target[1] == "UP":
             if not stop < to[1] < take_profit:
@@ -938,8 +931,9 @@ def _cancel_by_tp_sl_deadlines(alo: SmtPspTrade, trade_asset: Asset, stop_after:
 
 
 def _cancel_by_other_reached_target(alo: SmtPspTrade, trade_asset: Asset, tc: TargetChange) -> Optional[SmtPspTrade]:
-    for target_level, direction, target_label, _, _ in tc[4] + tc[5]:
-        if target_level == alo.target_level and direction == alo.direction and target_label == alo.target_label:
+    for target_level, target_direction, target_label, _, _ in tc[4] + tc[5]:
+        if (target_level == alo.target_level and target_direction == alo.target_direction
+                and target_label == alo.target_label):
             return _cancel_order(
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_someone_reached_target"
             )
@@ -966,30 +960,29 @@ def _cancel_by_smt_psp_change(alo: SmtPspTrade, trade_asset: Asset, spc: SmtPspC
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_smt_cancelled"
             )
 
-    for _, smt_label, smt_type, _, psp_key, _, psp_change in spc[4]:  # possible|closed|confirmed|swept
-        if (psp_change == 'swept' and smt_label == alo.smt_label and smt_type == alo.smt_type
-                and psp_key == alo.psp_key_used):
+    for _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
+        if psp_change == 'swept' and psp_date == alo.psp_date and psp_key == alo.psp_key_used:
             return _cancel_order(
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_psp_swept"
             )
     return None
 
 
-def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, assets: List[Asset]) -> Optional[SmtPspTrade]:
-    for asset, extremum in [(assets[i], x) for i, x in enumerate(at.psp_extremums)]:
-        if asset.prev_15m_candle[2] <= extremum <= asset.prev_15m_candle[1]:
+def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, spc: SmtPspChange) -> Optional[SmtPspTrade]:
+    for _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
+        if psp_change == 'swept' and psp_date == at.psp_date and psp_key == at.psp_key_used:
             return _close_trade(
-                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                f"stop because {asset.symbol} swept PSP", True
+                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "someone_psp_swept", True
             )
 
 
-def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, assets: List[Asset]) -> Optional[SmtPspTrade]:
-    for asset, target in [(assets[i], x) for i, x in enumerate(at.targets)]:
-        if asset.prev_15m_candle[2] <= target <= asset.prev_15m_candle[1]:
+def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, tc: TargetChange) -> Optional[SmtPspTrade]:
+    for target_level, target_direction, target_label, _, _ in tc[4] + tc[5]:
+        if (target_level == at.target_level and target_direction == at.target_direction
+                and target_label == at.target_label):
             return _close_trade(
                 at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                f"close because {asset.symbol} reached target", True
+                "someone_reached_target", True
             )
 
 
@@ -1110,17 +1103,17 @@ def strategy01_th(
             else:
                 at = by_tp_sp_deadline
 
-        by_other_swept_psp = _close_by_other_swept_psp(at, trade_asset, assets)
+        by_other_swept_psp = _close_by_other_swept_psp(at, trade_asset, spc)
         if by_other_swept_psp:
-            if by_tp_sp_deadline.percent_closed() == 100:
+            if by_other_swept_psp.percent_closed() == 100:
                 closed_trades.append(by_other_swept_psp)
                 continue
             else:
                 at = by_other_swept_psp
 
-        by_other_reached_target = _close_by_other_reached_target(at, trade_asset, assets)
+        by_other_reached_target = _close_by_other_reached_target(at, trade_asset, tc)
         if by_other_reached_target:
-            if by_tp_sp_deadline.percent_closed() == 100:
+            if by_other_reached_target.percent_closed() == 100:
                 closed_trades.append(by_other_reached_target)
                 continue
             else:
@@ -1143,7 +1136,7 @@ def strategy01_th(
 # закрытие до стопа: любой из 3 снял наш PSP
 # закрытие до тейка: любой из 3 дошёл до нашей цели
 strategy01 = SmtPspStrategy(
-    name="01. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - medium v1 TO+RR filter",
+    name="01. Trigger cPSP in wd smt - closest dq no-half target - medium v1 TO+RR filter",
     trade_opener=strategy01_to_constructor(4, 'closed', ['1h', '2h', '4h'],
                                            [5], False, _closest_targets_sorter),
     trades_handler=strategy01_th
@@ -1151,7 +1144,7 @@ strategy01 = SmtPspStrategy(
 
 # всё как в strategy01, но если есть 2-3 неснятых high/low дня, то берём который с большим RR
 strategy02 = SmtPspStrategy(
-    name="02. Trigger cPSP in wd smt - furthest dq no-half target - pre-take/stop - medium v1 TO+RR filter",
+    name="02. Trigger cPSP in wd smt - furthest dq no-half target - medium v1 TO+RR filter",
     trade_opener=strategy01_to_constructor(4, 'closed', ['1h', '2h', '4h'],
                                            [5], False, _furthest_targets_sorter),
     trades_handler=strategy01_th
@@ -1159,7 +1152,7 @@ strategy02 = SmtPspStrategy(
 
 # триггер цель и вход как в strategy01, но входим во все 3 актива
 strategy03 = SmtPspStrategy(
-    name="03. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - medium v1 TO+RR filter",
+    name="03. Trigger cPSP in wd smt - closest dq no-half target - medium v1 TO+RR filter",
     trade_opener=strategy03_to_constructor(4, 'closed', ['1h', '2h', '4h'],
                                            [5], False, _closest_targets_sorter),
     trades_handler=strategy01_th
@@ -1168,7 +1161,7 @@ strategy03 = SmtPspStrategy(
 # триггер цель и вход как в strategy01
 # RR от 3.2 до 80, фильтр на aside two tdo и t90mo
 strategy04 = SmtPspStrategy(
-    name="04. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - medium v2 all TO+RR filter",
+    name="04. Trigger cPSP in wd smt - closest dq no-half target - medium v2 all TO+RR filter",
     trade_opener=strategy04_to_constructor(
         4, 'closed', ['1h', '2h', '4h'], [5], False,
         _closest_targets_sorter, ['two', 'tdo'], ['two', 'tdo', 't90mo'], 3.2, 80
@@ -1178,7 +1171,7 @@ strategy04 = SmtPspStrategy(
 
 # всё как в strategy02, но входим сразу в 3 актива
 strategy05 = SmtPspStrategy(
-    name="05. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - medium v1 TO+RR filter",
+    name="05. Trigger cPSP in wd smt - closest dq no-half target - medium v1 TO+RR filter",
     trade_opener=strategy03_to_constructor(4, 'closed', ['1h', '2h', '4h'],
                                            [5], False, _furthest_targets_sorter),
     trades_handler=strategy01_th
@@ -1187,7 +1180,7 @@ strategy05 = SmtPspStrategy(
 # всё как в strategy04
 # RR от 3.2 до 80, фильтр на aside two tdo и t90mo только в выбранном активе, а не во всех
 strategy06 = SmtPspStrategy(
-    name="06. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - medium v2 asset TO+RR filter",
+    name="06. Trigger cPSP in wd smt - closest dq no-half target - medium v2 asset TO+RR filter",
     trade_opener=strategy04_to_constructor(
         4, 'closed', ['1h', '2h', '4h'], [5], False,
         _closest_targets_sorter, [], ['two', 'tdo', 't90mo'], 3.2, 80
@@ -1197,17 +1190,7 @@ strategy06 = SmtPspStrategy(
 
 # всё как в strategy01, входим в 3 актива и никаких фильтров на rr и tos
 strategy07 = SmtPspStrategy(
-    name="07. Trigger cPSP in wd smt - closest dq no-half target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 4, 'closed', ['1h', '2h', '4h'], [5], False,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy07, но, всегда ждём TP и SL
-strategy08 = SmtPspStrategy(
-    name="08. Trigger cPSP in wd smt - closest dq no-half target - no pre-take/stop - no TO+RR filter",
+    name="07. Trigger cPSP in wd smt - closest dq no-half target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['1h', '2h', '4h'], [5], False,
         _closest_targets_sorter
@@ -1217,17 +1200,7 @@ strategy08 = SmtPspStrategy(
 
 # всё как в strategy07, но можно half цели
 strategy09 = SmtPspStrategy(
-    name="09. Trigger cPSP in wd smt - closest dq target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 4, 'closed', ['1h', '2h', '4h'], [5], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy08, но но можно half цели
-strategy10 = SmtPspStrategy(
-    name="10. Trigger cPSP in wd smt - closest dq target - no pre-take/stop - no TO+RR filter",
+    name="09. Trigger cPSP in wd smt - closest dq target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['1h', '2h', '4h'], [5], True,
         _closest_targets_sorter
@@ -1237,17 +1210,7 @@ strategy10 = SmtPspStrategy(
 
 # всё как в strategy07, но wd+dq цели
 strategy11 = SmtPspStrategy(
-    name="11. Trigger cPSP in wd smt - closest dq+wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy08, но wd+dq цели
-strategy12 = SmtPspStrategy(
-    name="12. Trigger cPSP in wd smt - closest dq+wd target - no pre-take/stop - no TO+RR filter",
+    name="11. Trigger cPSP in wd smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
         _closest_targets_sorter
@@ -1257,17 +1220,7 @@ strategy12 = SmtPspStrategy(
 
 # всё как в strategy09, но wd smt + mw target
 strategy13 = SmtPspStrategy(
-    name="13. Trigger cPSP in mw smt - closest wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 3, 'closed', ['4h', '1d'], [4], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy13, но wd без pre-take/stop
-strategy14 = SmtPspStrategy(
-    name="14. Trigger cPSP in mw smt - closest wd target - no pre-take/stop - no TO+RR filter",
+    name="13. Trigger cPSP in mw smt - closest wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'closed', ['4h', '1d'], [4], True,
         _closest_targets_sorter
@@ -1277,17 +1230,7 @@ strategy14 = SmtPspStrategy(
 
 # всё как в strategy11, но mw smt и mw+wd цели
 strategy15 = SmtPspStrategy(
-    name="15. Trigger cPSP in mw smt - closest dq+wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 3, 'closed', ['4h', '1d'], [3, 4], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy12, но mw smt и mw+wd цели
-strategy16 = SmtPspStrategy(
-    name="16. Trigger cPSP in mw smt - closest dq+wd target - no pre-take/stop - no TO+RR filter",
+    name="15. Trigger cPSP in mw smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'closed', ['4h', '1d'], [3, 4], True,
         _closest_targets_sorter
@@ -1297,17 +1240,7 @@ strategy16 = SmtPspStrategy(
 
 # всё как в strategy13, но confirmed свечки
 strategy17 = SmtPspStrategy(
-    name="17. Trigger CPSP in mw smt - closest wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 3, 'confirmed', ['4h', '1d'], [4], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy14, но но confirmed свечки
-strategy18 = SmtPspStrategy(
-    name="18. Trigger CPSP in mw smt - closest dq target - no pre-take/stop - no TO+RR filter",
+    name="17. Trigger CPSP in mw smt - closest wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'confirmed', ['4h', '1d'], [4], True,
         _closest_targets_sorter
@@ -1317,17 +1250,7 @@ strategy18 = SmtPspStrategy(
 
 # всё как в strategy13, но только 1d up
 strategy19 = SmtPspStrategy(
-    name="19. Trigger cPSP in mw smt - only 1d UP - closest wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "UP", 3, 'closed', ['1d'], [4], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy14, но только 1d up
-strategy20 = SmtPspStrategy(
-    name="14. Trigger cPSP in mw smt - only 1d UP - closest dq target - no pre-take/stop - no TO+RR filter",
+    name="19. Trigger cPSP in mw smt - only 1d UP - closest wd target",
     trade_opener=strategy07_to_constructor(
         "UP", 3, 'closed', ['1d'], [4], True,
         _closest_targets_sorter
@@ -1337,17 +1260,7 @@ strategy20 = SmtPspStrategy(
 
 # всё как в strategy15, но только 1d up
 strategy21 = SmtPspStrategy(
-    name="15. Trigger cPSP in mw smt - only 1d UP - closest dq+wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "UP", 3, 'closed', ['1d'], [3, 4], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy16, но только 1d up
-strategy22 = SmtPspStrategy(
-    name="16. Trigger cPSP in mw smt - only 1d UP - closest dq+wd target - no pre-take/stop - no TO+RR filter",
+    name="21. Trigger cPSP in mw smt - only 1d UP - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "UP", 3, 'closed', ['1d'], [3, 4], True,
         _closest_targets_sorter
@@ -1357,17 +1270,7 @@ strategy22 = SmtPspStrategy(
 
 # всё как в strategy17, но только 1d up
 strategy23 = SmtPspStrategy(
-    name="17. Trigger CPSP in mw smt - only 1d UP - closest wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "UP", 3, 'confirmed', ['1d'], [4], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy18, но только 1d up
-strategy24 = SmtPspStrategy(
-    name="18. Trigger CPSP in mw smt - only 1d UP - closest dq target - no pre-take/stop - no TO+RR filter",
+    name="23. Trigger CPSP in mw smt - only 1d UP - closest wd target",
     trade_opener=strategy07_to_constructor(
         "UP", 3, 'confirmed', ['1d'], [4], True,
         _closest_targets_sorter
@@ -1377,17 +1280,7 @@ strategy24 = SmtPspStrategy(
 
 # всё как в strategy11, но только 4h свечки
 strategy25 = SmtPspStrategy(
-    name="25. Trigger 4h cPSP in wd smt - closest dq+wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 4, 'closed', ['4h'], [4, 5], True,
-        _closest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# всё как в strategy12, но только 4h свечки
-strategy26 = SmtPspStrategy(
-    name="26. Trigger 4h cPSP in wd smt - closest dq+wd target - no pre-take/stop - no TO+RR filter",
+    name="25. Trigger 4h cPSP in wd smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['4h'], [4, 5], True,
         _closest_targets_sorter
@@ -1397,7 +1290,7 @@ strategy26 = SmtPspStrategy(
 
 # всё как в strategy25, furthest target
 strategy27 = SmtPspStrategy(
-    name="27. Trigger 4h cPSP in wd smt - furthest dq+wd target - pre-take/stop - no TO+RR filter",
+    name="27. Trigger 4h cPSP in wd smt - furthest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['4h'], [4, 5], True,
         _furthest_targets_sorter
@@ -1405,19 +1298,9 @@ strategy27 = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
-# всё как в strategy26, но furthest target
-strategy28 = SmtPspStrategy(
-    name="28. Trigger 4h cPSP in wd smt - furthest dq+wd target - no pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 4, 'closed', ['4h'], [4, 5], True,
-        _furthest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# confirmed wd 1h 2h 4h свечки, furthest wd + dq цели, с pretake
+# confirmed wd 1h 2h 4h свечки, furthest wd + dq цели
 strategy29 = SmtPspStrategy(
-    name="29. Trigger 1h 2h 4h CPSP in wd smt - furthest dq+wd target - pre-take/stop - no TO+RR filter",
+    name="29. Trigger 1h 2h 4h CPSP in wd smt - furthest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'confirmed', ['1h', '2h', '4h'], [4, 5], True,
         _furthest_targets_sorter
@@ -1425,29 +1308,9 @@ strategy29 = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
-# confirmed wd 1h 2h 4h свечки, furthest wd + dq цели, без pretake
-strategy30 = SmtPspStrategy(
-    name="30. Trigger 1h 2h 4h CPSP in wd smt - furthest dq+wd target - no pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 4, 'confirmed', ['1h', '2h', '4h'], [4, 5], True,
-        _furthest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# mw confirmed 4h + 1d свечки, furthest mw + wd цели, c pretake
+# mw confirmed 4h + 1d свечки, furthest mw + wd цели
 strategy31 = SmtPspStrategy(
-    name="31. Trigger 4h + 1d CPSP in mw smt - furthest mw+wd target - pre-take/stop - no TO+RR filter",
-    trade_opener=strategy07_to_constructor(
-        "", 3, 'confirmed', ['4h', '1d'], [3, 4], True,
-        _furthest_targets_sorter
-    ),
-    trades_handler=strategy01_th
-)
-
-# mw confirmed 4h + 1d свечки, furthest mw + wd цели, без pretake
-strategy32 = SmtPspStrategy(
-    name="32. Trigger 4h + 1d CPSP in wd smt - furthest dq+wd target - no pre-take/stop - no TO+RR filter",
+    name="31. Trigger 4h + 1d CPSP in mw smt - furthest mw+wd target ",
     trade_opener=strategy07_to_constructor(
         "", 3, 'confirmed', ['4h', '1d'], [3, 4], True,
         _furthest_targets_sorter
