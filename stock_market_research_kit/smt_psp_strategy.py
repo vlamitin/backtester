@@ -20,16 +20,16 @@ SmtPspChange: TypeAlias = Tuple[
     List[Tuple[int, str, Optional[SMTLevels]]],  # new (level, label, smt levels)
     List[Tuple[int, str, SMT]],  # new: key, SMT
     List[Tuple[int, str, SMT]],  # cancelled: key, SMT
-    List[Tuple[int, str, str, str, str, str, str]]
-    # smt_level, smt_key, smt_type, smt_flags, psp_key, psp_date, possible|closed|confirmed|swept
+    List[Tuple[int, str, str, str, str, str, str, str]]
+    # smt_level, smt_key, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, possible|closed|confirmed|swept
 ]
 TargetChange: TypeAlias = Tuple[
     List[Target],  # old long
     List[Target],  # old short
     List[Target],  # all new long targets
     List[Target],  # all new short targets
-    List[Tuple[int, str, str, int, float]],  # reached long: level, direction, target_label, asset_index, price
-    List[Tuple[int, str, str, int, float]],  # reached short: level, direction, target_label, asset_index, price
+    List[Tuple[int, str, str, str, int, float]],  # reached long: level, direction, target_label, ql_start, asset_index, price
+    List[Tuple[int, str, str, str, int, float]],  # reached short: level, direction, target_label, ql_start, asset_index, price
     List[Target],  # only new long targets
     List[Target],  # only new short targets
 ]
@@ -93,18 +93,17 @@ def _price_and_pos_size(rr: float, target: float, stop: float) -> Tuple[float, f
     return price, pos_size_assets, pos_size_assets * price
 
 
-# TODO handle multiple closes!
 def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: str, close_half: bool) -> SmtPspTrade:
     percent_to_close = 100 - trade.percent_closed() if not close_half else (100 - trade.percent_closed()) / 2
     part_to_close = percent_to_close / 100
     trade.closes.append((percent_to_close, close_price, time_str, to_ny_date_str(time_str), reason))
-    trade.close_position_fee += (close_price *
-                                 trade.entry_position_assets * MARKET_ORDER_FEE_PERCENT / 100) * part_to_close
+    trade.close_position_fee += part_to_close * (close_price * trade.entry_position_assets *
+                                                 MARKET_ORDER_FEE_PERCENT / 100)
 
     if trade.direction == 'UP':
-        pnl = part_to_close * trade.entry_position_usd / trade.entry_price * (close_price - trade.entry_price)
+        pnl = part_to_close * trade.entry_position_assets * (close_price - trade.entry_price)
     else:
-        pnl = part_to_close * trade.entry_position_usd / trade.entry_price * (trade.entry_price - close_price)
+        pnl = part_to_close * trade.entry_position_assets * (trade.entry_price - close_price)
     trade.pnl_usd += pnl
 
     return trade
@@ -120,17 +119,17 @@ def _cancel_order(alo: SmtPspTrade, close_price: float, time_str: str, reason: s
 def _filter_by_psp_change(
         smt_level_filter: int,
         smt_type_filter: List[str],
-        psp_change: List[Tuple[int, str, str, str, str, str, str]],
+        psp_change: List[Tuple[int, str, str, str, str, str, str, str]],
         psp_change_filter: List[str],  # 'closed'|'confirmed' etc
         psp_key_filter: List[str]  #
-) -> Optional[Tuple[int, str, str, str, str, str, str]]:
+) -> Optional[Tuple[int, str, str, str, str, str, str, str]]:
     my_psp_change = None
-    for smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change in psp_change:  # psp_changes
+    for smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change in psp_change:
         if (change not in psp_change_filter or smt_level != smt_level_filter
                 or psp_key not in psp_key_filter or smt_type not in smt_type_filter):
             continue
         if my_psp_change is None or int(psp_key[0]) > int(my_psp_change[4][0]):
-            my_psp_change = (smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change)
+            my_psp_change = (smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change)
         if (int(psp_key[0]) == int(my_psp_change[4][0]) and
                 smt_types_is_long[smt_type] != smt_types_is_long[my_psp_change[2]]):
             my_psp_change = None
@@ -174,22 +173,22 @@ def _filter_by_target(
     short_directions = ["low", "half_low"] if allow_half else ["low"]
     my_target: Optional[Target] = None
     targets = tc[2] if is_long else tc[3]
-    for tl, direction, label, tp_a1, tp_a2, tp_a3 in targets:
+    for tl, direction, label, ql_start, tp_a1, tp_a2, tp_a3 in targets:
         if tl not in target_levels:
             continue
         if is_long:
             if direction not in long_directions:
                 continue
             if not my_target:
-                my_target = (tl, direction, label, tp_a1, tp_a2, tp_a3)
+                my_target = (tl, direction, label, ql_start, tp_a1, tp_a2, tp_a3)
                 continue
         else:
             if direction not in short_directions:
                 continue
             if not my_target:
-                my_target = (tl, direction, label, tp_a1, tp_a2, tp_a3)
+                my_target = (tl, direction, label, ql_start, tp_a1, tp_a2, tp_a3)
                 continue
-        my_target = ts(my_target, (tl, direction, label, tp_a1, tp_a2, tp_a3))
+        my_target = ts(my_target, (tl, direction, label, ql_start, tp_a1, tp_a2, tp_a3))
 
     return my_target
 
@@ -295,11 +294,11 @@ def _filter_by_tos(
 
 def _open_market_trade(
         trade_asset: Asset, rr_pos: Tuple[float, float, float], my_target: Target,
-        my_psp_change: Tuple[int, str, str, str, str, str, str],
+        my_psp_change: Tuple[int, str, str, str, str, str, str, str],
         stop: float, psp_extremums: Tuple[float, float, float], take_profit: float,
         tos: List[TrueOpen]
 ) -> SmtPspTrade:
-    smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+    smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
 
     reason = f"{psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}"
     return SmtPspTrade(
@@ -334,9 +333,11 @@ def _open_market_trade(
         smt_level=smt_level,
         smt_label=smt_label,
         smt_flags=smt_flags,
+        smt_first_appeared=smt_first_appeared,
         target_level=my_target[0],
         target_direction=my_target[1],
         target_label=my_target[2],
+        target_ql_start=my_target[3],
         best_pnl=0,
         best_pnl_time=trade_asset.snapshot_date_readable,
         best_pnl_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
@@ -349,7 +350,7 @@ def _open_market_trade(
         best_entry_tos=tos,
         psp_extremums=psp_extremums,
         deadline_close="",
-        targets=(my_target[3][1], my_target[4][1], my_target[5][1]),
+        targets=(my_target[4][1], my_target[5][1], my_target[6][1]),
         _in_trade_range=None,
         closes=[],
         pnl_usd=0,
@@ -440,11 +441,13 @@ def _limit_trade_from_alo(
 
 def _open_limit_orders(
         trade_asset: Asset, rr_pos: Tuple[float, float, float], my_target: Target,
-        my_psp_change: Tuple[int, str, str, str, str, str, str],
+        my_psp_change: Tuple[int, str, str, str, str, str, str, str],
         stop: float, psp_extremums: Tuple[float, float, float], take_profit: float,
         tos: List[TrueOpen]
 ) -> List[SmtPspTrade]:
-    smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+    smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
+
+    direction = "UP" if my_target[1] in ["high", "half_high"] else "DOWN"
 
     median_chase_rr = rr_pos[0] * 1.3
     mean_chase_rr = rr_pos[0] * 2
@@ -464,7 +467,7 @@ def _open_limit_orders(
     ) -> SmtPspTrade:
         return SmtPspTrade(
             asset=trade_asset.symbol,
-            direction="UP" if my_target[1] in ["high", "half_high"] else "DOWN",
+            direction=direction,
             signal_time=trade_asset.snapshot_date_readable,
             signal_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
             limit_price_history=[price] if price is not None else [],
@@ -494,9 +497,11 @@ def _open_limit_orders(
             smt_level=smt_level,
             smt_label=smt_label,
             smt_flags=smt_flags,
+            smt_first_appeared=smt_first_appeared,
             target_level=my_target[0],
             target_direction=my_target[1],
             target_label=my_target[2],
+            target_ql_start=my_target[3],
             best_pnl=0,
             best_pnl_time="",
             best_pnl_time_ny="",
@@ -509,7 +514,7 @@ def _open_limit_orders(
             best_entry_tos=[],
             psp_extremums=psp_extremums,
             deadline_close="",
-            targets=(my_target[3][1], my_target[4][1], my_target[5][1]),
+            targets=(my_target[4][1], my_target[5][1], my_target[6][1]),
             _in_trade_range=None,
             closes=[],
             pnl_usd=0,
@@ -527,23 +532,23 @@ def _open_limit_orders(
 
     tos_list = [x[0] for x in tos]
     asset_to_i = next(i for i, x in enumerate(tos_list) if x == trade_asset.symbol)
-    aside_tos = tos_list[asset_to_i + 1:] if my_target[1] == "UP" else tos[:asset_to_i]
+    aside_tos = tos_list[asset_to_i + 1:] if direction == "UP" else tos[:asset_to_i]
     all_tos = ['tyo', 'tmo', 'two', 'tdo', 't90mo']
 
     for to in tos:
         if to[0] in aside_tos or to[0] == trade_asset.symbol:
             continue
-        if my_target[1] == "UP":
+        if direction == "UP":
             if not stop < to[1] < take_profit:
                 continue
         else:
             if not take_profit < to[1] < stop:
                 continue
 
-        to_price = _to_limit_price(my_target[1], to[1], stop, take_profit)
+        to_price = _to_limit_price(direction, to[1], stop, take_profit)
         to_rr_pos = _rr_and_pos_size(to_price, take_profit, stop)
         limit_orders.append(limit_order(
-            f"chase_{to[0]}", to_price, to_rr_pos[1], to_rr_pos[2], None, to[0]
+            f"chase_{to[0]}", to_price, to_rr_pos[1], to_rr_pos[2], to_rr_pos[0], to[0]
         ))
 
     for to_label in set(all_tos) - set(tos_list):
@@ -564,7 +569,7 @@ def strategy01_to_constructor(
         )
         if not my_psp_change:
             return []
-        smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+        smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
 
         my_target = _filter_by_target(
             smt_types_is_long[smt_type], allow_half_target, tc, target_lvl_filter, tsg(smt_types_is_long[smt_type])
@@ -576,14 +581,14 @@ def strategy01_to_constructor(
             [x for x in spc[1] if x[0] == smt_level and x[1] == smt_label][0][2],
             smt_type, psp_key, psp_date)
 
-        if (tr.a1.prev_15m_candle[3] in [my_target[3][0], stop_a1] or
-                tr.a2.prev_15m_candle[3] in [my_target[4][0], stop_a2] or
-                tr.a3.prev_15m_candle[3] in [my_target[5][0], stop_a3]):
+        if (tr.a1.prev_15m_candle[3] in [my_target[4][0], stop_a1] or
+                tr.a2.prev_15m_candle[3] in [my_target[5][0], stop_a2] or
+                tr.a3.prev_15m_candle[3] in [my_target[6][0], stop_a3]):
             return []
 
-        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[3][0], stop_a1),
-                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[4][0], stop_a2),
-                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[5][0], stop_a3))
+        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[4][0], stop_a1),
+                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[5][0], stop_a2),
+                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[6][0], stop_a3))
 
         smb_to_trade = _filter_by_tos_ratio_and_rr(
             tos, (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol),
@@ -603,7 +608,7 @@ def strategy01_to_constructor(
         trade_asset = tr.a1
         rr_pos = rr_pos_a1
         stop = stop_a1
-        take_profit = my_target[3][0]
+        take_profit = my_target[4][0]
         trade_tos = tos[0]
 
         match smb_to_trade:
@@ -611,13 +616,13 @@ def strategy01_to_constructor(
                 trade_asset = tr.a2
                 rr_pos = rr_pos_a2
                 stop = stop_a2
-                take_profit = my_target[4][0]
+                take_profit = my_target[5][0]
                 trade_tos = tos[1]
             case tr.a3.symbol:
                 trade_asset = tr.a3
                 rr_pos = rr_pos_a3
                 stop = stop_a3
-                take_profit = my_target[5][0]
+                take_profit = my_target[6][0]
                 trade_tos = tos[2]
 
         return [
@@ -642,7 +647,7 @@ def strategy03_to_constructor(
         )
         if not my_psp_change:
             return []
-        smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+        smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
 
         my_target = _filter_by_target(
             smt_types_is_long[smt_type], allow_half_target, tc, target_lvl_filter, tsg(smt_types_is_long[smt_type])
@@ -654,14 +659,14 @@ def strategy03_to_constructor(
             [x for x in spc[1] if x[0] == smt_level and x[1] == smt_label][0][2],
             smt_type, psp_key, psp_date)
 
-        if (tr.a1.prev_15m_candle[3] in [my_target[3][0], stop_a1] or
-                tr.a2.prev_15m_candle[3] in [my_target[4][0], stop_a2] or
-                tr.a3.prev_15m_candle[3] in [my_target[5][0], stop_a3]):
+        if (tr.a1.prev_15m_candle[3] in [my_target[4][0], stop_a1] or
+                tr.a2.prev_15m_candle[3] in [my_target[5][0], stop_a2] or
+                tr.a3.prev_15m_candle[3] in [my_target[6][0], stop_a3]):
             return []
 
-        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[3][0], stop_a1),
-                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[4][0], stop_a2),
-                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[5][0], stop_a3))
+        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[4][0], stop_a1),
+                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[5][0], stop_a2),
+                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[6][0], stop_a3))
 
         smb_to_trade = _filter_by_tos_ratio_and_rr(
             tos, (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol),
@@ -681,7 +686,7 @@ def strategy03_to_constructor(
         trade_asset = tr.a1
         rr_pos = rr_pos_a1
         stop = stop_a1
-        take_profit = my_target[3][0]
+        take_profit = my_target[4][0]
         trade_tos = tos[0]
 
         trades = []
@@ -691,13 +696,13 @@ def strategy03_to_constructor(
                     trade_asset = tr.a2
                     rr_pos = rr_pos_a2
                     stop = stop_a2
-                    take_profit = my_target[4][0]
+                    take_profit = my_target[5][0]
                     trade_tos = tos[1]
                 case tr.a3.symbol:
                     trade_asset = tr.a3
                     rr_pos = rr_pos_a3
                     stop = stop_a3
-                    take_profit = my_target[5][0]
+                    take_profit = my_target[6][0]
                     trade_tos = tos[2]
 
             trades.append(
@@ -726,7 +731,7 @@ def strategy04_to_constructor(
         )
         if not my_psp_change:
             return []
-        smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+        smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
 
         my_target = _filter_by_target(
             smt_types_is_long[smt_type], allow_half_target, tc, target_lvl_filter, tsg(smt_types_is_long[smt_type])
@@ -738,14 +743,14 @@ def strategy04_to_constructor(
             [x for x in spc[1] if x[0] == smt_level and x[1] == smt_label][0][2],
             smt_type, psp_key, psp_date)
 
-        if (tr.a1.prev_15m_candle[3] in [my_target[3][0], stop_a1] or
-                tr.a2.prev_15m_candle[3] in [my_target[4][0], stop_a2] or
-                tr.a3.prev_15m_candle[3] in [my_target[5][0], stop_a3]):
+        if (tr.a1.prev_15m_candle[3] in [my_target[4][0], stop_a1] or
+                tr.a2.prev_15m_candle[3] in [my_target[5][0], stop_a2] or
+                tr.a3.prev_15m_candle[3] in [my_target[6][0], stop_a3]):
             return []
 
-        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[3][0], stop_a1),
-                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[4][0], stop_a2),
-                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[5][0], stop_a3))
+        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[4][0], stop_a1),
+                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[5][0], stop_a2),
+                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[6][0], stop_a3))
 
         symbols_to_trade_d = _filter_by_tos(
             tos, (tr.a1.symbol, tr.a2.symbol, tr.a3.symbol),
@@ -776,7 +781,7 @@ def strategy04_to_constructor(
         trade_asset = tr.a1
         rr_pos = rr_pos_a1
         stop = stop_a1
-        take_profit = my_target[3][0]
+        take_profit = my_target[4][0]
         trade_tos = tos[0]
 
         match symbol_max_rr:
@@ -784,13 +789,13 @@ def strategy04_to_constructor(
                 trade_asset = tr.a2
                 rr_pos = rr_pos_a2
                 stop = stop_a2
-                take_profit = my_target[4][0]
+                take_profit = my_target[5][0]
                 trade_tos = tos[1]
             case tr.a3.symbol:
                 trade_asset = tr.a3
                 rr_pos = rr_pos_a3
                 stop = stop_a3
-                take_profit = my_target[5][0]
+                take_profit = my_target[6][0]
                 trade_tos = tos[2]
 
         return [
@@ -817,7 +822,7 @@ def strategy07_to_constructor(
         if not my_psp_change:
             return []
 
-        smt_level, smt_label, smt_type, smt_flags, psp_key, psp_date, change = my_psp_change
+        smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
         if (direction_filter == "UP" and not smt_types_is_long[smt_type] or
                 direction_filter == "DOWN" and smt_types_is_long[smt_type]):
             return []
@@ -832,14 +837,14 @@ def strategy07_to_constructor(
             [x for x in spc[1] if x[0] == smt_level and x[1] == smt_label][0][2],
             smt_type, psp_key, psp_date)
 
-        if (tr.a1.prev_15m_candle[3] in [my_target[3][0], stop_a1] or
-                tr.a2.prev_15m_candle[3] in [my_target[4][0], stop_a2] or
-                tr.a3.prev_15m_candle[3] in [my_target[5][0], stop_a3]):
+        if (tr.a1.prev_15m_candle[3] in [my_target[4][0], stop_a1] or
+                tr.a2.prev_15m_candle[3] in [my_target[5][0], stop_a2] or
+                tr.a3.prev_15m_candle[3] in [my_target[6][0], stop_a3]):
             return []
 
-        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[3][0], stop_a1),
-                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[4][0], stop_a2),
-                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[5][0], stop_a3))
+        rr_pos_a1, rr_pos_a2, rr_pos_a3 = (_rr_and_pos_size(tr.a1.prev_15m_candle[3], my_target[4][0], stop_a1),
+                                           _rr_and_pos_size(tr.a2.prev_15m_candle[3], my_target[5][0], stop_a2),
+                                           _rr_and_pos_size(tr.a3.prev_15m_candle[3], my_target[6][0], stop_a3))
 
         stop_percents = (
             percent_from_current(tr.a1.prev_15m_candle[3], stop_a1),
@@ -850,7 +855,7 @@ def strategy07_to_constructor(
         trade_asset = tr.a1
         rr_pos = rr_pos_a1
         stop = stop_a1
-        take_profit = my_target[3][0]
+        take_profit = my_target[4][0]
         trade_tos = tos[0]
 
         trades = []
@@ -860,13 +865,13 @@ def strategy07_to_constructor(
                     trade_asset = tr.a2
                     rr_pos = rr_pos_a2
                     stop = stop_a2
-                    take_profit = my_target[4][0]
+                    take_profit = my_target[5][0]
                     trade_tos = tos[1]
                 case tr.a3.symbol:
                     trade_asset = tr.a3
                     rr_pos = rr_pos_a3
                     stop = stop_a3
-                    take_profit = my_target[5][0]
+                    take_profit = my_target[6][0]
                     trade_tos = tos[2]
 
             trades.append(
@@ -931,7 +936,7 @@ def _cancel_by_tp_sl_deadlines(alo: SmtPspTrade, trade_asset: Asset, stop_after:
 
 
 def _cancel_by_other_reached_target(alo: SmtPspTrade, trade_asset: Asset, tc: TargetChange) -> Optional[SmtPspTrade]:
-    for target_level, target_direction, target_label, _, _ in tc[4] + tc[5]:
+    for target_level, target_direction, target_label, ql_start, _, _ in tc[4] + tc[5]:
         if (target_level == alo.target_level and target_direction == alo.target_direction
                 and target_label == alo.target_label):
             return _cancel_order(
@@ -960,7 +965,7 @@ def _cancel_by_smt_psp_change(alo: SmtPspTrade, trade_asset: Asset, spc: SmtPspC
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_smt_cancelled"
             )
 
-    for _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
+    for _, _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
         if psp_change == 'swept' and psp_date == alo.psp_date and psp_key == alo.psp_key_used:
             return _cancel_order(
                 alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_psp_swept"
@@ -969,7 +974,7 @@ def _cancel_by_smt_psp_change(alo: SmtPspTrade, trade_asset: Asset, spc: SmtPspC
 
 
 def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, spc: SmtPspChange) -> Optional[SmtPspTrade]:
-    for _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
+    for _, _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
         if psp_change == 'swept' and psp_date == at.psp_date and psp_key == at.psp_key_used:
             return _close_trade(
                 at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "someone_psp_swept", True
@@ -977,9 +982,9 @@ def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, spc: SmtPspCh
 
 
 def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, tc: TargetChange) -> Optional[SmtPspTrade]:
-    for target_level, target_direction, target_label, _, _ in tc[4] + tc[5]:
+    for target_level, target_direction, target_label, ql_start, _, _ in tc[4] + tc[5]:
         if (target_level == at.target_level and target_direction == at.target_direction
-                and target_label == at.target_label):
+                and target_label == at.target_label and ql_start == at.target_ql_start):
             return _close_trade(
                 at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
                 "someone_reached_target", True
@@ -1003,7 +1008,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
         if candle_max_pnl > at.best_pnl:
             at.best_pnl = candle_max_pnl
             at.best_pnl_time = asset.snapshot_date_readable
-            at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable)
             at.best_pnl_price = asset.prev_15m_candle[1]
             at.best_pnl_tos = []
             for label, price, perc in trade_tos:
@@ -1027,7 +1032,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
         if candle_max_pnl > at.best_pnl:
             at.best_pnl = candle_max_pnl
             at.best_pnl_time = asset.snapshot_date_readable
-            at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable)
             at.best_pnl_price = asset.prev_15m_candle[1]
             at.best_pnl_tos = []
             for label, price, perc in trade_tos:
@@ -1037,7 +1042,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
                     at.best_pnl_tos.append((label, price, percent_from_current(asset.prev_15m_candle[1], price)))
         if asset.prev_15m_candle[1] > at.best_entry_price:
             at.best_entry_time = asset.snapshot_date_readable
-            at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable),
+            at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable)
             at.best_entry_price = asset.prev_15m_candle[1]
             at.best_entry_rr = _rr_and_pos_size(asset.prev_15m_candle[1], at.take_profit, at.stop)[0]
             at.best_entry_tos = []

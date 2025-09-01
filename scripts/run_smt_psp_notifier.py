@@ -63,12 +63,12 @@ def handle_new_candle(triad: Triad):
 
     symbols = (triad.a1.symbol, triad.a2.symbol, triad.a3.symbol)
     if len(reached_long_targets) > 0:
-        for _, direction, label, asset_index, price in reached_long_targets:
+        for _, direction, label, _, asset_index, price in reached_long_targets:
             header += f"\n✅↗ {symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
         header += "\n"
 
     if len(reached_short_targets) > 0:
-        for _, direction, label, asset_index, price in reached_short_targets:
+        for _, direction, label, _, asset_index, price in reached_short_targets:
             header += f"\n✅↘ {symbols[asset_index]} {direction} {label} ({round(price, 3)}) target reached"
         header += "\n"
 
@@ -108,7 +108,7 @@ def handle_new_candle(triad: Triad):
             'swept': '🛑'
         }
         grouped_psp = {}
-        for _, smt_key, smt_type, smt_flags, psp_key, psp_date, change in psp_changes:
+        for _, smt_key, smt_type, smt_flags, _, psp_key, psp_date, change in psp_changes:
             if change + psp_key + psp_date not in grouped_psp:
                 grouped_psp[change + psp_key + psp_date] = []
             grouped_psp[change + psp_key + psp_date].append((smt_key, smt_type, smt_flags, psp_key, psp_date, change))

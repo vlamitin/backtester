@@ -15,7 +15,9 @@ from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to,
     to_ny_date_str, quarters_by_time, month_week_quarters_ranges, weekday_ranges, day_quarters_ranges, \
     year_quarters_ranges, log_info_ny, log_warn_ny
 
-Target: TypeAlias = Tuple[int, str, str, TargetPercent, TargetPercent, TargetPercent]  # level, direction, label, tp*3
+Target: TypeAlias = Tuple[
+    int, str, str, str, TargetPercent, TargetPercent, TargetPercent
+]  # level, direction, label, ql_start, tp*3
 TrueOpen: TypeAlias = Tuple[str, float, float]  # label, price, percent_from_current
 
 
@@ -121,7 +123,7 @@ class Triad:
         for level, label, a1_ql, a2_ql, a3_ql in qls:
             if not a1_ql or not a2_ql or not a3_ql:
                 continue
-            _, _, _, a1_high, a1_half, _ = a1_ql
+            a1_start, _, _, a1_high, a1_half, _ = a1_ql
             _, _, _, a2_high, a2_half, _ = a2_ql
             _, _, _, a3_high, a3_half, _ = a3_ql
             if len([x for x in [a1_half, a2_half, a3_half] if not x[1]]) == 3:
@@ -133,6 +135,7 @@ class Triad:
                         level,
                         "half_high",
                         label,
+                        a1_start,
                         (a1_half[0], pfc1),
                         (a2_half[0], pfc2),
                         (a3_half[0], pfc3)
@@ -142,6 +145,7 @@ class Triad:
                     level,
                     "high",
                     label,
+                    a1_start,
                     (a1_high[0], percent_from_current(self.a1.prev_15m_candle[3], a1_high[0])),
                     (a2_high[0], percent_from_current(self.a2.prev_15m_candle[3], a2_high[0])),
                     (a3_high[0], percent_from_current(self.a3.prev_15m_candle[3], a3_high[0]))
@@ -157,7 +161,7 @@ class Triad:
         for level, label, a1_ql, a2_ql, a3_ql in qls:
             if not a1_ql or not a2_ql or not a3_ql:
                 continue
-            _, _, _, _, a1_half, a1_low = a1_ql
+            a1_start, _, _, _, a1_half, a1_low = a1_ql
             _, _, _, _, a2_half, a2_low = a2_ql
             _, _, _, _, a3_half, a3_low = a3_ql
             if len([x for x in [a1_half, a2_half, a3_half] if not x[1]]) == 3:
@@ -169,6 +173,7 @@ class Triad:
                         level,
                         "half_low",
                         label,
+                        a1_start,
                         (a1_half[0], pfc1),
                         (a2_half[0], pfc2),
                         (a3_half[0], pfc3)
@@ -178,6 +183,7 @@ class Triad:
                     level,
                     "low",
                     label,
+                    a1_start,
                     (a1_low[0], percent_from_current(self.a1.prev_15m_candle[3], a1_low[0])),
                     (a2_low[0], percent_from_current(self.a2.prev_15m_candle[3], a2_low[0])),
                     (a3_low[0], percent_from_current(self.a3.prev_15m_candle[3], a3_low[0]))
@@ -1304,18 +1310,18 @@ def targets_reached(
         last_candles: Tuple[InnerCandle, InnerCandle, InnerCandle],
         targets_old: List[Target],
         targets_new: List[Target]
-) -> List[Tuple[int, str, str, int, float]]:  # level, direction, label, asset_index, price
+) -> List[Tuple[int, str, str, str, int, float]]:  # level, direction, label, ql_start, asset_index, price
     result = []
     if not targets_old:
         return []
-    for level, direction, label, tp_a1, tp_a2, tp_a3 in targets_old:
+    for level, direction, label, ql_start, tp_a1, tp_a2, tp_a3 in targets_old:
         if not any(f"{direction}_{label}" == f"{x[1]}_{x[2]}" for x in targets_new):
             if last_candles[0][2] < tp_a1[0] < last_candles[0][1]:
-                result.append((level, direction, label, 0, tp_a1[0]))
+                result.append((level, direction, label, ql_start, 0, tp_a1[0]))
             if last_candles[1][2] < tp_a2[0] < last_candles[1][1]:
-                result.append((level, direction, label, 1, tp_a2[0]))
+                result.append((level, direction, label, ql_start, 1, tp_a2[0]))
             if last_candles[2][2] < tp_a3[0] < last_candles[2][1]:
-                result.append((level, direction, label, 2, tp_a3[0]))
+                result.append((level, direction, label, ql_start, 2, tp_a3[0]))
 
     return result
 
@@ -1327,9 +1333,9 @@ def targets_new_appeared(
     result = []
     if not targets_new:
         return []
-    for level, direction, label, tp_a1, tp_a2, tp_a3 in targets_new:
+    for level, direction, label, ql_start, tp_a1, tp_a2, tp_a3 in targets_new:
         if not any(f"{direction}_{label}" == f"{x[1]}_{x[2]}" for x in targets_old):
-            result.append((level, direction, label, tp_a1, tp_a2, tp_a3))
+            result.append((level, direction, label, ql_start, tp_a1, tp_a2, tp_a3))
 
     return result
 
@@ -1338,8 +1344,9 @@ def calc_psp_changed(
         symbols: Tuple[str, str, str],
         l_old: List[Tuple[int, str, Optional[SMTLevels]]],
         l_new: List[Tuple[int, str, Optional[SMTLevels]]],
-) -> List[Tuple[int, str, str, str, str, str, str]]:
-    # returns (smt_level, smt_key, smt_type, smt_flags, psp_key, psp_date, possible|closed|confirmed|swept)
+) -> List[Tuple[int, str, str, str, str, str, str, str]]:
+    # returns (smt_level, smt_key, smt_type, smt_flags, smt_first_appeared,
+    # psp_key, psp_date, possible|closed|confirmed|swept)
     result = []
 
     d_old = {}
@@ -1354,70 +1361,94 @@ def calc_psp_changed(
         high_old, half_old, low_old = smt_tuple_old
 
         if high_new and high_old:
-            result.extend(
-                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '15m', x[0], x[1]) for x in
-                 psps_changed(high_old.psps_15m, high_new.psps_15m)])
-            result.extend(
-                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '30m', x[0], x[1]) for x in
-                 psps_changed(high_old.psps_30m, high_new.psps_30m)])
-            result.extend(
-                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '1h', x[0], x[1]) for x in
-                 psps_changed(high_old.psps_1h, high_new.psps_1h)])
-            result.extend(
-                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '2h', x[0], x[1]) for x in
-                 psps_changed(high_old.psps_2h, high_new.psps_2h)])
-            result.extend(
-                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '4h', x[0], x[1]) for x in
-                 psps_changed(high_old.psps_4h, high_new.psps_4h)])
-            result.extend(
-                [(level, label, high_new.type, to_smt_flags(symbols, high_new), '1d', x[0], x[1]) for x in
-                 psps_changed(high_old.psps_1d, high_new.psps_1d)])
-            result.extend([(level, label, high_new.type, to_smt_flags(symbols, high_new), '1_week', x[0], x[1]) for x in
-                           psps_changed(high_old.psps_1_week, high_new.psps_1_week)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '15m', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_15m, high_new.psps_15m)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '30m', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_30m, high_new.psps_30m)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '1h', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_1h, high_new.psps_1h)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '2h', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_2h, high_new.psps_2h)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '4h', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_4h, high_new.psps_4h)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '1d', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_1d, high_new.psps_1d)])
+            result.extend([(
+                level, label, high_new.type, to_smt_flags(symbols, high_new),
+                high_new.first_appeared, '1_week', x[0], x[1]
+            ) for x in psps_changed(high_old.psps_1_week, high_new.psps_1_week)])
 
         if half_new and half_old:
-            result.extend(
-                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '15m', x[0], x[1]) for x in
-                 psps_changed(half_old.psps_15m, half_new.psps_15m)])
-            result.extend(
-                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '30m', x[0], x[1]) for x in
-                 psps_changed(half_old.psps_30m, half_new.psps_30m)])
-            result.extend(
-                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '1h', x[0], x[1]) for x in
-                 psps_changed(half_old.psps_1h, half_new.psps_1h)])
-            result.extend(
-                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '2h', x[0], x[1]) for x in
-                 psps_changed(half_old.psps_2h, half_new.psps_2h)])
-            result.extend(
-                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '4h', x[0], x[1]) for x in
-                 psps_changed(half_old.psps_4h, half_new.psps_4h)])
-            result.extend(
-                [(level, label, half_new.type, to_smt_flags(symbols, half_new), '1d', x[0], x[1]) for x in
-                 psps_changed(half_old.psps_1d, half_new.psps_1d)])
-            result.extend([(level, label, half_new.type, to_smt_flags(symbols, half_new), '1_week', x[0], x[1]) for x in
-                           psps_changed(half_old.psps_1_week, half_new.psps_1_week)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '15m', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_15m, half_new.psps_15m)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '30m', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_30m, half_new.psps_30m)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '1h', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_1h, half_new.psps_1h)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '2h', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_2h, half_new.psps_2h)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '4h', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_4h, half_new.psps_4h)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '1d', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_1d, half_new.psps_1d)])
+            result.extend([(
+                level, label, half_new.type, to_smt_flags(symbols, half_new),
+                half_new.first_appeared, '1_week', x[0], x[1]
+            ) for x in psps_changed(half_old.psps_1_week, half_new.psps_1_week)])
 
         if low_new and low_old:
-            result.extend(
-                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '15m', x[0], x[1]) for x in
-                 psps_changed(low_old.psps_15m, low_new.psps_15m)])
-            result.extend(
-                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '30m', x[0], x[1]) for x in
-                 psps_changed(low_old.psps_30m, low_new.psps_30m)])
-            result.extend(
-                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '1h', x[0], x[1]) for x in
-                 psps_changed(low_old.psps_1h, low_new.psps_1h)])
-            result.extend(
-                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '2h', x[0], x[1]) for x in
-                 psps_changed(low_old.psps_2h, low_new.psps_2h)])
-            result.extend(
-                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '4h', x[0], x[1]) for x in
-                 psps_changed(low_old.psps_4h, low_new.psps_4h)])
-            result.extend(
-                [(level, label, low_new.type, to_smt_flags(symbols, low_new), '1d', x[0], x[1]) for x in
-                 psps_changed(low_old.psps_1d, low_new.psps_1d)])
-            result.extend([(level, label, low_new.type, to_smt_flags(symbols, low_new), '1_week', x[0], x[1]) for x in
-                           psps_changed(low_old.psps_1_week, low_new.psps_1_week)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '15m', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_15m, low_new.psps_15m)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '30m', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_30m, low_new.psps_30m)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '1h', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_1h, low_new.psps_1h)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '2h', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_2h, low_new.psps_2h)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '4h', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_4h, low_new.psps_4h)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '1d', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_1d, low_new.psps_1d)])
+            result.extend([(
+                level, label, low_new.type, to_smt_flags(symbols, low_new),
+                low_new.first_appeared, '1_week', x[0], x[1]
+            ) for x in psps_changed(low_old.psps_1_week, low_new.psps_1_week)])
 
     return result
 
@@ -1608,11 +1639,11 @@ def true_opens_readable(
 def targets_readable(targets: List[Target]) -> str:
     def to_str(t: Target) -> str:
         result = f"{t[1]} {t[2]}</b>: "
-        plus = "+" if t[3][1] > 0 else ""
+        plus = "+" if t[4][1] > 0 else ""
 
-        result += f"{round(t[3][0], 3)} (<b>{plus}{t[3][1]}%</b>), "
         result += f"{round(t[4][0], 3)} (<b>{plus}{t[4][1]}%</b>), "
-        result += f"{round(t[5][0], 3)} (<b>{plus}{t[5][1]}%</b>)"
+        result += f"{round(t[5][0], 3)} (<b>{plus}{t[5][1]}%</b>), "
+        result += f"{round(t[6][0], 3)} (<b>{plus}{t[6][1]}%</b>)"
 
         return result
 

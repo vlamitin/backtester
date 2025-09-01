@@ -43,10 +43,12 @@ class SmtPspTrade:
     smt_type: str
     smt_level: int
     smt_label: str
+    smt_first_appeared: str
     smt_flags: str
     target_level: int
     target_direction: str
     target_label: str
+    target_ql_start: str
 
     best_pnl: float
     best_pnl_time: str
@@ -75,6 +77,16 @@ class SmtPspTrade:
 
     def percent_closed(self) -> int:
         return sum([x[0] for x in self.closes])
+
+    def pnls_per_closes(self) -> List[float]:
+        result = []
+        for close in self.closes:
+            part_to_close = close[0] / 100
+            if self.direction == 'UP':
+                result.append(part_to_close * self.entry_position_assets * (close[1] - self.entry_price))
+            else:
+                result.append(part_to_close * self.entry_position_assets * (self.entry_price - close[1]))
+        return result
 
 
 def smt_psp_trade_decoder(dct: dict):
