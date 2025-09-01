@@ -74,7 +74,12 @@ strategy31_2025_snapshot = "scripts/test_snapshots/strategy_31_2025_btc_eth_sol.
 strategy32_2025_snapshot = "scripts/test_snapshots/strategy_32_2025_btc_eth_sol.json"
 
 
-def with_3d_window_stagnation(df: pd.DataFrame) -> pd.DataFrame:
+def with_cum_and_stagnation(df: pd.DataFrame) -> pd.DataFrame:
+    if len(df) == 0:
+        return df
+    df = df.copy()
+    df["cum_pnl_usd"] = df["pnl_usd"].cumsum()
+    df["cum_pnl_minus_fees"] = df["pnl_minus_fees"].cumsum()
     # === шаг 1. считаем 3-дневные окна ===
     df["entry_date"] = pd.to_datetime(df["entry_time"], errors="coerce")
     min_date = df["entry_date"].min().normalize()
@@ -161,26 +166,32 @@ def item_shifted(smb: str, arr1: List[Tuple[str, float, float]], arr2: List[Tupl
     return neighbors1 != neighbors2
 
 
-def to_trade_df(trades: List[SmtPspTrade]):
+def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
     df = pd.DataFrame(trades, columns=[
-        'entry_time', 'asset', 'pnl_usd', 'direction', 'entry_rr',
-        'smt_type', 'smt_label', 'smt_flags',
+        'signal_time', 'signal_time_ny', 'entry_time', 'entry_time_ny', 'asset', 'pnl_usd', 'direction', 'entry_rr',
+        'entry_price', 'stop', 'take_profit', 'entry_position_usd',
+        'smt_level', 'smt_type', 'smt_label', 'smt_flags', 'smt_first_appeared',
+        'target_level', 'target_direction', 'target_label', 'target_ql_start',
         'best_entry_time', 'best_entry_time_ny', 'best_entry_price', 'best_entry_rr',
-        'entry_position_usd',
+        'best_pnl', 'best_pnl_time', 'best_pnl_time_ny', 'best_pnl_price',
+        'psp_extremums', 'targets',  # TODO придумать как проанализировать
         'entry_position_fee',
         'close_position_fee'
     ])
-    df["cum_pnl_usd"] = df["pnl_usd"].cumsum()
     df["won"] = df["pnl_usd"] > 0
     df['pnl_minus_fees'] = df['pnl_usd'] - df['entry_position_fee'] - df['close_position_fee']
-    df["cum_pnl_minus_fees"] = df["pnl_minus_fees"].cumsum()
-    df["close_time"] = df.index.map(lambda i: trades[i].closes[0][2])
+    df["final_close_time"] = df.index.map(lambda i: trades[i].closes[-1][2])
     df['minutes_in_market'] = df.apply(
-        lambda row: (to_utc_datetime(row['close_time']) - to_utc_datetime(row['entry_time'])).total_seconds() / 60,
+        lambda row: (to_utc_datetime(row['final_close_time']) - to_utc_datetime(
+            row['entry_time'])).total_seconds() / 60,
         axis=1
     )
+    df['final_close_percent'] = df.index.map(lambda i: trades[i].closes[-1][0])
+    df['final_close_pnl'] = df.index.map(lambda i: trades[i].pnls_per_closes()[-1])
+    df['pre_final_closes_sum_pnl'] = df.index.map(lambda i: sum(trades[i].pnls_per_closes()[0:-1]))
     df['best_entry_minutes_in_market'] = df.apply(
-        lambda row: (to_utc_datetime(row['close_time']) - to_utc_datetime(row['best_entry_time'])).total_seconds() / 60,
+        lambda row: (to_utc_datetime(row['final_close_time']) - to_utc_datetime(
+            row['best_entry_time'])).total_seconds() / 60,
         axis=1
     )
     df['psp_key'] = df.index.map(lambda i: trades[i].psp_key_used)
@@ -194,6 +205,7 @@ def to_trade_df(trades: List[SmtPspTrade]):
     df['entry_position_usd_perc'], _ = perc_all_and_sma20(df['entry_position_usd'])
     df['entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].entry_tos]))
     df['best_entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].best_entry_tos]))
+    df['best_pnl_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].best_pnl_tos]))
 
     # # чем больше TO, которые с нужной от нас стороны, и чем они ближе к нашей цене, тем лучше
     # entry_tos_aside_coefs1 = []
@@ -228,7 +240,6 @@ def to_trade_df(trades: List[SmtPspTrade]):
     # df["entry_tos_aside_coefs2"] = df.index.map(lambda i: entry_tos_aside_coefs2[i])
     # df['entry_tos_aside_coefs2_perc'], _ = perc_all_and_sma20(df['entry_tos_aside_coefs2'])
 
-
     # with_shift_in_tos = []
     # prev_tos_in_shifted = []
     # for trade in trades:
@@ -250,297 +261,178 @@ def to_trade_df(trades: List[SmtPspTrade]):
     # pref_tos_percents = np.array([abs(x[2]) for x in prev_tos_in_shifted])
     # pref_tos_mean, pref_tos_median = np.mean(pref_tos_percents), np.median(pref_tos_percents)
 
-    df = with_3d_window_stagnation(df)
-
     first_cols = [
-        'entry_time', 'asset', 'pnl_usd', 'pnl_minus_fees', 'cum_pnl_usd', 'cum_pnl_minus_fees',
-        '3d_pnl_cumsum', '3d_window_start_date', '3d_pnl_cumsum_last_in_window',
-        'stagnation_trades_count', 'stagnation_days'
+        'signal_time', 'entry_time', 'asset', 'direction', 'pnl_usd', 'pnl_minus_fees',
     ]
     cols = first_cols + [c for c in df.columns if c not in first_cols]
     df = df[cols]
 
-    df1 = df[[
-        'asset', 'pnl_usd', 'direction', 'entry_rr', 'psp_key', 'smt_type', 'smt_label', 'smt_flags',
-        'entry_yq',
-        'entry_mw',
-        'entry_wd',
-        'entry_dq',
-        'entry_q90m',
-        'entry_rr_perc',
-        'entry_tos',
-    ]]
+    return df
+
+
+def _to_lo_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
+    df = pd.DataFrame(trades, columns=[
+        'signal_time', 'signal_time_ny', 'asset', 'pnl_usd', 'direction',
+        'limit_stop', 'limit_take_profit', 'limit_rr', 'limit_position_usd', 'limit_status',
+        'limit_chase_to_label', 'limit_chase_rr',
+        'limit_price_history',  # TODO придумать как анализировать
+
+        'entry_time', 'entry_time_ny',
+
+        'smt_level', 'smt_type', 'smt_label', 'smt_flags', 'smt_first_appeared',
+        'target_level', 'target_direction', 'target_label',
+        'psp_extremums', 'targets',  # TODO придумать как проанализировать
+    ])
+    df['limit_reason'] = df.index.map(lambda i: trades[i].entry_reason.split()[0])
+    df['final_close_reason'] = df.index.map(lambda i: trades[i].closes[-1][4])
+    df['final_close_time'] = df.index.map(lambda i: trades[i].closes[-1][2])
+    df['minutes_till_final_close'] = df.apply(
+        lambda row: (to_utc_datetime(row['final_close_time']) - to_utc_datetime(
+            row['signal_time'])).total_seconds() / 60,
+        axis=1
+    )
 
     return df
 
 
+#  market_trades, limit_trades, limit_orders (filled and cancelled)
+def to_trade_dfs(trades: List[SmtPspTrade]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    m_trades = [x for x in trades if x.entry_order_type == 'MARKET']
+    l_trades = [x for x in trades if x.entry_order_type == 'LIMIT']
+    l_orders = [x for x in trades if x.limit_status]
+    df_m = _to_trade_df(m_trades)
+
+    df_l = _to_trade_df(l_trades)
+    df_l['limit_reason'] = df_l.index.map(lambda i: l_trades[i].entry_reason.split()[0])
+
+    def with_market_trade_columns(row):
+        candidates = df_m[
+            (df_m["asset"] == row["asset"]) &
+            (df_m["stop"] == row["stop"]) &
+            (df_m["take_profit"] == row["take_profit"]) &
+            (df_m["signal_time"] == row["signal_time"])
+            ]
+        if candidates.empty:
+            return pd.Series({"market_pnl": None, "market_rr": None})
+        return pd.Series({"market_pnl": candidates.iloc[0]["pnl_usd"], "market_rr": candidates.iloc[0]["entry_rr"]})
+
+    df_l[["market_pnl", "market_rr"]] = df_l.apply(with_market_trade_columns, axis=1)
+
+    df_lo = _to_lo_df(l_orders)
+
+    return df_m, df_l, df_lo
+
+
+def analyze():
+    with open(strategy29_2025_snapshot, "r", encoding="utf-8") as f:
+        json_str = f.read()
+    df_m, df_l, df_lo = to_trade_dfs(smt_psp_trades_from_json(json_str))
+
+    df_l_chase_median_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_median_rr"'))
+    df_l_chase_mean_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_mean_rr"'))
+    df_l_chase_absent_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tyo"'))
+    df_l_chase_absent_tmo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tmo"'))
+    df_l_chase_absent_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_two"'))
+    df_l_chase_absent_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tdo"'))
+    df_l_chase_absent_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_t90mo"'))
+    df_l_chase_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tyo"'))
+    df_l_chase_tmo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tmo"'))
+    df_l_chase_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_two"'))
+    df_l_chase_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tdo"'))
+    df_l_chase_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_t90mo"'))
+
+    df_m = with_cum_and_stagnation(df_m)
+    df_l = with_cum_and_stagnation(df_l)
+
+    df_lo_chase_median_rr = df_lo.query('limit_reason == "chase_median_rr"')
+    df_lo_chase_mean_rr = df_lo.query('limit_reason == "chase_mean_rr"')
+    df_lo_chase_absent_tyo = df_lo.query('limit_reason == "chase_absent_tyo"')
+    df_lo_chase_absent_tmo = df_lo.query('limit_reason == "chase_absent_tmo"')
+    df_lo_chase_absent_two = df_lo.query('limit_reason == "chase_absent_two"')
+    df_lo_chase_absent_tdo = df_lo.query('limit_reason == "chase_absent_tdo"')
+    df_lo_chase_absent_t90mo = df_lo.query('limit_reason == "chase_absent_t90mo"')
+    df_lo_chase_tyo = df_lo.query('limit_reason == "chase_tyo"')
+    df_lo_chase_tmo = df_lo.query('limit_reason == "chase_tmo"')
+    df_lo_chase_two = df_lo.query('limit_reason == "chase_two"')
+    df_lo_chase_tdo = df_lo.query('limit_reason == "chase_tdo"')
+    df_lo_chase_t90mo = df_lo.query('limit_reason == "chase_t90mo"')
+
+    def basic_trade_stat(name, df) -> Tuple[str, int, float, float, float]:
+        if len(df) == 0:
+            return name, 0, 0, 0, 0
+        return (
+            name, len(df), round(df['cum_pnl_usd'].iloc[-1], 2),
+            round(df['cum_pnl_minus_fees'].iloc[-1], 2), round(len(df.query('won')) / len(df), 3)
+        )
+
+    def basic_lo_stat(name, df) -> Tuple[str, int, int, float]:
+        if len(df) == 0:
+            return name, 0, 0, 0
+        filled_orders = df.query('limit_status == "FILLED"')
+        return name, len(df), len(filled_orders), round(100 * len(filled_orders) / len(df), 2)
+
+    df_trade_stat = pd.DataFrame([
+        basic_trade_stat('market all', df_m),
+        basic_trade_stat('limit all', df_l),
+        basic_trade_stat('chase_median_rr', df_l_chase_median_rr),
+        basic_trade_stat('chase_mean_rr', df_l_chase_mean_rr),
+        basic_trade_stat('chase_absent_tyo', df_l_chase_absent_tyo),
+        basic_trade_stat('chase_absent_tmo', df_l_chase_absent_tmo),
+        basic_trade_stat('chase_absent_two', df_l_chase_absent_two),
+        basic_trade_stat('chase_absent_tdo', df_l_chase_absent_tdo),
+        basic_trade_stat('chase_absent_t90mo', df_l_chase_absent_t90mo),
+        basic_trade_stat('chase_tyo', df_l_chase_tyo),
+        basic_trade_stat('chase_tmo', df_l_chase_tmo),
+        basic_trade_stat('chase_two', df_l_chase_two),
+        basic_trade_stat('chase_tdo', df_l_chase_tdo),
+        basic_trade_stat('chase_t90mo', df_l_chase_t90mo),
+    ], columns=[
+        'name',
+        'trades',
+        'cum_pnl',
+        'minus_fees',
+        'win_rate',
+    ])
+
+    df_lo_stat = pd.DataFrame([
+        basic_lo_stat('limit all', df_lo),
+        basic_lo_stat('chase_median_rr', df_lo_chase_median_rr),
+        basic_lo_stat('chase_mean_rr', df_lo_chase_mean_rr),
+        basic_lo_stat('chase_absent_tyo', df_lo_chase_absent_tyo),
+        basic_lo_stat('chase_absent_tmo', df_lo_chase_absent_tmo),
+        basic_lo_stat('chase_absent_two', df_lo_chase_absent_two),
+        basic_lo_stat('chase_absent_tdo', df_lo_chase_absent_tdo),
+        basic_lo_stat('chase_absent_t90mo', df_lo_chase_absent_t90mo),
+        basic_lo_stat('chase_tyo', df_lo_chase_tyo),
+        basic_lo_stat('chase_tmo', df_lo_chase_tmo),
+        basic_lo_stat('chase_two', df_lo_chase_two),
+        basic_lo_stat('chase_tdo', df_lo_chase_tdo),
+        basic_lo_stat('chase_t90mo', df_lo_chase_t90mo),
+    ], columns=[
+        'name',
+        'orders',
+        'trades',
+        'conversion',
+    ])
+
+    print(f"{f.name[23:34]}:")
+    print(f"Trade stat:")
+    print(df_trade_stat)
+    print(f"--")
+    print(f"Limit orders stat:")
+    print(df_lo_stat)
+
+    # group_by_display(["asset"])
+    # group_by_display(["smt_type"])
+    # group_by_display(["smt_label"])
+    # group_by_display(["smt_flags"])
+
+    print("done!")
+
+
 if __name__ == "__main__":
     try:
-        with open(strategy09_2025_snapshot, "r", encoding="utf-8") as f:
-            json_str = f.read()
-            trades_list = smt_psp_trades_from_json(json_str)
-            trades_df = to_trade_df(trades_list)
-
-            # show_corr_charts("bla", trades_df, trades_df, [
-            #     "entry_tos_aside_coefs1",
-            #     "entry_tos_aside_coefs2",
-            # ], ["pnl_usd"])
-
-            print("cum pnl --")
-            print(trades_df['cum_pnl_usd'].iloc[-1])
-            print("\n")
-
-            print("direction mean median count --")
-            print(trades_df.groupby("direction")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("asset mean median count --")
-            print(trades_df.groupby("asset")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("smt_type mean median count --")
-            print(trades_df.groupby("smt_type")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("smt_label mean median count --")
-            print(trades_df.groupby("smt_label")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("smt_flags mean median count --")
-            print(trades_df.groupby("smt_flags")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            # print("direction mean median count pnl_minus_fees --")
-            # print(trades_df.groupby("direction")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            # print("\n")
-
-            print("entry_position_usd_perc --")
-            print([float(x) for x in np.percentile(trades_df['entry_position_usd'], [10, 30, 70, 90])])
-            print("\n")
-
-            print("entry_position_usd_perc mean median count --")
-            print(trades_df.groupby("entry_position_usd_perc")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-            #
-            # print("entry_tos_aside_coefs1_perc --")
-            # print([float(x) for x in np.percentile(trades_df['entry_tos_aside_coefs1'], [10, 30, 70, 90])])
-            # print("\n")
-            #
-            # print("entry_tos_aside_coefs1_perc mean median count --")
-            # print(trades_df.groupby("entry_tos_aside_coefs1_perc")["pnl_usd"].agg(["mean", "median", "count"]))
-            # print("\n")
-            #
-            # print("entry_tos_aside_coefs2_perc --")
-            # print([float(x) for x in np.percentile(trades_df['entry_tos_aside_coefs2'], [10, 30, 70, 90])])
-            # print("\n")
-            #
-            # print("entry_tos_aside_coefs2_perc mean median count --")
-            # print(trades_df.groupby("entry_tos_aside_coefs2_perc")["pnl_usd"].agg(["mean", "median", "count"]))
-            # print("\n")
-
-            #
-            # print("entry_position_usd_perc mean median count pnl_minus_fees --")
-            # print(trades_df.groupby("entry_position_usd_perc")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            # print("\n")
-
-            print("entry_rr_perc --")
-            print([float(x) for x in np.percentile(trades_df['entry_rr'], [10, 30, 70, 90])])
-            print("\n")
-
-            print("entry_rr_perc mean median count --")
-            print(trades_df.groupby("entry_rr_perc")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("entry_wd + entry_rr_perc mean median count --")
-            print(
-                trades_df.groupby(["entry_wd", "entry_rr_perc"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            #             print("entry_rr_perc mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("entry_rr_perc")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("minutes_in_market_perc --")
-            print([float(x) for x in np.percentile(trades_df['minutes_in_market'], [10, 30, 70, 90])])
-            print("\n")
-
-            print("minutes_in_market_perc mean median count --")
-            print(trades_df.groupby("minutes_in_market_perc")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            print("entry_wd + minutes_in_market_perc mean median count --")
-            print(
-                trades_df.groupby(["entry_wd", "minutes_in_market_perc"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("entry_rr_perc + minutes_in_market_perc mean median count --")
-            print(
-                trades_df.groupby(["entry_rr_perc", "minutes_in_market_perc"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("entry_rr_perc < 90 and >=90 + minutes_in_market_perc + entry_wd mean median count --")
-            print(
-                trades_df[trades_df["entry_rr_perc"].isin(['<p90', '>=p90'])]
-                .groupby(["entry_rr_perc", "minutes_in_market_perc", "entry_wd"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key mean median count --")
-            print(trades_df.groupby("psp_key")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-            #
-            # print("entry_tos mean median count --")
-            # print(trades_df.groupby("entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
-            # print("\n")
-            #
-            # print("best_entry_tos mean median count --")
-            # print(trades_df.groupby("best_entry_tos")["pnl_usd"].agg(["mean", "median", "count"]))
-            # print("\n")
-
-            #             print("psp_key mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("psp_key")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("entry_yq mean median count --")
-            print(trades_df.groupby("entry_yq")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            #             print("entry_yq mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("entry_yq")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("entry_mw mean median count --")
-            print(trades_df.groupby("entry_mw")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            #             print("entry_mw mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("entry_mw")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("entry_wd mean median count --")
-            print(trades_df.groupby("entry_wd")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            #             print("entry_wd mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("entry_wd")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("entry_dq mean median count --")
-            print(trades_df.groupby("entry_dq")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            #             print("entry_dq mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("entry_dq")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("entry_q90m mean median count --")
-            print(trades_df.groupby("entry_q90m")["pnl_usd"].agg(["mean", "median", "count"]))
-            print("\n")
-
-            #             print("entry_q90m mean median count pnl_minus_fees --")
-            #             print(trades_df.groupby("entry_q90m")["pnl_minus_fees"].agg(["mean", "median", "count"]))
-            #             print("\n")
-
-            print("psp_key + direction mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key + direction mean median count --")
-            print(
-                trades_df.groupby(["smt_type", "smt_label", "asset", "smt_flags"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key + direction + asset mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction", "asset"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            #             print("psp_key + direction mean median count pnl_minus_fees --")
-            #             print(
-            #                 trades_df.groupby(["psp_key", "direction"])["pnl_minus_fees"]
-            #                 .agg(["mean", "median", "count"])
-            #                 .reset_index()
-            #             )
-            #             print("\n")
-
-            print("psp_key + direction + entry_yq mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction", "entry_yq"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key + direction + entry_mw mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction", "entry_mw"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key + direction + entry_wd mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction", "entry_wd"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key + direction + entry_dq mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction", "entry_dq"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("psp_key + direction + entry_q90m mean median count --")
-            print(
-                trades_df.groupby(["psp_key", "direction", "entry_q90m"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("entry_wd + entry_dq mean median count --")
-            print(
-                trades_df.groupby(["entry_wd", "entry_dq"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-            print("entry_wd + smt_label mean median count --")
-            print(
-                trades_df.groupby(["entry_wd", "smt_label"])["pnl_usd"]
-                .agg(["mean", "median", "count"])
-                .reset_index()
-            )
-            print("\n")
-
-        print("done!")
+        analyze()
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
         quit(0)
