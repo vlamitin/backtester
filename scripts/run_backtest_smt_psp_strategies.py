@@ -1,3 +1,5 @@
+import time
+from datetime import timedelta
 from typing import Tuple
 
 from scripts.run_smt_psp_fronttester import fronttest
@@ -11,6 +13,7 @@ from stock_market_research_kit.smt_psp_strategy import strategy01, \
     strategy09, strategy11, strategy13, strategy15
 from stock_market_research_kit.smt_psp_trade import json_from_smt_psp_trades
 from stock_market_research_kit.triad import new_triad
+from utils.date_utils import log_warn_ny, to_utc_datetime, now_utc_datetime
 
 strategy01_2024_snapshot = "scripts/test_snapshots/strategy_01_2024_btc_eth_sol.json"
 strategy02_2024_snapshot = "scripts/test_snapshots/strategy_02_2024_btc_eth_sol.json"
@@ -94,15 +97,35 @@ def candles_generator_reverse(symbol: str, from_year: int, to_year: int, to_: st
 
 
 def candles_generator(symbols: Tuple[str, str, str], year: int, from_: str, to_: str) -> TriadCandles15mGenerator:
-    candles_a1 = select_candles_15m(year, symbols[0], from_, to_)
-    candles_a2 = select_candles_15m(year, symbols[1], from_, to_)
-    candles_a3 = select_candles_15m(year, symbols[2], from_, to_)
+    candles_a1 = []
+    candles_a2 = []
+    candles_a3 = []
 
+    def update():
+        nonlocal candles_a1
+        nonlocal candles_a2
+        nonlocal candles_a3
+        candles_a1 = select_candles_15m(year, symbols[0], from_, to_)
+        candles_a2 = select_candles_15m(year, symbols[1], from_, to_)
+        candles_a3 = select_candles_15m(year, symbols[2], from_, to_)
+
+    update()
     index = 0
 
     while True:
-        yield candles_a1[index], candles_a2[index], candles_a3[index]
-        index = index + 1
+        if len(candles_a1) <= index:
+            last_candle_date = to_utc_datetime(candles_a1[index - 1][5])
+            now_utc = now_utc_datetime()
+            sleep_seconds = (last_candle_date + timedelta(minutes=15, seconds=5) - now_utc).total_seconds()
+            if sleep_seconds < 0:
+                sleep_seconds = 15 * 60
+            log_warn_ny(
+                f"Sleeping {sleep_seconds} seconds to try one more time to get new candle")
+            time.sleep(sleep_seconds)
+            update()
+        else:
+            yield candles_a1[index], candles_a2[index], candles_a3[index]
+            index = index + 1
 
 
 def backtest_strategy_full_2024():
@@ -303,8 +326,8 @@ def backtest_strategy_full_2025():
 
 if __name__ == "__main__":
     try:
-        backtest_strategy_full_2024()
-        # backtest_strategy_full_2025()
+        # backtest_strategy_full_2024()
+        backtest_strategy_full_2025()
 
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
