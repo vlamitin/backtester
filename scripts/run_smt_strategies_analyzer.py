@@ -80,6 +80,8 @@ def with_cum_and_stagnation(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["cum_pnl_usd"] = df["pnl_usd"].cumsum()
     df["cum_pnl_minus_fees"] = df["pnl_minus_fees"].cumsum()
+    df["cum_final_close_pnl"] = df["final_close_pnl"].cumsum()
+    df["cum_pre_final_closes_pnl"] = df["pre_final_closes_sum_pnl"].cumsum()
     # === шаг 1. считаем 3-дневные окна ===
     df["entry_date"] = pd.to_datetime(df["entry_time"], errors="coerce")
     min_date = df["entry_date"].min().normalize()
@@ -194,6 +196,15 @@ def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
             row['best_entry_time'])).total_seconds() / 60,
         axis=1
     )
+    asset_to_index = {
+        'BTCUSDT': 0,
+        'ETHUSDT': 1,
+        'SOLUSDT': 2,
+    }
+    df['percents_till_stop'] = df.index.map(lambda i: abs(trades[i].psp_extremums[asset_to_index[trades[i].asset]]))
+    df['percents_till_stop_perc'], _ = perc_all_and_sma20(df['percents_till_stop'])
+    df['percents_till_take'] = df.index.map(lambda i: abs(trades[i].targets[asset_to_index[trades[i].asset]]))
+    df['percents_till_take_perc'], _ = perc_all_and_sma20(df['percents_till_take'])
     df['psp_key'] = df.index.map(lambda i: trades[i].psp_key_used)
     df['entry_yq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[0].name)
     df['entry_mw'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[1].name)
