@@ -1,15 +1,18 @@
 from dataclasses import dataclass
+from types import MethodType
 from typing import TypeAlias, Callable, List, Tuple, Optional, Dict
 
 from stock_market_research_kit.asset import Asset
 from stock_market_research_kit.candle import as_1_candle
+from stock_market_research_kit.quarter import DayQuarter
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade
 from stock_market_research_kit.triad import Triad, SMTLevels, SMT, Target, TrueOpen, to_smt_flags, percent_from_current
-from utils.date_utils import to_utc_datetime, to_ny_datetime, to_date_str, to_ny_date_str
+from utils.date_utils import to_utc_datetime, to_ny_datetime, to_date_str, to_ny_date_str, quarters_by_time
 
 ACCOUNT_MARGIN_USD = 10000  # TODO сделать SmtPspStrategy stateful, хранить в ней margin_used
 FREE_SAFETY_MARGIN_PERCENT = 20  # 20% маржи оставляем неиспользованной чтобы не поймать ликвидацию на slippage
 MAX_LEVERAGE = 50  # TODO и не открывать сделки если кончилась маржа (и сами сделки ограничивать по RR таким образом)
+MAX_ENTRY = 0.25 * ACCOUNT_MARGIN_USD * MAX_LEVERAGE
 ONE_RR_IN_USD = 100
 MARKET_ORDER_FEE_PERCENT = 0.045  # Binance default
 LIMIT_ORDER_FEE_PERCENT = 0.018  # Binance default
@@ -28,8 +31,10 @@ TargetChange: TypeAlias = Tuple[
     List[Target],  # old short
     List[Target],  # all new long targets
     List[Target],  # all new short targets
-    List[Tuple[int, str, str, str, int, float]],  # reached long: level, direction, target_label, ql_start, asset_index, price
-    List[Tuple[int, str, str, str, int, float]],  # reached short: level, direction, target_label, ql_start, asset_index, price
+    List[Tuple[
+        int, str, str, str, int, float]],  # reached long: level, direction, target_label, ql_start, asset_index, price
+    List[Tuple[
+        int, str, str, str, int, float]],  # reached short: level, direction, target_label, ql_start, asset_index, price
     List[Target],  # only new long targets
     List[Target],  # only new short targets
 ]
@@ -80,8 +85,12 @@ def _rr_and_pos_size(current: float, target: float, stop: float) -> Tuple[float,
 
     rr = reward / risk
     pos_size_assets = ONE_RR_IN_USD / risk
+    pos_size_usd = pos_size_assets * current
+    if pos_size_usd > MAX_ENTRY:
+        pos_size_usd = MAX_ENTRY
+        pos_size_assets = pos_size_usd / current
 
-    return rr, pos_size_assets, pos_size_assets * current
+    return rr, pos_size_assets, pos_size_usd
 
 
 def _price_and_pos_size(rr: float, target: float, stop: float) -> Tuple[float, float, float]:
@@ -89,8 +98,12 @@ def _price_and_pos_size(rr: float, target: float, stop: float) -> Tuple[float, f
     risk = abs(price - stop)
 
     pos_size_assets = ONE_RR_IN_USD / risk
+    pos_size_usd = pos_size_assets * price
+    if pos_size_usd > MAX_ENTRY:
+        pos_size_usd = MAX_ENTRY
+        pos_size_assets = pos_size_usd / price
 
-    return price, pos_size_assets, pos_size_assets * price
+    return price, pos_size_assets, pos_size_usd
 
 
 def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: str, close_half: bool) -> SmtPspTrade:
@@ -434,6 +447,10 @@ def _limit_trade_from_alo(
 
     # не открыли лимитку
     if not trade_asset.prev_15m_candle[2] < alo.limit_price_history[-1] < trade_asset.prev_15m_candle[1]:
+        return None, alo
+
+    # пост-проверка кастомная в стратегиях
+    if not alo.limit_pre_fill_checker(trade_asset.prev_15m_candle[5]):
         return None, alo
 
     return _open_limit_trade(alo, trade_asset, trade_tos), None  # открываем сделку
@@ -813,7 +830,8 @@ def strategy04_to_constructor(
 def strategy07_to_constructor(
         direction_filter: str,
         smt_lvl_filter: int, psp_change_filter: str, psp_keys_filter: List[str],
-        target_lvl_filter: List[int], allow_half_target: bool, tsg: Callable[[bool], TargetSorter]
+        target_lvl_filter: List[int], allow_half_target: bool, tsg: Callable[[bool], TargetSorter],
+        post_filterer: Callable[[List[SmtPspTrade]], List[SmtPspTrade]]
 ) -> TOpener:
     def strategy07_to(tr: Triad, tos: TrueOpens, spc: SmtPspChange, tc: TargetChange) -> List[SmtPspTrade]:
         my_psp_change = _filter_by_psp_change(
@@ -884,9 +902,151 @@ def strategy07_to_constructor(
                     trade_asset, rr_pos, my_target, my_psp_change, stop, stop_percents, take_profit, trade_tos
                 ),
             )
-        return trades
+        return post_filterer(trades)
 
     return strategy07_to
+
+
+def strategy_10_to_pf(trades: List[SmtPspTrade]) -> List[SmtPspTrade]:
+    res = []
+
+    def abs_tdo_1h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 1.1 < self.limit_rr < 2.3
+
+    def abs_t90mo_1h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.8 < self.limit_rr < 1.5
+
+    def t90mo_1h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.5 < self.limit_rr < 2
+
+    def median_rr_1h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 12 < self.limit_rr < 20
+
+    def chase_two_tmo_4h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.35 < self.limit_rr < 1.5
+
+    def mean_rr_4h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 12 < self.limit_rr < 25
+
+    def median_rr_4h_checker(self: SmtPspTrade, entry_time: str) -> bool:
+        if not 5 < self.limit_rr < 11:
+            return False
+        return (quarters_by_time(entry_time)[3] in [DayQuarter.DQ2_London] and
+                quarters_by_time(self.signal_time)[3] in [DayQuarter.DQ2_London])
+
+    for t in trades:
+        limit_reason = t.entry_reason.split()[0]
+        if t.psp_key_used == '1h':
+            match limit_reason:
+                case "chase_absent_tdo":
+                    t.limit_pre_fill_checker = MethodType(abs_tdo_1h_checker, t)
+                    res.append(t)
+                case "chase_absent_t90mo":
+                    t.limit_pre_fill_checker = MethodType(abs_t90mo_1h_checker, t)
+                    res.append(t)
+                case "chase_t90mo":
+                    t.limit_pre_fill_checker = MethodType(t90mo_1h_checker, t)
+                    res.append(t)
+                case "chase_median_rr":
+                    t.limit_pre_fill_checker = MethodType(median_rr_1h_checker, t)
+                    res.append(t)
+        elif t.psp_key_used == '4h':
+            match limit_reason:
+                case "chase_tmo" | "chase_two":
+                    t.limit_pre_fill_checker = MethodType(chase_two_tmo_4h_checker, t)
+                    res.append(t)
+                case "chase_mean_rr":
+                    t.limit_pre_fill_checker = MethodType(mean_rr_4h_checker, t)
+                    res.append(t)
+                case "chase_mean_rr":
+                    t.limit_pre_fill_checker = MethodType(median_rr_4h_checker, t)
+                    res.append(t)
+
+    return res
+
+
+def strategy_30_to_pf(trades: List[SmtPspTrade]) -> List[SmtPspTrade]:
+    res = []
+
+    def tdo_2h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.2 < self.limit_rr < 0.9
+
+    def market_2h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 4.5 < self.limit_rr
+
+    def tdo_4h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 1.5 < self.limit_rr < 6.5
+
+    def t90mo_4h_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.5 < self.limit_rr < 2.5
+
+    for t in trades:
+        limit_reason = t.entry_reason.split()[0]
+        if t.psp_key_used == '1h':
+            match limit_reason:
+                case "chase_absent_tdo":
+                    if t.target_level == 4:
+                        res.append(t)
+        elif t.psp_key_used == '2h':
+            match limit_reason:
+                case "chase_tdo":
+                    if t.target_level == 5:
+                        t.limit_pre_fill_checker = MethodType(tdo_2h_checker, t)
+                        res.append(t)
+                case "chase_two":
+                    if t.target_level == 5:
+                        res.append(t)
+                case "market all":
+                    if t.target_level == 5:
+                        t.limit_pre_fill_checker = MethodType(market_2h_checker, t)
+                        res.append(t)
+        elif t.psp_key_used == '4h':
+            match limit_reason:
+                case "chase_two":
+                    if t.target_level == 4:
+                        res.append(t)
+                case "chase_tdo":
+                    if t.target_level == 5:
+                        t.limit_pre_fill_checker = MethodType(tdo_4h_checker, t)
+                        res.append(t)
+                case "chase_t90mo":
+                    if t.target_level == 5:
+                        t.limit_pre_fill_checker = MethodType(t90mo_4h_checker, t)
+                        res.append(t)
+
+    return res
+
+
+def strategy_32_to_pf(trades: List[SmtPspTrade]) -> List[SmtPspTrade]:
+    res = []
+
+    def t90mo_1d_checker(self: SmtPspTrade, _: str) -> bool:
+        return self.limit_rr < 0.42
+
+    def abs_tdo_1d_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.3 < self.limit_rr < 0.8
+
+    def med_rr_1d_checker(self: SmtPspTrade, _: str) -> bool:
+        return 0.5 < self.limit_rr < 2
+
+    for t in trades:
+        limit_reason = t.entry_reason.split()[0]
+        if t.psp_key_used == '1d':
+            match limit_reason:
+                case "chase_t90mo":
+                    if t.target_level == 4:
+                        t.limit_pre_fill_checker = MethodType(t90mo_1d_checker, t)
+                        res.append(t)
+                case "chase_absent_tdo":
+                    if t.target_level == 3:
+                        t.limit_pre_fill_checker = MethodType(abs_tdo_1d_checker, t)
+                        res.append(t)
+                case "chase_median_rr":
+                    if t.target_level == 4:
+                        t.limit_pre_fill_checker = MethodType(med_rr_1d_checker, t)
+                        res.append(t)
+
+    return res
 
 
 def _close_by_tp_sl_deadlines(at: SmtPspTrade, trade_asset: Asset, stop_after: str) -> Optional[SmtPspTrade]:
@@ -1198,7 +1358,7 @@ strategy07 = SmtPspStrategy(
     name="07. Trigger cPSP in wd smt - closest dq no-half target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['1h', '2h', '4h'], [5], False,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1208,7 +1368,24 @@ strategy09 = SmtPspStrategy(
     name="09. Trigger cPSP in wd smt - closest dq target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['1h', '2h', '4h'], [5], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
+    ),
+    trades_handler=strategy01_th
+)
+
+# based on strategy09 2024 - sep 2025 what's good on backtest:
+# 1h candles abs_tdo rr 1.1-2.3
+# 1h candles abs_t90 rr 1.5-0.8
+# 1h candles t90 rr 0.5-2
+# 1h candles med rr 12-20
+# 4h candles chase_tmo/chase_two rr 0.35-1.5
+# 4h candles mean rr 12-25
+# 4h candles med rr 5-11 with entry in London (signal also in London, usually 15min between signal and entry)
+strategy10 = SmtPspStrategy(
+    name="10. Trigger cPSP in wd smt - closest dq target, post-filter from strategy09 backtest",
+    trade_opener=strategy07_to_constructor(
+        "", 4, 'closed', ['1h', '4h'], [5], True,
+        _closest_targets_sorter, strategy_10_to_pf
     ),
     trades_handler=strategy01_th
 )
@@ -1218,17 +1395,29 @@ strategy11 = SmtPspStrategy(
     name="11. Trigger cPSP in wd smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
+
+# based on strategy11 2024 - sep 2025 what's good on backtest:
+# 1h candles abs_tdo rr 1.1-2.3
+# TODO
+# strategy12 = SmtPspStrategy(
+#     name="12. TODO",
+#     trade_opener=strategy07_to_constructor(
+#         "", 4, 'closed', ['1h', '2h', '4h'], [4, 5], True,
+#         _closest_targets_sorter
+#     ),
+#     trades_handler=strategy01_th
+# )
 
 # всё как в strategy09, но wd smt + mw target
 strategy13 = SmtPspStrategy(
     name="13. Trigger cPSP in mw smt - closest wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'closed', ['4h', '1d'], [4], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1238,7 +1427,7 @@ strategy15 = SmtPspStrategy(
     name="15. Trigger cPSP in mw smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'closed', ['4h', '1d'], [3, 4], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1248,7 +1437,7 @@ strategy17 = SmtPspStrategy(
     name="17. Trigger CPSP in mw smt - closest wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'confirmed', ['4h', '1d'], [4], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1258,7 +1447,7 @@ strategy19 = SmtPspStrategy(
     name="19. Trigger cPSP in mw smt - only 1d UP - closest wd target",
     trade_opener=strategy07_to_constructor(
         "UP", 3, 'closed', ['1d'], [4], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1268,7 +1457,7 @@ strategy21 = SmtPspStrategy(
     name="21. Trigger cPSP in mw smt - only 1d UP - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "UP", 3, 'closed', ['1d'], [3, 4], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1278,7 +1467,7 @@ strategy23 = SmtPspStrategy(
     name="23. Trigger CPSP in mw smt - only 1d UP - closest wd target",
     trade_opener=strategy07_to_constructor(
         "UP", 3, 'confirmed', ['1d'], [4], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1288,7 +1477,7 @@ strategy25 = SmtPspStrategy(
     name="25. Trigger 4h cPSP in wd smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['4h'], [4, 5], True,
-        _closest_targets_sorter
+        _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1298,7 +1487,7 @@ strategy27 = SmtPspStrategy(
     name="27. Trigger 4h cPSP in wd smt - furthest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'closed', ['4h'], [4, 5], True,
-        _furthest_targets_sorter
+        _furthest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
@@ -1308,17 +1497,47 @@ strategy29 = SmtPspStrategy(
     name="29. Trigger 1h 2h 4h CPSP in wd smt - furthest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'confirmed', ['1h', '2h', '4h'], [4, 5], True,
-        _furthest_targets_sorter
+        _furthest_targets_sorter, lambda x: x
+    ),
+    trades_handler=strategy01_th
+)
+
+# based on strategy29 2024 - sep 2025 what's good on backtest:
+# wd targets + 1h candles chase_abs_tdo
+# dq targets + 2h candles chase_tdo with rr 0.2 - 0.9
+# dq targets + 2h candles chase_two
+# dq targets + 2h candles market with rr >4.5
+# wd targets + 4h candles chase_two
+# dq targets + 4h candles chase_tdo with rr 1.5 - 6.5
+# dq targets + 4h candles chase_t90mo with rr 0.5 - 2.5
+strategy30 = SmtPspStrategy(
+    name="30. Trigger 1h 2h 4h CPSP in wd smt - furthest dq+wd target, post-filter from 2024-2025 backtests",
+    trade_opener=strategy07_to_constructor(
+        "", 4, 'confirmed', ['1h', '2h', '4h'], [4, 5], True,
+        _furthest_targets_sorter, strategy_30_to_pf
     ),
     trades_handler=strategy01_th
 )
 
 # mw confirmed 4h + 1d свечки, furthest mw + wd цели
 strategy31 = SmtPspStrategy(
-    name="31. Trigger 4h + 1d CPSP in mw smt - furthest mw+wd target ",
+    name="31. Trigger 4h + 1d CPSP in mw smt - furthest mw+wd target",
     trade_opener=strategy07_to_constructor(
         "", 3, 'confirmed', ['4h', '1d'], [3, 4], True,
-        _furthest_targets_sorter
+        _furthest_targets_sorter, lambda x: x
+    ),
+    trades_handler=strategy01_th
+)
+
+# based on strategy31 2024 - sep 2025 what's good on backtest:
+# - dq targets + 1d psp + t90lo + rr < 0.42
+# - mw targets + 1d psp + abs_tdo + rr 0.3-0.8
+# - dq targets + 1d psp + med_rr + rr 0.5-2
+strategy32 = SmtPspStrategy(
+    name="32. Trigger 4h + 1d CPSP in mw smt - furthest mw+wd target + post-filter from strategy31 2024-2025 backtests",
+    trade_opener=strategy07_to_constructor(
+        "", 3, 'confirmed', ['4h', '1d'], [3, 4], True,
+        _furthest_targets_sorter, strategy_32_to_pf
     ),
     trades_handler=strategy01_th
 )

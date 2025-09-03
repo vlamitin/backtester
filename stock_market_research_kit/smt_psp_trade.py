@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, asdict, fields
-from typing import List, Tuple, TypeAlias, Optional
+from typing import List, Tuple, TypeAlias, Optional, Callable, Dict
 
 from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.triad import TrueOpen
@@ -75,6 +75,11 @@ class SmtPspTrade:
     pnl_usd: float
     close_position_fee: float
 
+    def limit_pre_fill_checker(self, entry_time: str) -> bool:
+        if self.asset == "":
+            return False
+        return True
+
     def percent_closed(self) -> int:
         return sum([x[0] for x in self.closes])
 
@@ -95,12 +100,18 @@ def smt_psp_trade_decoder(dct: dict):
     return SmtPspTrade(**filtered)
 
 
+def _to_safe_dict(trade: SmtPspTrade) -> Dict[any, any]:
+    d = asdict(trade)
+    d.pop("limit_pre_fill_checker", None)
+    return d
+
+
 def json_from_smt_psp_trade(trade: SmtPspTrade) -> str:
-    return json.dumps(asdict(trade), ensure_ascii=False, indent=4)
+    return json.dumps(_to_safe_dict(trade), ensure_ascii=False, indent=4)
 
 
 def json_from_smt_psp_trades(trades: List[SmtPspTrade]) -> str:
-    return json.dumps([trade.__dict__ for trade in trades], ensure_ascii=False, indent=4)
+    return json.dumps([_to_safe_dict(trade) for trade in trades], ensure_ascii=False, indent=4)
 
 
 def smt_psp_trades_from_json(json_str: str) -> List[SmtPspTrade]:

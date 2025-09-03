@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+from IPython.core.display_functions import display
 
 from stock_market_research_kit.candle_with_stat import perc_all_and_sma20, show_corr_charts
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, smt_psp_trades_from_json
@@ -72,6 +73,208 @@ strategy29_2025_snapshot = "scripts/test_snapshots/strategy_29_2025_btc_eth_sol.
 strategy30_2025_snapshot = "scripts/test_snapshots/strategy_30_2025_btc_eth_sol.json"
 strategy31_2025_snapshot = "scripts/test_snapshots/strategy_31_2025_btc_eth_sol.json"
 strategy32_2025_snapshot = "scripts/test_snapshots/strategy_32_2025_btc_eth_sol.json"
+
+
+def snap_dfs(snap_file: str) -> Tuple[
+    str, List[Tuple[str, pd.DataFrame]], List[Tuple[str, pd.DataFrame]]
+]:  # filename, tdfs, lodfs
+    with open(snap_file, "r", encoding="utf-8") as f:
+        # with open(strategy31_2024_snapshot, "r", encoding="utf-8") as f:
+        json_str = f.read()
+    df_m, df_l, df_lo = to_trade_dfs(smt_psp_trades_from_json(json_str))
+
+    df_l_chase_median_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_median_rr"'))
+    df_l_chase_mean_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_mean_rr"'))
+    df_l_chase_absent_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tyo"'))
+    df_l_chase_absent_tmo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tmo"'))
+    df_l_chase_absent_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_two"'))
+    df_l_chase_absent_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tdo"'))
+    df_l_chase_absent_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_t90mo"'))
+    df_l_chase_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tyo"'))
+    df_l_chase_tmo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tmo"'))
+    df_l_chase_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_two"'))
+    df_l_chase_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tdo"'))
+    df_l_chase_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_t90mo"'))
+
+    df_m = with_cum_and_stagnation(df_m)
+    df_l = with_cum_and_stagnation(df_l)
+
+    df_lo_chase_median_rr = df_lo.query('limit_reason == "chase_median_rr"')
+    df_lo_chase_mean_rr = df_lo.query('limit_reason == "chase_mean_rr"')
+    df_lo_chase_absent_tyo = df_lo.query('limit_reason == "chase_absent_tyo"')
+    df_lo_chase_absent_tmo = df_lo.query('limit_reason == "chase_absent_tmo"')
+    df_lo_chase_absent_two = df_lo.query('limit_reason == "chase_absent_two"')
+    df_lo_chase_absent_tdo = df_lo.query('limit_reason == "chase_absent_tdo"')
+    df_lo_chase_absent_t90mo = df_lo.query('limit_reason == "chase_absent_t90mo"')
+    df_lo_chase_tyo = df_lo.query('limit_reason == "chase_tyo"')
+    df_lo_chase_tmo = df_lo.query('limit_reason == "chase_tmo"')
+    df_lo_chase_two = df_lo.query('limit_reason == "chase_two"')
+    df_lo_chase_tdo = df_lo.query('limit_reason == "chase_tdo"')
+    df_lo_chase_t90mo = df_lo.query('limit_reason == "chase_t90mo"')
+
+    trades_dfs = [
+        ('market all', df_m),
+        ('limit all', df_l),
+        ('chase_median_rr', df_l_chase_median_rr),
+        ('chase_mean_rr', df_l_chase_mean_rr),
+        ('chase_absent_tyo', df_l_chase_absent_tyo),
+        ('chase_absent_tmo', df_l_chase_absent_tmo),
+        ('chase_absent_two', df_l_chase_absent_two),
+        ('chase_absent_tdo', df_l_chase_absent_tdo),
+        ('chase_absent_t90mo', df_l_chase_absent_t90mo),
+        ('chase_tyo', df_l_chase_tyo),
+        ('chase_tmo', df_l_chase_tmo),
+        ('chase_two', df_l_chase_two),
+        ('chase_tdo', df_l_chase_tdo),
+        ('chase_t90mo', df_l_chase_t90mo),
+    ]
+
+    lo_dfs = [
+        ('limit all', df_lo),
+        ('chase_median_rr', df_lo_chase_median_rr),
+        ('chase_mean_rr', df_lo_chase_mean_rr),
+        ('chase_absent_tyo', df_lo_chase_absent_tyo),
+        ('chase_absent_tmo', df_lo_chase_absent_tmo),
+        ('chase_absent_two', df_lo_chase_absent_two),
+        ('chase_absent_tdo', df_lo_chase_absent_tdo),
+        ('chase_absent_t90mo', df_lo_chase_absent_t90mo),
+        ('chase_tyo', df_lo_chase_tyo),
+        ('chase_tmo', df_lo_chase_tmo),
+        ('chase_two', df_lo_chase_two),
+        ('chase_tdo', df_lo_chase_tdo),
+        ('chase_t90mo', df_lo_chase_t90mo),
+    ]
+
+    return f.name, trades_dfs, lo_dfs
+
+
+def merge_year_dfs(df_lists: List[List[Tuple[str, pd.DataFrame]]], query: str, order_type_filter: List[str]) -> List[
+    Tuple[str, pd.DataFrame]
+]:
+    result = []
+    for df_list in df_lists:
+        filtered = df_list
+        if len(order_type_filter) > 0:
+            filtered = [x for x in filtered if x[0] in order_type_filter]
+        for i, df_tuple in enumerate(filtered):
+            res_df = df_tuple[1]
+            if query:
+                res_df = res_df.query(query)
+            if len(result) == i:
+                result.append((df_tuple[0], res_df))
+                continue
+            prev_df_tuple = result[i]
+            result[i] = (prev_df_tuple[0], pd.concat([prev_df_tuple[1], res_df], ignore_index=True))
+
+    return result
+
+
+def basic_trade_stat(name, df) -> Tuple[str, int, float, float, float, float, float, float]:
+    if len(df) == 0:
+        return name, 0, 0, 0, 0, 0, 0, 0
+
+    len_trades = (df["entry_time"] != "").sum()
+    return (
+        name,
+        len_trades,
+        round(df['cum_pnl_usd'].iloc[-1], 2),
+        round(df['cum_pnl_minus_fees'].iloc[-1], 2),
+        round(df['cum_pnl_minus_fees'].iloc[-1] / len_trades, 2),
+        round(df['cum_final_close_pnl'].iloc[-1], 2),
+        round(df['cum_pre_final_closes_pnl'].iloc[-1], 2),
+        round(len(df.query('won')) / len_trades, 3)
+    )
+
+
+def basic_lo_stat(name, df) -> Tuple[str, int, int, int, float]:
+    if len(df) == 0:
+        return name, 0, 0, 0, 0
+    len_filled = (df["limit_status"] == "FILLED").sum()
+    len_cancelled = (df["limit_status"] == "CANCELLED").sum()
+    return name, len(df), len_cancelled, len_filled, round(100 * len_filled / (len_filled + len_cancelled), 2)
+
+
+def basic_stats(trade_dfs, lo_dfs):
+    df_trade_stat = pd.DataFrame([basic_trade_stat(label, df) for label, df in trade_dfs], columns=[
+        'name',
+        'trades',
+        'cum_pnl',
+        'minus_fees',
+        'minus_fees_per_trade',
+        'cum_final_close_pnl',
+        'cum_pre_final_closes_pnl',
+        'win_rate',
+    ])
+
+    df_lo_stat = pd.DataFrame([basic_lo_stat(label, df) for label, df in lo_dfs], columns=[
+        'name',
+        'total_orders',
+        'cancelled',
+        'filled',
+        'conversion',
+    ])
+
+    return df_trade_stat, df_lo_stat
+
+
+def group_display(trade_dfs, fields: List[str], display_good: bool, show_perc: str):
+    def to_agg_df(label, df):
+        if df.empty:
+            return pd.DataFrame()
+
+        agg_pnl = df.groupby(fields)["pnl_usd"].agg(["mean", "median", "count"])
+        agg_wr = df.groupby(fields)["won"].agg(["mean", "median", "count"])
+
+        if display_good:
+            agg_pnl_filtered = agg_pnl[(agg_pnl["count"] > 4) & (agg_pnl["mean"] > 15)]
+            if not agg_pnl_filtered.empty:
+                display(label, agg_pnl_filtered)
+
+        # округляем
+        agg_pnl = agg_pnl.round({"mean": 2, "median": 2, "count": 0})
+        agg_wr = agg_wr.round({"mean": 2, "median": 2, "count": 0})
+
+        # объединяем ячейки по логике
+        def merge_cells(v1, v2, col_name):
+            if col_name == "count":
+                return int(v1) if not pd.isna(v1) else pd.NA
+            if pd.isna(v1) or pd.isna(v2):
+                return 0
+            if isinstance(v1, str) and isinstance(v2, str) and v1 == v2:
+                return v1
+            return f"{v1}/{v2}"
+
+        merged = pd.DataFrame(
+            [
+                [
+                    merge_cells(a, b, col_name)
+                    for (a, b, col_name) in zip(row_pnl, row_wr, agg_pnl.columns)
+                ]
+                for row_pnl, row_wr in zip(agg_pnl.values, agg_wr.values)
+            ],
+            index=agg_pnl.index,
+            columns=agg_pnl.columns,
+        )
+
+        merged.columns = pd.MultiIndex.from_product([[label], merged.columns])
+        for col in merged.columns:
+            if col[1] == "count":  # второй уровень MultiIndex
+                merged[col] = merged[col].astype("Int64")  # nullable integer
+        return merged
+
+    df_joined = pd.concat(
+        [to_agg_df(label, df) for label, df in trade_dfs if not df.empty],
+        axis=1
+    )
+
+    if show_perc:
+        for df_tuple in trade_dfs:
+            if df_tuple[1].empty:
+                continue
+            display(
+                f"{df_tuple[0]} {[round(float(x), 2) for x in np.percentile(df_tuple[1][show_perc], [10, 30, 70, 90])]}")
+
+    return df_joined
 
 
 def with_cum_and_stagnation(df: pd.DataFrame) -> pd.DataFrame:
@@ -188,6 +391,11 @@ def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
             row['entry_time'])).total_seconds() / 60,
         axis=1
     )
+    df['minutes_between_signal_and_entry'] = df.apply(
+        lambda row: (to_utc_datetime(row['entry_time']) - to_utc_datetime(
+            row['signal_time'])).total_seconds() / 60,
+        axis=1
+    )
     df['final_close_percent'] = df.index.map(lambda i: trades[i].closes[-1][0])
     df['final_close_pnl'] = df.index.map(lambda i: trades[i].pnls_per_closes()[-1])
     df['pre_final_closes_sum_pnl'] = df.index.map(lambda i: sum(trades[i].pnls_per_closes()[0:-1]))
@@ -206,11 +414,17 @@ def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
     df['percents_till_take'] = df.index.map(lambda i: abs(trades[i].targets[asset_to_index[trades[i].asset]]))
     df['percents_till_take_perc'], _ = perc_all_and_sma20(df['percents_till_take'])
     df['psp_key'] = df.index.map(lambda i: trades[i].psp_key_used)
+    df['year'] = df['signal_time'].apply(lambda x: int(x[0:4]))
     df['entry_yq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[0].name)
     df['entry_mw'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[1].name)
     df['entry_wd'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[2].name)
     df['entry_dq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[3].name)
     df['entry_q90m'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[4].name)
+    df['signal_yq'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[0].name)
+    df['signal_mw'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[1].name)
+    df['signal_wd'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[2].name)
+    df['signal_dq'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[3].name)
+    df['signal_q90m'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[4].name)
     df['entry_rr_perc'], _ = perc_all_and_sma20(df['entry_rr'])
     df['minutes_in_market_perc'], _ = perc_all_and_sma20(df['minutes_in_market'])
     df['entry_position_usd_perc'], _ = perc_all_and_sma20(df['entry_position_usd'])
@@ -335,103 +549,25 @@ def to_trade_dfs(trades: List[SmtPspTrade]) -> Tuple[pd.DataFrame, pd.DataFrame,
 
 
 def analyze():
-    with open(strategy29_2025_snapshot, "r", encoding="utf-8") as f:
-        json_str = f.read()
-    df_m, df_l, df_lo = to_trade_dfs(smt_psp_trades_from_json(json_str))
+    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(strategy31_2024_snapshot)
+    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(strategy31_2025_snapshot)
 
-    df_l_chase_median_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_median_rr"'))
-    df_l_chase_mean_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_mean_rr"'))
-    df_l_chase_absent_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tyo"'))
-    df_l_chase_absent_tmo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tmo"'))
-    df_l_chase_absent_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_two"'))
-    df_l_chase_absent_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tdo"'))
-    df_l_chase_absent_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_t90mo"'))
-    df_l_chase_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tyo"'))
-    df_l_chase_tmo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tmo"'))
-    df_l_chase_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_two"'))
-    df_l_chase_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tdo"'))
-    df_l_chase_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_t90mo"'))
+    trade_stat_2024, lo_stat_2024 = basic_stats(trade_dfs_2024, lo_dfs_2024)
+    trade_stat_2025, lo_stat_2025 = basic_stats(trade_dfs_2025, lo_dfs_2025)
 
-    df_m = with_cum_and_stagnation(df_m)
-    df_l = with_cum_and_stagnation(df_l)
+    trade_dfs = merge_year_dfs([trade_dfs_2024, trade_dfs_2025], "", [])
 
-    df_lo_chase_median_rr = df_lo.query('limit_reason == "chase_median_rr"')
-    df_lo_chase_mean_rr = df_lo.query('limit_reason == "chase_mean_rr"')
-    df_lo_chase_absent_tyo = df_lo.query('limit_reason == "chase_absent_tyo"')
-    df_lo_chase_absent_tmo = df_lo.query('limit_reason == "chase_absent_tmo"')
-    df_lo_chase_absent_two = df_lo.query('limit_reason == "chase_absent_two"')
-    df_lo_chase_absent_tdo = df_lo.query('limit_reason == "chase_absent_tdo"')
-    df_lo_chase_absent_t90mo = df_lo.query('limit_reason == "chase_absent_t90mo"')
-    df_lo_chase_tyo = df_lo.query('limit_reason == "chase_tyo"')
-    df_lo_chase_tmo = df_lo.query('limit_reason == "chase_tmo"')
-    df_lo_chase_two = df_lo.query('limit_reason == "chase_two"')
-    df_lo_chase_tdo = df_lo.query('limit_reason == "chase_tdo"')
-    df_lo_chase_t90mo = df_lo.query('limit_reason == "chase_t90mo"')
+    print(f"2024 {f_name_2024[23:34]}:")
+    print(f"2024 Trade stat:")
+    display(trade_stat_2024)
+    print(f"2025 {f_name_2025[23:34]}:")
+    print(f"2025 Trade stat:")
+    display(trade_stat_2025)
 
-    def basic_trade_stat(name, df) -> Tuple[str, int, float, float, float]:
-        if len(df) == 0:
-            return name, 0, 0, 0, 0
-        return (
-            name, len(df), round(df['cum_pnl_usd'].iloc[-1], 2),
-            round(df['cum_pnl_minus_fees'].iloc[-1], 2), round(len(df.query('won')) / len(df), 3)
-        )
-
-    def basic_lo_stat(name, df) -> Tuple[str, int, int, float]:
-        if len(df) == 0:
-            return name, 0, 0, 0
-        filled_orders = df.query('limit_status == "FILLED"')
-        return name, len(df), len(filled_orders), round(100 * len(filled_orders) / len(df), 2)
-
-    df_trade_stat = pd.DataFrame([
-        basic_trade_stat('market all', df_m),
-        basic_trade_stat('limit all', df_l),
-        basic_trade_stat('chase_median_rr', df_l_chase_median_rr),
-        basic_trade_stat('chase_mean_rr', df_l_chase_mean_rr),
-        basic_trade_stat('chase_absent_tyo', df_l_chase_absent_tyo),
-        basic_trade_stat('chase_absent_tmo', df_l_chase_absent_tmo),
-        basic_trade_stat('chase_absent_two', df_l_chase_absent_two),
-        basic_trade_stat('chase_absent_tdo', df_l_chase_absent_tdo),
-        basic_trade_stat('chase_absent_t90mo', df_l_chase_absent_t90mo),
-        basic_trade_stat('chase_tyo', df_l_chase_tyo),
-        basic_trade_stat('chase_tmo', df_l_chase_tmo),
-        basic_trade_stat('chase_two', df_l_chase_two),
-        basic_trade_stat('chase_tdo', df_l_chase_tdo),
-        basic_trade_stat('chase_t90mo', df_l_chase_t90mo),
-    ], columns=[
-        'name',
-        'trades',
-        'cum_pnl',
-        'minus_fees',
-        'win_rate',
-    ])
-
-    df_lo_stat = pd.DataFrame([
-        basic_lo_stat('limit all', df_lo),
-        basic_lo_stat('chase_median_rr', df_lo_chase_median_rr),
-        basic_lo_stat('chase_mean_rr', df_lo_chase_mean_rr),
-        basic_lo_stat('chase_absent_tyo', df_lo_chase_absent_tyo),
-        basic_lo_stat('chase_absent_tmo', df_lo_chase_absent_tmo),
-        basic_lo_stat('chase_absent_two', df_lo_chase_absent_two),
-        basic_lo_stat('chase_absent_tdo', df_lo_chase_absent_tdo),
-        basic_lo_stat('chase_absent_t90mo', df_lo_chase_absent_t90mo),
-        basic_lo_stat('chase_tyo', df_lo_chase_tyo),
-        basic_lo_stat('chase_tmo', df_lo_chase_tmo),
-        basic_lo_stat('chase_two', df_lo_chase_two),
-        basic_lo_stat('chase_tdo', df_lo_chase_tdo),
-        basic_lo_stat('chase_t90mo', df_lo_chase_t90mo),
-    ], columns=[
-        'name',
-        'orders',
-        'trades',
-        'conversion',
-    ])
-
-    print(f"{f.name[23:34]}:")
-    print(f"Trade stat:")
-    print(df_trade_stat)
-    print(f"--")
-    print(f"Limit orders stat:")
-    print(df_lo_stat)
+    print(f"2024 Limit orders stat:")
+    display(lo_stat_2024)
+    print(f"2025 Limit orders stat:")
+    display(lo_stat_2025)
 
     # group_by_display(["asset"])
     # group_by_display(["smt_type"])

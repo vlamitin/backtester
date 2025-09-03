@@ -21,7 +21,7 @@ def fronttest(
 
     _tc_pnl = []
     for s in strategies:
-        _tc_pnl.append((int(s.name[0:2]), 0, 0))
+        _tc_pnl.append((int(s.name[0:2]), 0, 0, 0))
         closed_trades[s.name] = []
         active_trades[s.name] = []
 
@@ -35,7 +35,7 @@ def fronttest(
         a1_candle, a2_candle, a3_candle = next(candles_gen)
         if _counter % (4 * 24 * 1) == 0:
             log_info_ny(
-                f"candle {a1_candle[5]}, handled {_counter // (4 * 24)} days, strategies: {'; '.join([f'{x[0]}) {x[1]}/{round(x[2], 2)}' for x in _tc_pnl])}. Took {(time.perf_counter() - _prev_handle_day_time):.3f} seconds")
+                f"candle {a1_candle[5]}, handled {_counter // (4 * 24)} days, strategies: {'; '.join([f'{x[0]}) {x[1]}/{x[2]}/{round(x[3], 2)}' for x in _tc_pnl])}. Took {(time.perf_counter() - _prev_handle_day_time):.3f} seconds")
             _prev_handle_day_time = time.perf_counter()
         _counter += 1
 
@@ -96,7 +96,10 @@ def fronttest(
                 )
             )
             for t in s_closed_trades:
-                _tc_pnl[i] = (_tc_pnl[i][0], _tc_pnl[i][1] + 1, _tc_pnl[i][2] + t.pnl_usd)
+                if t.limit_status == "CANCELLED":
+                    _tc_pnl[i] = (_tc_pnl[i][0], _tc_pnl[i][1] + 1, _tc_pnl[i][2], _tc_pnl[i][3] + t.pnl_usd)
+                else:
+                    _tc_pnl[i] = (_tc_pnl[i][0], _tc_pnl[i][1], _tc_pnl[i][2] + 1, _tc_pnl[i][3] + t.pnl_usd)
             closed_trades[s.name].extend(s_closed_trades)
 
             if to_utc_datetime(triad.a1.snapshot_date_readable) >= to_utc_datetime(stop_after):
