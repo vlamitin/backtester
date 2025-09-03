@@ -2670,9 +2670,9 @@
         "stop": 112.198,
         "take_profit": 107.316,
         "entry_rr": 65.87671232877314,
-        "entry_position_assets": 1369.863013698756,
-        "entry_position_usd": 153595.89041097302,
-        "entry_position_fee": 69.11815068493786,
+        "entry_position_assets": 1114.8272017837235,
+        "entry_position_usd": 125000.0,
+        "entry_position_fee": 56.25,
         "entry_reason": "1h psp for high tue SMT -> low asia",
         "entry_tos": [
             [
@@ -2795,8 +2795,8 @@
                 "stop"
             ]
         ],
-        "pnl_usd": -100.0,
-        "close_position_fee": 69.16315068493786
+        "pnl_usd": -81.38238573020433,
+        "close_position_fee": 56.28662207357859
     },
     {
         "asset": "SOLUSDT",
@@ -2809,8 +2809,8 @@
         "limit_stop": 112.198,
         "limit_take_profit": 107.316,
         "limit_rr": 85.63972602740509,
-        "limit_position_assets": 1774.6768952773934,
-        "limit_position_usd": 199015.19829633296,
+        "limit_position_assets": 1114.661663072401,
+        "limit_position_usd": 125000.0,
         "limit_status": "FILLED",
         "limit_chase_to_label": null,
         "limit_chase_rr": 85.63972602740509,
@@ -2821,9 +2821,9 @@
         "stop": 112.198,
         "take_profit": 107.316,
         "entry_rr": 85.63972602740509,
-        "entry_position_assets": 1774.6768952773934,
-        "entry_position_usd": 199015.19829633296,
-        "entry_position_fee": 35.82273569333993,
+        "entry_position_assets": 1114.661663072401,
+        "entry_position_usd": 125000.0,
+        "entry_position_fee": 22.5,
         "entry_reason": "chase_median_rr limit for 1h psp for high tue SMT -> low asia",
         "entry_tos": [
             [
@@ -2946,8 +2946,8 @@
                 "stop"
             ]
         ],
-        "pnl_usd": -100.0,
-        "close_position_fee": 89.60183923334984
+        "pnl_usd": -62.80927339723845,
+        "close_position_fee": 56.27826417302876
     },
     {
         "asset": "SOLUSDT",
@@ -2960,8 +2960,8 @@
         "limit_stop": 112.198,
         "limit_take_profit": 107.316,
         "limit_rr": 131.75342465754628,
-        "limit_position_assets": 2719.2426189590897,
-        "limit_position_usd": 304993.58336197195,
+        "limit_position_assets": 1114.4671426299496,
+        "limit_position_usd": 125000.0,
         "limit_status": "FILLED",
         "limit_chase_to_label": null,
         "limit_chase_rr": 131.75342465754628,
@@ -2972,9 +2972,9 @@
         "stop": 112.198,
         "take_profit": 107.316,
         "entry_rr": 131.75342465754628,
-        "entry_position_assets": 2719.2426189590897,
-        "entry_position_usd": 304993.58336197195,
-        "entry_position_fee": 54.898845005154946,
+        "entry_position_assets": 1114.4671426299496,
+        "entry_position_usd": 125000.0,
+        "entry_position_fee": 22.5,
         "entry_reason": "chase_mean_rr limit for 1h psp for high tue SMT -> low asia",
         "entry_tos": [
             [
@@ -3097,8 +3097,8 @@
                 "stop"
             ]
         ],
-        "pnl_usd": -100.0,
-        "close_position_fee": 137.29211251288737
+        "pnl_usd": -40.98446879508535,
+        "close_position_fee": 56.26844301095778
     },
     {
         "asset": "SOLUSDT",
@@ -4594,7 +4594,7 @@
         "limit_position_assets": null,
         "limit_position_usd": null,
         "limit_status": "CANCELLED",
-        "limit_chase_to_label": "tmo",
+        "limit_chase_to_label": "tyo",
         "limit_chase_rr": null,
         "entry_time": "",
         "entry_time_ny": "",
@@ -4606,7 +4606,7 @@
         "entry_position_assets": 0,
         "entry_position_usd": 0,
         "entry_position_fee": 0,
-        "entry_reason": "chase_absent_tmo limit for 1h psp for high sat SMT -> low asia",
+        "entry_reason": "chase_absent_tyo limit for 1h psp for high sat SMT -> low asia",
         "entry_tos": [],
         "psp_key_used": "1h",
         "psp_date": "2024-03-10 08:00",
@@ -4665,7 +4665,7 @@
         "limit_position_assets": null,
         "limit_position_usd": null,
         "limit_status": "CANCELLED",
-        "limit_chase_to_label": "tyo",
+        "limit_chase_to_label": "tmo",
         "limit_chase_rr": null,
         "entry_time": "",
         "entry_time_ny": "",
@@ -4677,7 +4677,7 @@
         "entry_position_assets": 0,
         "entry_position_usd": 0,
         "entry_position_fee": 0,
-        "entry_reason": "chase_absent_tyo limit for 1h psp for high sat SMT -> low asia",
+        "entry_reason": "chase_absent_tmo limit for 1h psp for high sat SMT -> low asia",
         "entry_tos": [],
         "psp_key_used": "1h",
         "psp_date": "2024-03-10 08:00",
@@ -19928,8 +19928,8 @@
         "limit_stop": 156.933,
         "limit_take_profit": 151.414,
         "limit_rr": 60.71590909091353,
-        "limit_position_assets": 1118.2444118665221,
-        "limit_position_usd": 175389.4502874489,
+        "limit_position_assets": 796.9724020129285,
+        "limit_position_usd": 125000.0,
         "limit_status": "FILLED",
         "limit_chase_to_label": null,
         "limit_chase_rr": 60.71590909091353,
@@ -19940,9 +19940,9 @@
         "stop": 156.933,
         "take_profit": 151.414,
         "entry_rr": 60.71590909091353,
-        "entry_position_assets": 1118.2444118665221,
-        "entry_position_usd": 175389.4502874489,
-        "entry_position_fee": 31.570101051740803,
+        "entry_position_assets": 796.9724020129285,
+        "entry_position_usd": 125000.0,
+        "entry_position_fee": 22.5,
         "entry_reason": "chase_mean_rr limit for 1h psp for half_high mon SMT -> low asia",
         "entry_tos": [
             [
@@ -19987,7 +19987,7 @@
         "target_direction": "low",
         "target_label": "asia",
         "target_ql_start": "2024-09-30 22:00",
-        "best_pnl": 449.0580062264461,
+        "best_pnl": 320.0434842934373,
         "best_pnl_time": "2024-10-01 09:00",
         "best_pnl_time_ny": "2024-10-01 05:00",
         "best_pnl_price": 156.442,
@@ -20087,8 +20087,8 @@
                 "stop"
             ]
         ],
-        "pnl_usd": -100.0,
-        "close_position_fee": 78.970252629352
+        "pnl_usd": -71.26996509489896,
+        "close_position_fee": 56.2820714842927
     },
     {
         "asset": "SOLUSDT",
