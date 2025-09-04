@@ -72,14 +72,18 @@ def update_candle_from_binance(symbol, last_date_utc: datetime):
         raise ValueError("More than a month passed! Download a CSV!")
 
     for i, date in enumerate(iteration_days):
-        start_time = to_timestamp(date)
-        end_time = min(to_timestamp(end_of_day(date)), to_timestamp(last_date_utc) - 1)
+        update_day_from_binance(symbol, date, last_date_utc)
 
-        if start_time >= end_time:
-            continue
 
-        candles_15m = [to_inner_candle(x) for x in fetch_15m_candles(symbol, start_time, end_time)]
-        update_stock_data(now_year, candles_15m, symbol, "15m")
+def update_day_from_binance(symbol: str, from_date: datetime, to_date: datetime):
+    start_time = to_timestamp(from_date)
+    end_time = min(to_timestamp(end_of_day(from_date)), to_timestamp(to_date) - 1)
+
+    if start_time >= end_time:
+        return
+
+    candles_15m = [to_inner_candle(x) for x in fetch_15m_candles(symbol, start_time, end_time)]
+    update_stock_data(from_date.year, candles_15m, symbol, "15m")
 
 
 if __name__ == "__main__":
@@ -89,7 +93,7 @@ if __name__ == "__main__":
             # "1INCHUSDT",
             # "AAVEUSDT",
             # "AVAXUSDT",
-            "BTCUSDT",
+            # "BTCUSDT",
             # "COMPUSDT",
             # "CRVUSDT",
             "ETHUSDT",
@@ -101,12 +105,17 @@ if __name__ == "__main__":
             # "XLMUSDT",
             # "XMRUSDT",
         ]:
-            update_candle_from_binance(smb, datetime.now(ZoneInfo("UTC")))
+            # update_candle_from_binance(smb, datetime.now(ZoneInfo("UTC")))
+            update_day_from_binance(
+                "SOLUSDT",
+                to_utc_datetime('2022-02-28 00:00'),
+                to_utc_datetime('2022-02-28 23:59')
+            )
             # for series_year in [
             #     # 2021,
-            #     # 2022,
+            #     2022,
             #     # 2023,
-            #     2024,
+            #     # 2024,
             #     # 2025
             # ]:
             #     fill_year_from_csv(series_year, smb)

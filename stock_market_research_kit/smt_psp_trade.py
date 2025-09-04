@@ -1,9 +1,17 @@
 import json
 from dataclasses import dataclass, asdict, fields
-from typing import List, Tuple, TypeAlias, Optional, Callable, Dict
+from typing import List, Tuple, Optional, Dict
 
 from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.triad import TrueOpen
+
+ACCOUNT_MARGIN_USD = 10000  # TODO сделать SmtPspStrategy stateful, хранить в ней margin_used
+FREE_SAFETY_MARGIN_PERCENT = 20  # 20% маржи оставляем неиспользованной чтобы не поймать ликвидацию на slippage
+MAX_LEVERAGE = 50  # TODO и не открывать сделки если кончилась маржа (и сами сделки ограничивать по RR таким образом)
+MAX_ENTRY = 0.25 * ACCOUNT_MARGIN_USD * MAX_LEVERAGE
+ONE_RR_IN_USD = 100
+MARKET_ORDER_FEE_PERCENT = 0.045  # Binance default
+LIMIT_ORDER_FEE_PERCENT = 0.018  # Binance default
 
 
 @dataclass
@@ -83,15 +91,31 @@ class SmtPspTrade:
     def percent_closed(self) -> int:
         return sum([x[0] for x in self.closes])
 
+    def _pnl(self, percent_close: float, close_price: float) -> float:
+        part_to_close = percent_close / 100
+        if self.direction == 'UP':
+            return part_to_close * self.entry_position_assets * (close_price - self.entry_price)
+        else:
+            return part_to_close * self.entry_position_assets * (self.entry_price - close_price)
+
     def pnls_per_closes(self) -> List[float]:
         result = []
         for close in self.closes:
-            part_to_close = close[0] / 100
-            if self.direction == 'UP':
-                result.append(part_to_close * self.entry_position_assets * (close[1] - self.entry_price))
-            else:
-                result.append(part_to_close * self.entry_position_assets * (self.entry_price - close[1]))
+            result.append(self._pnl(close[0], close[1]))
         return result
+
+    def pnl_if_full_preclose(self) -> Tuple[float, float]:  # pnl, close_fee
+        pnl = self._pnl(100, self.closes[0][1])
+        close_price = self.closes[0][1]
+        if len(self.closes) == 1:
+            pnl = self._pnl(100, self.closes[-1][1])
+            close_price = self.closes[-1][1]
+        return pnl, self.entry_position_assets * close_price * (MARKET_ORDER_FEE_PERCENT / 100)
+
+    def pnl_if_full_tp_sl(self) -> Tuple[float, float]:  # pnl, close_fee
+        close_price = self.closes[-1][1]
+        return (self._pnl(100, close_price),
+                self.entry_position_assets * close_price * (MARKET_ORDER_FEE_PERCENT / 100))
 
 
 def smt_psp_trade_decoder(dct: dict):

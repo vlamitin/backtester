@@ -1,0 +1,6732 @@
+[
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-02-04 00:00",
+        "signal_time_ny": "2023-02-03 19:00",
+        "limit_price_history": [
+            23533.14926232225
+        ],
+        "limit_stop": 24281.4,
+        "limit_take_profit": 23201.0,
+        "limit_rr": 0.44390101552468886,
+        "limit_position_assets": 0.13364504031142976,
+        "limit_position_usd": 3145.088681817951,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.44390101552468886,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week3 SMT -> low fri",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-02-02 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-01-25 21:45",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "fri",
+        "target_ql_start": "2023-02-02 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.66,
+            3.2,
+            6.04
+        ],
+        "targets": [
+            -0.95,
+            -2.51,
+            -2.89
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                23296.1,
+                "2023-02-04 23:45",
+                "2023-02-04 18:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-02-04 00:00",
+        "signal_time_ny": "2023-02-03 19:00",
+        "limit_price_history": [
+            24.958215202990267
+        ],
+        "limit_stop": 26.173,
+        "limit_take_profit": 23.97,
+        "limit_rr": 0.813489932885908,
+        "limit_position_assets": 82.31910725764455,
+        "limit_position_usd": 2054.5379942543304,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.813489932885908,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week3 SMT -> low fri",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-02-02 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-01-25 21:45",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "fri",
+        "target_ql_start": "2023-02-02 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.66,
+            3.2,
+            6.04
+        ],
+        "targets": [
+            -0.95,
+            -2.51,
+            -2.89
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                24.285,
+                "2023-02-04 23:45",
+                "2023-02-04 18:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-02-04 00:00",
+        "signal_time_ny": "2023-02-03 19:00",
+        "limit_price_history": [
+            1676.2078984666925
+        ],
+        "limit_stop": 1717.0,
+        "limit_take_profit": 1622.0,
+        "limit_rr": 1.3288822205551425,
+        "limit_position_assets": 2.4514549690054155,
+        "limit_position_usd": 4109.148181782299,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.3288822205551425,
+        "entry_time": "2023-02-04 13:15",
+        "entry_time_ny": "2023-02-04 08:15",
+        "entry_price": 1676.2078984666925,
+        "entry_order_type": "LIMIT",
+        "stop": 1717.0,
+        "take_profit": 1622.0,
+        "entry_rr": 1.3288822205551425,
+        "entry_position_assets": 2.4514549690054155,
+        "entry_position_usd": 4109.148181782299,
+        "entry_position_fee": 0.7396466727208137,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week3 SMT -> low fri",
+        "entry_tos": [
+            [
+                "ETHUSDT",
+                1684.0,
+                0
+            ],
+            [
+                "t90mo",
+                1660.99,
+                -1.37
+            ],
+            [
+                "tdo",
+                1652.85,
+                -1.85
+            ],
+            [
+                "two",
+                1564.06,
+                -7.12
+            ],
+            [
+                "tmo",
+                1269.12,
+                -24.64
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-02-02 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-01-25 21:45",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "fri",
+        "target_ql_start": "2023-02-02 23:00",
+        "best_pnl": 84.52101551703758,
+        "best_pnl_time": "2023-02-05 17:15",
+        "best_pnl_time_ny": "2023-02-05 12:15",
+        "best_pnl_price": 1641.73,
+        "best_pnl_tos": [
+            [
+                "tdo",
+                1664.19,
+                1.37
+            ],
+            [
+                "ETHUSDT",
+                1641.73,
+                0
+            ],
+            [
+                "two",
+                1564.06,
+                -4.73
+            ],
+            [
+                "tmo",
+                1269.12,
+                -22.7
+            ]
+        ],
+        "best_entry_time": "2023-02-04 13:30",
+        "best_entry_time_ny": "2023-02-04 08:30",
+        "best_entry_price": 1696.99,
+        "best_entry_rr": 3.747626186906549,
+        "best_entry_tos": [
+            [
+                "ETHUSDT",
+                1696.99,
+                0
+            ],
+            [
+                "t90mo",
+                1660.99,
+                -2.12
+            ],
+            [
+                "tdo",
+                1652.85,
+                -2.6
+            ],
+            [
+                "two",
+                1564.06,
+                -7.83
+            ],
+            [
+                "tmo",
+                1269.12,
+                -25.21
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.66,
+            3.2,
+            6.04
+        ],
+        "targets": [
+            -0.95,
+            -2.51,
+            -2.89
+        ],
+        "_in_trade_range": [
+            1665.57,
+            1696.99,
+            1623.32,
+            1637.29,
+            4158696.13,
+            "2023-02-04 13:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                1658.78,
+                "2023-02-05 12:45",
+                "2023-02-05 07:45",
+                "someone_reached_target"
+            ],
+            [
+                50.0,
+                1622.0,
+                "2023-02-05 17:45",
+                "2023-02-05 12:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 87.80596517550491,
+        "close_position_fee": 1.8096039974730571
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-03-27 00:00",
+        "signal_time_ny": "2023-03-26 20:00",
+        "limit_price_history": [
+            28022.381800000003,
+            27824.180949999998,
+            27824.2809
+        ],
+        "limit_stop": 27131.8,
+        "limit_take_profit": 28777.0,
+        "limit_rr": 1.375805599836754,
+        "limit_position_assets": 0.14440831508854565,
+        "limit_position_usd": 4018.0575233194027,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.8473317105739127,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for half_low week2 SMT -> high thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-03-25 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-03-24 17:15",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "thu",
+        "target_ql_start": "2023-03-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.94,
+            -3.42,
+            -4.09
+        ],
+        "targets": [
+            2.94,
+            4.93,
+            8.69
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                27896.4,
+                "2023-03-27 09:30",
+                "2023-03-27 05:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-03-27 00:00",
+        "signal_time_ny": "2023-03-26 20:00",
+        "limit_price_history": [
+            1754.9056779462464
+        ],
+        "limit_stop": 1712.02,
+        "limit_take_profit": 1860.0,
+        "limit_rr": 2.4505692130011467,
+        "limit_position_assets": 2.331780789972388,
+        "limit_position_usd": 4092.055348048528,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 2.4505692130011467,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_low week2 SMT -> high thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-03-25 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-03-24 17:15",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "thu",
+        "target_ql_start": "2023-03-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.94,
+            -3.42,
+            -4.09
+        ],
+        "targets": [
+            2.94,
+            4.93,
+            8.69
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1760.14,
+                "2023-03-27 09:30",
+                "2023-03-27 05:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-03-27 00:00",
+        "signal_time_ny": "2023-03-26 20:00",
+        "limit_price_history": [
+            1776.101505,
+            1759.070025,
+            1759.08002
+        ],
+        "limit_stop": 1712.02,
+        "limit_take_profit": 1860.0,
+        "limit_rr": 2.144495051213315,
+        "limit_position_assets": 2.1249459732486247,
+        "limit_position_usd": 3737.9500051211103,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 1.309246638324112,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for half_low week2 SMT -> high thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-03-25 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-03-24 17:15",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "thu",
+        "target_ql_start": "2023-03-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.94,
+            -3.42,
+            -4.09
+        ],
+        "targets": [
+            2.94,
+            4.93,
+            8.69
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1760.14,
+                "2023-03-27 09:30",
+                "2023-03-27 05:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-03-27 00:00",
+        "signal_time_ny": "2023-03-26 20:00",
+        "limit_price_history": [
+            20.713612885232187
+        ],
+        "limit_stop": 20.074,
+        "limit_take_profit": 22.75,
+        "limit_rr": 3.1837806301050184,
+        "limit_position_assets": 156.34456764219033,
+        "limit_position_usd": 3238.460850849329,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 3.1837806301050184,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_low week2 SMT -> high thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-03-25 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-03-24 17:15",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "thu",
+        "target_ql_start": "2023-03-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.94,
+            -3.42,
+            -4.09
+        ],
+        "targets": [
+            2.94,
+            4.93,
+            8.69
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                20.516,
+                "2023-03-27 09:30",
+                "2023-03-27 05:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-03-27 00:00",
+        "signal_time_ny": "2023-03-26 20:00",
+        "limit_price_history": [
+            20.999495000000003,
+            20.6226835,
+            20.621684000000002
+        ],
+        "limit_stop": 20.074,
+        "limit_take_profit": 22.75,
+        "limit_rr": 3.8860291701053837,
+        "limit_position_assets": 182.5870392416064,
+        "limit_position_usd": 3765.252225736007,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 1.8914256695065819,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for half_low week2 SMT -> high thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-03-25 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-03-24 17:15",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "thu",
+        "target_ql_start": "2023-03-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.94,
+            -3.42,
+            -4.09
+        ],
+        "targets": [
+            2.94,
+            4.93,
+            8.69
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                20.516,
+                "2023-03-27 09:30",
+                "2023-03-27 05:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-03-27 00:00",
+        "signal_time_ny": "2023-03-26 20:00",
+        "limit_price_history": [
+            27741.040057809452
+        ],
+        "limit_stop": 27131.8,
+        "limit_take_profit": 28777.0,
+        "limit_rr": 1.7004133738601837,
+        "limit_position_assets": 0.16413891161318905,
+        "limit_position_usd": 4553.384122106722,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.7004133738601837,
+        "entry_time": "2023-03-27 06:00",
+        "entry_time_ny": "2023-03-27 02:00",
+        "entry_price": 27741.040057809452,
+        "entry_order_type": "LIMIT",
+        "stop": 27131.8,
+        "take_profit": 28777.0,
+        "entry_rr": 1.7004133738601837,
+        "entry_position_assets": 0.16413891161318905,
+        "entry_position_usd": 4553.384122106722,
+        "entry_position_fee": 0.81960914197921,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_low week2 SMT -> high thu",
+        "entry_tos": [
+            [
+                "tdo",
+                27878.4,
+                0.62
+            ],
+            [
+                "t90mo",
+                27838.2,
+                0.47
+            ],
+            [
+                "BTCUSDT",
+                27707.1,
+                0
+            ],
+            [
+                "tmo",
+                21262.8,
+                -23.26
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-03-25 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-03-24 17:15",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "thu",
+        "target_ql_start": "2023-03-22 22:00",
+        "best_pnl": 40.338769429276645,
+        "best_pnl_time": "2023-03-27 11:15",
+        "best_pnl_time_ny": "2023-03-27 07:15",
+        "best_pnl_price": 27986.8,
+        "best_pnl_tos": [
+            [
+                "BTCUSDT",
+                27986.8,
+                0
+            ],
+            [
+                "tdo",
+                27878.4,
+                -0.39
+            ],
+            [
+                "tmo",
+                21262.8,
+                -24.03
+            ]
+        ],
+        "best_entry_time": "2023-03-27 14:30",
+        "best_entry_time_ny": "2023-03-27 10:30",
+        "best_entry_price": 27220.0,
+        "best_entry_rr": 17.65306122448965,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                27923.6,
+                2.58
+            ],
+            [
+                "tdo",
+                27878.4,
+                2.42
+            ],
+            [
+                "BTCUSDT",
+                27220.0,
+                0
+            ],
+            [
+                "tmo",
+                21262.8,
+                -21.89
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.94,
+            -3.42,
+            -4.09
+        ],
+        "targets": [
+            2.94,
+            4.93,
+            8.69
+        ],
+        "_in_trade_range": [
+            27815.0,
+            27986.8,
+            27220.0,
+            27374.4,
+            232632.305,
+            "2023-03-27 05:45"
+        ],
+        "closes": [
+            [
+                50.0,
+                27329.4,
+                "2023-03-27 14:30",
+                "2023-03-27 10:30",
+                "someone_psp_swept"
+            ],
+            [
+                50.0,
+                27131.8,
+                "2023-03-27 15:00",
+                "2023-03-27 11:00",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -83.78307553261675,
+        "close_position_fee": 2.0113204709583474
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-04-07 00:00",
+        "signal_time_ny": "2023-04-06 20:00",
+        "limit_price_history": [
+            28231.476613423103
+        ],
+        "limit_stop": 28800.0,
+        "limit_take_profit": 27166.0,
+        "limit_rr": 1.8741121976325237,
+        "limit_position_assets": 0.17589425934103464,
+        "limit_position_usd": 4965.754669021798,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.8741121976325237,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week4 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-05 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week4 SMT",
+        "smt_first_appeared": "2023-04-04 11:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-04-02 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.77,
+            3.94,
+            3.55
+        ],
+        "targets": [
+            -3.06,
+            -5.88,
+            -3.26
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                27943.3,
+                "2023-04-07 05:45",
+                "2023-04-07 01:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-04-07 00:00",
+        "signal_time_ny": "2023-04-06 20:00",
+        "limit_price_history": [
+            28029.292992674997,
+            27964.19300895
+        ],
+        "limit_stop": 28800.0,
+        "limit_take_profit": 27166.0,
+        "limit_rr": 0.9549968084703983,
+        "limit_position_assets": 0.11964484751960822,
+        "limit_position_usd": 3345.7716085647166,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 1.1201312359561177,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week4 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-05 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week4 SMT",
+        "smt_first_appeared": "2023-04-04 11:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-04-02 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.77,
+            3.94,
+            3.55
+        ],
+        "targets": [
+            -3.06,
+            -5.88,
+            -3.26
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                27943.3,
+                "2023-04-07 05:45",
+                "2023-04-07 01:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-04-07 00:00",
+        "signal_time_ny": "2023-04-06 20:00",
+        "limit_price_history": [
+            1893.0960464866605
+        ],
+        "limit_stop": 1945.0,
+        "limit_take_profit": 1761.25,
+        "limit_rr": 2.5401927514592058,
+        "limit_position_assets": 1.9266355109982063,
+        "limit_position_usd": 3647.306068891511,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 2.5401927514592058,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week4 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-05 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week4 SMT",
+        "smt_first_appeared": "2023-04-04 11:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-04-02 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.77,
+            3.94,
+            3.55
+        ],
+        "targets": [
+            -3.06,
+            -5.88,
+            -3.26
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1868.63,
+                "2023-04-07 05:45",
+                "2023-04-07 01:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-04-07 00:00",
+        "signal_time_ny": "2023-04-06 20:00",
+        "limit_price_history": [
+            1870.2095324475001,
+            1871.2495321874999,
+            1871.2595321850001
+        ],
+        "limit_stop": 1945.0,
+        "limit_take_profit": 1761.25,
+        "limit_rr": 1.4918474949330685,
+        "limit_position_assets": 1.3561074802356836,
+        "limit_position_usd": 2537.6290490584047,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 1.4568639027562562,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week4 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-05 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week4 SMT",
+        "smt_first_appeared": "2023-04-04 11:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-04-02 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.77,
+            3.94,
+            3.55
+        ],
+        "targets": [
+            -3.06,
+            -5.88,
+            -3.26
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1868.63,
+                "2023-04-07 05:45",
+                "2023-04-07 01:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-04-07 00:00",
+        "signal_time_ny": "2023-04-06 20:00",
+        "limit_price_history": [
+            20.791596091205214
+        ],
+        "limit_stop": 21.34,
+        "limit_take_profit": 19.937,
+        "limit_rr": 1.5583333333333331,
+        "limit_position_assets": 182.34735091470748,
+        "limit_position_usd": 3791.2924685198577,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.5583333333333331,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week4 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-05 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week4 SMT",
+        "smt_first_appeared": "2023-04-04 11:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-04-02 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.77,
+            3.94,
+            3.55
+        ],
+        "targets": [
+            -3.06,
+            -5.88,
+            -3.26
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                20.423,
+                "2023-04-07 05:45",
+                "2023-04-07 01:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-04-07 00:00",
+        "signal_time_ny": "2023-04-06 20:00",
+        "limit_price_history": [
+            20.587994853,
+            20.45699488575,
+            20.4579948855
+        ],
+        "limit_stop": 21.34,
+        "limit_take_profit": 19.937,
+        "limit_rr": 0.5906937238060637,
+        "limit_position_assets": 113.37802735609873,
+        "limit_position_usd": 2319.4871037791468,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.8656787198824872,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week4 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-05 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week4 SMT",
+        "smt_first_appeared": "2023-04-04 11:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-04-02 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.77,
+            3.94,
+            3.55
+        ],
+        "targets": [
+            -3.06,
+            -5.88,
+            -3.26
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                20.423,
+                "2023-04-07 05:45",
+                "2023-04-07 01:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-04-28 00:00",
+        "signal_time_ny": "2023-04-27 20:00",
+        "limit_price_history": [
+            29173.25794935964
+        ],
+        "limit_stop": 27200.0,
+        "limit_take_profit": 30048.2,
+        "limit_rr": 0.4433997343957508,
+        "limit_position_assets": 0.05067761162824758,
+        "limit_position_usd": 1478.4310362883343,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.4433997343957508,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-26 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-04-20 19:15",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-04-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -7.67,
+            -6.59,
+            -9.11
+        ],
+        "targets": [
+            2.0,
+            2.99,
+            2.92
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                29465.6,
+                "2023-04-28 01:15",
+                "2023-04-27 21:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-04-28 00:00",
+        "signal_time_ny": "2023-04-27 20:00",
+        "limit_price_history": [
+            1885.1368587678749
+        ],
+        "limit_stop": 1782.03,
+        "limit_take_profit": 1964.7,
+        "limit_rr": 0.7716571155682894,
+        "limit_position_assets": 0.9698675839318375,
+        "limit_position_usd": 1828.3331305940524,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.7716571155682894,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-26 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-04-20 19:15",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-04-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -7.67,
+            -6.59,
+            -9.11
+        ],
+        "targets": [
+            2.0,
+            2.99,
+            2.92
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1907.49,
+                "2023-04-28 01:15",
+                "2023-04-27 21:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-04-28 00:00",
+        "signal_time_ny": "2023-04-27 20:00",
+        "limit_price_history": [
+            1908.0954749999999
+        ],
+        "limit_stop": 1782.03,
+        "limit_take_profit": 1964.7,
+        "limit_rr": 0.44900893761753763,
+        "limit_position_assets": 0.7932385928819933,
+        "limit_position_usd": 1513.5749696734986,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.44900893761753763,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-26 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-04-20 19:15",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-04-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -7.67,
+            -6.59,
+            -9.11
+        ],
+        "targets": [
+            2.0,
+            2.99,
+            2.92
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1907.49,
+                "2023-04-28 01:15",
+                "2023-04-27 21:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-04-28 00:00",
+        "signal_time_ny": "2023-04-27 20:00",
+        "limit_price_history": [
+            22.030825572142472
+        ],
+        "limit_stop": 20.291,
+        "limit_take_profit": 22.977,
+        "limit_rr": 0.5438329238329236,
+        "limit_position_assets": 57.47702620375736,
+        "limit_position_usd": 1266.2663387004407,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.5438329238329236,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-26 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-04-20 19:15",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-04-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -7.67,
+            -6.59,
+            -9.11
+        ],
+        "targets": [
+            2.0,
+            2.99,
+            2.92
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                22.484,
+                "2023-04-28 01:15",
+                "2023-04-27 21:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-04-28 00:00",
+        "signal_time_ny": "2023-04-27 20:00",
+        "limit_price_history": [
+            29444.6703
+        ],
+        "limit_stop": 27200.0,
+        "limit_take_profit": 30048.2,
+        "limit_rr": 0.26887231501214176,
+        "limit_position_assets": 0.04454997243915952,
+        "limit_position_usd": 1311.759250345139,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.26887231501214176,
+        "entry_time": "2023-04-28 00:15",
+        "entry_time_ny": "2023-04-27 20:15",
+        "entry_price": 29444.6703,
+        "entry_order_type": "LIMIT",
+        "stop": 27200.0,
+        "take_profit": 30048.2,
+        "entry_rr": 0.26887231501214176,
+        "entry_position_assets": 0.04454997243915952,
+        "entry_position_usd": 1311.759250345139,
+        "entry_position_fee": 0.236116665062125,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [
+            [
+                "t90mo",
+                29459.4,
+                0.16
+            ],
+            [
+                "BTCUSDT",
+                29412.8,
+                0
+            ],
+            [
+                "tyo",
+                28532.0,
+                -2.99
+            ],
+            [
+                "tmo",
+                28423.2,
+                -3.36
+            ],
+            [
+                "two",
+                27400.0,
+                -6.84
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-04-26 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-04-20 19:15",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-04-25 22:00",
+        "best_pnl": 22.512424207688678,
+        "best_pnl_time": "2023-04-30 15:45",
+        "best_pnl_time_ny": "2023-04-30 11:45",
+        "best_pnl_price": 29950.0,
+        "best_pnl_tos": [
+            [
+                "BTCUSDT",
+                29950.0,
+                0
+            ],
+            [
+                "t90mo",
+                29204.9,
+                -2.49
+            ],
+            [
+                "tdo",
+                29168.0,
+                -2.61
+            ],
+            [
+                "tyo",
+                28532.0,
+                -4.73
+            ],
+            [
+                "tmo",
+                28423.2,
+                -5.1
+            ],
+            [
+                "two",
+                27400.0,
+                -8.51
+            ]
+        ],
+        "best_entry_time": "2023-05-08 20:15",
+        "best_entry_time_ny": "2023-05-08 16:15",
+        "best_entry_price": 27250.0,
+        "best_entry_rr": 55.96400000000001,
+        "best_entry_tos": [
+            [
+                "tmo",
+                28757.8,
+                5.53
+            ],
+            [
+                "tyo",
+                28532.0,
+                4.7
+            ],
+            [
+                "tdo",
+                28188.1,
+                3.44
+            ],
+            [
+                "t90mo",
+                27875.0,
+                2.29
+            ],
+            [
+                "BTCUSDT",
+                27250.0,
+                0
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -7.67,
+            -6.59,
+            -9.11
+        ],
+        "targets": [
+            2.0,
+            2.99,
+            2.92
+        ],
+        "_in_trade_range": [
+            29459.0,
+            29950.0,
+            27250.0,
+            27872.8,
+            6159421.346,
+            "2023-04-28 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                29259.6,
+                "2023-04-28 17:00",
+                "2023-04-28 13:00",
+                "someone_psp_swept"
+            ],
+            [
+                25.0,
+                29259.6,
+                "2023-04-28 17:00",
+                "2023-04-28 13:00",
+                "someone_reached_target"
+            ],
+            [
+                25.0,
+                27200.0,
+                "2023-05-10 17:30",
+                "2023-05-10 13:30",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -31.18365757323034,
+        "close_position_fee": 0.5762590167473589
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-05-24 00:00",
+        "signal_time_ny": "2023-05-23 20:00",
+        "limit_price_history": [
+            27224.68085,
+            26796.09525,
+            26667.15975
+        ],
+        "limit_stop": 26500.0,
+        "limit_take_profit": 27527.5,
+        "limit_rr": 5.146814648861384,
+        "limit_position_assets": 0.5982301361422272,
+        "limit_position_usd": 15953.098607769021,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.41786553349657174,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high tue",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-22 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-05-21 21:00",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-05-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.61,
+            -3.38,
+            -3.79
+        ],
+        "targets": [
+            1.17,
+            1.13,
+            0.73
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                26620.6,
+                "2023-05-24 13:45",
+                "2023-05-24 09:45",
+                "limit_psp_swept"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-05-24 00:00",
+        "signal_time_ny": "2023-05-23 20:00",
+        "limit_price_history": [
+            1853.9025849999998,
+            1826.10649,
+            1810.13448
+        ],
+        "limit_stop": 1790.76,
+        "limit_take_profit": 1874.23,
+        "limit_rr": 3.308244659985726,
+        "limit_position_assets": 5.161428848671049,
+        "limit_position_usd": 9342.880325046168,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.32192877437628276,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high tue",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-22 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-05-21 21:00",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-05-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.61,
+            -3.38,
+            -3.79
+        ],
+        "targets": [
+            1.17,
+            1.13,
+            0.73
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1812.06,
+                "2023-05-24 13:45",
+                "2023-05-24 09:45",
+                "limit_psp_swept"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-05-24 00:00",
+        "signal_time_ny": "2023-05-23 20:00",
+        "limit_price_history": [
+            19.947009739614394
+        ],
+        "limit_stop": 19.266,
+        "limit_take_profit": 20.17,
+        "limit_rr": 0.32744063324538325,
+        "limit_position_assets": 146.84077801386866,
+        "limit_position_usd": 2929.034429215193,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.32744063324538325,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high tue",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-22 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-05-21 21:00",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-05-22 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.61,
+            -3.38,
+            -3.79
+        ],
+        "targets": [
+            1.17,
+            1.13,
+            0.73
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                19.266,
+                "2023-05-24 13:45",
+                "2023-05-24 09:45",
+                "limit_stop"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-05-24 00:00",
+        "signal_time_ny": "2023-05-23 20:00",
+        "limit_price_history": [
+            20.061964
+        ],
+        "limit_stop": 19.266,
+        "limit_take_profit": 20.17,
+        "limit_rr": 0.13572975662216108,
+        "limit_position_assets": 125.63382263519433,
+        "limit_position_usd": 2520.461226889654,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.13572975662216108,
+        "entry_time": "2023-05-24 00:15",
+        "entry_time_ny": "2023-05-23 20:15",
+        "entry_price": 20.061964,
+        "entry_order_type": "LIMIT",
+        "stop": 19.266,
+        "take_profit": 20.17,
+        "entry_rr": 0.13572975662216108,
+        "entry_position_assets": 125.63382263519433,
+        "entry_position_usd": 2520.461226889654,
+        "entry_position_fee": 0.4536830208401377,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high tue",
+        "entry_tos": [
+            [
+                "tmo",
+                22.341,
+                11.52
+            ],
+            [
+                "tyo",
+                21.017,
+                4.91
+            ],
+            [
+                "t90mo",
+                20.072,
+                0.19
+            ],
+            [
+                "SOLUSDT",
+                20.033,
+                0
+            ],
+            [
+                "two",
+                19.679,
+                -1.77
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-22 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-05-21 21:00",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-05-22 22:00",
+        "best_pnl": 0.7583257534262474,
+        "best_pnl_time": "2023-05-24 00:15",
+        "best_pnl_time_ny": "2023-05-23 20:15",
+        "best_pnl_price": 20.068,
+        "best_pnl_tos": [
+            [
+                "tmo",
+                22.341,
+                11.33
+            ],
+            [
+                "tyo",
+                21.017,
+                4.73
+            ],
+            [
+                "t90mo",
+                20.072,
+                0.02
+            ],
+            [
+                "SOLUSDT",
+                20.068,
+                0
+            ],
+            [
+                "two",
+                19.679,
+                -1.94
+            ]
+        ],
+        "best_entry_time": "2023-05-24 11:30",
+        "best_entry_time_ny": "2023-05-24 07:30",
+        "best_entry_price": 19.301,
+        "best_entry_rr": 24.828571428571422,
+        "best_entry_tos": [
+            [
+                "tmo",
+                22.341,
+                15.75
+            ],
+            [
+                "tyo",
+                21.017,
+                8.89
+            ],
+            [
+                "two",
+                19.679,
+                1.96
+            ],
+            [
+                "tdo",
+                19.546,
+                1.27
+            ],
+            [
+                "t90mo",
+                19.343,
+                0.22
+            ],
+            [
+                "SOLUSDT",
+                19.301,
+                0
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.61,
+            -3.38,
+            -3.79
+        ],
+        "targets": [
+            1.17,
+            1.13,
+            0.73
+        ],
+        "_in_trade_range": [
+            20.024,
+            20.068,
+            19.301,
+            19.373,
+            11776608.0,
+            "2023-05-24 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                19.266,
+                "2023-05-24 13:45",
+                "2023-05-24 09:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -100.0,
+        "close_position_fee": 1.0892075521003444
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-05-24 00:00",
+        "signal_time_ny": "2023-05-23 20:00",
+        "limit_price_history": [
+            1844.0356451432008
+        ],
+        "limit_stop": 1790.76,
+        "limit_take_profit": 1874.23,
+        "limit_rr": 0.5667571884984066,
+        "limit_position_assets": 1.877030296511807,
+        "limit_position_usd": 3461.3107737814835,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.5667571884984066,
+        "entry_time": "2023-05-24 02:00",
+        "entry_time_ny": "2023-05-23 22:00",
+        "entry_price": 1844.0356451432008,
+        "entry_order_type": "LIMIT",
+        "stop": 1790.76,
+        "take_profit": 1874.23,
+        "entry_rr": 0.5667571884984066,
+        "entry_position_assets": 1.877030296511807,
+        "entry_position_usd": 3461.3107737814835,
+        "entry_position_fee": 0.6230359392806669,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high tue",
+        "entry_tos": [
+            [
+                "tmo",
+                1906.59,
+                3.36
+            ],
+            [
+                "t90mo",
+                1854.83,
+                0.56
+            ],
+            [
+                "ETHUSDT",
+                1844.55,
+                0
+            ],
+            [
+                "tyo",
+                1825.6,
+                -1.03
+            ],
+            [
+                "two",
+                1819.94,
+                -1.33
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-22 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-05-21 21:00",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-05-22 22:00",
+        "best_pnl": 9.524717801463778,
+        "best_pnl_time": "2023-05-24 02:00",
+        "best_pnl_time_ny": "2023-05-23 22:00",
+        "best_pnl_price": 1849.11,
+        "best_pnl_tos": [
+            [
+                "tmo",
+                1906.59,
+                3.11
+            ],
+            [
+                "t90mo",
+                1854.83,
+                0.31
+            ],
+            [
+                "ETHUSDT",
+                1849.11,
+                0
+            ],
+            [
+                "tyo",
+                1825.6,
+                -1.27
+            ],
+            [
+                "two",
+                1819.94,
+                -1.58
+            ]
+        ],
+        "best_entry_time": "2023-05-24 11:30",
+        "best_entry_time_ny": "2023-05-24 07:30",
+        "best_entry_price": 1808.34,
+        "best_entry_rr": 3.7480091012514434,
+        "best_entry_tos": [
+            [
+                "tmo",
+                1906.59,
+                5.43
+            ],
+            [
+                "tyo",
+                1825.6,
+                0.95
+            ],
+            [
+                "tdo",
+                1820.84,
+                0.69
+            ],
+            [
+                "two",
+                1819.94,
+                0.64
+            ],
+            [
+                "t90mo",
+                1811.04,
+                0.15
+            ],
+            [
+                "ETHUSDT",
+                1808.34,
+                0
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.61,
+            -3.38,
+            -3.79
+        ],
+        "targets": [
+            1.17,
+            1.13,
+            0.73
+        ],
+        "_in_trade_range": [
+            1849.1,
+            1849.11,
+            1808.34,
+            1812.06,
+            1684446.004,
+            "2023-05-24 01:45"
+        ],
+        "closes": [
+            [
+                50.0,
+                1812.06,
+                "2023-05-24 13:45",
+                "2023-05-24 09:45",
+                "someone_psp_swept"
+            ],
+            [
+                50.0,
+                1790.76,
+                "2023-05-24 14:00",
+                "2023-05-24 10:00",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -80.00962734214929,
+        "close_position_fee": 1.5215855158977003
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-05-24 00:00",
+        "signal_time_ny": "2023-05-23 20:00",
+        "limit_price_history": [
+            27083.621841545184
+        ],
+        "limit_stop": 26500.0,
+        "limit_take_profit": 27527.5,
+        "limit_rr": 0.760557825045776,
+        "limit_position_assets": 0.17134382725506342,
+        "limit_position_usd": 4640.6114222591805,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.760557825045776,
+        "entry_time": "2023-05-24 03:15",
+        "entry_time_ny": "2023-05-23 23:15",
+        "entry_price": 27083.621841545184,
+        "entry_order_type": "LIMIT",
+        "stop": 26500.0,
+        "take_profit": 27527.5,
+        "entry_rr": 0.760557825045776,
+        "entry_position_assets": 0.17134382725506342,
+        "entry_position_usd": 4640.6114222591805,
+        "entry_position_fee": 0.8353100560066524,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high tue",
+        "entry_tos": [
+            [
+                "tmo",
+                28757.8,
+                6.16
+            ],
+            [
+                "tyo",
+                28532.0,
+                5.32
+            ],
+            [
+                "t90mo",
+                27238.3,
+                0.55
+            ],
+            [
+                "BTCUSDT",
+                27090.3,
+                0
+            ],
+            [
+                "two",
+                26892.8,
+                -0.73
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-22 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-05-21 21:00",
+        "smt_flags": "beS",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-05-22 22:00",
+        "best_pnl": 12.555760123851407,
+        "best_pnl_time": "2023-05-24 03:15",
+        "best_pnl_time_ny": "2023-05-23 23:15",
+        "best_pnl_price": 27156.9,
+        "best_pnl_tos": [
+            [
+                "tmo",
+                28757.8,
+                5.9
+            ],
+            [
+                "tyo",
+                28532.0,
+                5.06
+            ],
+            [
+                "t90mo",
+                27238.3,
+                0.3
+            ],
+            [
+                "BTCUSDT",
+                27156.9,
+                0
+            ],
+            [
+                "two",
+                26892.8,
+                -0.97
+            ]
+        ],
+        "best_entry_time": "2023-05-24 07:00",
+        "best_entry_time_ny": "2023-05-24 03:00",
+        "best_entry_price": 26566.5,
+        "best_entry_rr": 14.451127819548873,
+        "best_entry_tos": [
+            [
+                "tmo",
+                28757.8,
+                8.25
+            ],
+            [
+                "tyo",
+                28532.0,
+                7.4
+            ],
+            [
+                "two",
+                26892.8,
+                1.23
+            ],
+            [
+                "t90mo",
+                26809.5,
+                0.91
+            ],
+            [
+                "tdo",
+                26770.0,
+                0.77
+            ],
+            [
+                "BTCUSDT",
+                26566.5,
+                0
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.61,
+            -3.38,
+            -3.79
+        ],
+        "targets": [
+            1.17,
+            1.13,
+            0.73
+        ],
+        "_in_trade_range": [
+            27153.2,
+            27156.9,
+            26566.5,
+            26620.6,
+            224676.655,
+            "2023-05-24 03:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                26620.6,
+                "2023-05-24 13:45",
+                "2023-05-24 09:45",
+                "someone_psp_swept"
+            ],
+            [
+                50.0,
+                26500.0,
+                "2023-05-24 14:00",
+                "2023-05-24 10:00",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -89.6679672165198,
+        "close_position_fee": 2.0479245547691973
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-01 00:00",
+        "signal_time_ny": "2023-05-31 20:00",
+        "limit_price_history": [
+            27350.169175078125
+        ],
+        "limit_stop": 28038.6,
+        "limit_take_profit": 26826.0,
+        "limit_rr": 0.7613970149253702,
+        "limit_position_assets": 0.14525787686997954,
+        "limit_position_usd": 3972.8275064066083,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.7613970149253702,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week3 SMT -> low wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-30 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-05-23 03:00",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-05-30 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.08,
+            2.36,
+            2.79
+        ],
+        "targets": [
+            -1.38,
+            -1.49,
+            -2.35
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                26826.0,
+                "2023-06-01 03:00",
+                "2023-05-31 23:00",
+                "limit_take_profit"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-01 00:00",
+        "signal_time_ny": "2023-05-31 20:00",
+        "limit_price_history": [
+            1871.099532225
+        ],
+        "limit_stop": 1917.0,
+        "limit_take_profit": 1845.0,
+        "limit_rr": 0.5686114649841413,
+        "limit_position_assets": 2.178627034700196,
+        "limit_position_usd": 4076.428025520276,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.5686114649841413,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week3 SMT -> low wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-30 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-05-23 03:00",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-05-30 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.08,
+            2.36,
+            2.79
+        ],
+        "targets": [
+            -1.38,
+            -1.49,
+            -2.35
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1845.0,
+                "2023-06-01 03:00",
+                "2023-05-31 23:00",
+                "limit_take_profit"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-01 00:00",
+        "signal_time_ny": "2023-05-31 20:00",
+        "limit_price_history": [
+            20.779994805
+        ],
+        "limit_stop": 21.39,
+        "limit_take_profit": 20.32,
+        "limit_rr": 0.7540834221911854,
+        "limit_position_assets": 163.93303011132568,
+        "limit_position_usd": 3406.5275140812564,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.7540834221911854,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week3 SMT -> low wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-30 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-05-23 03:00",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-05-30 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.08,
+            2.36,
+            2.79
+        ],
+        "targets": [
+            -1.38,
+            -1.49,
+            -2.35
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                20.483,
+                "2023-06-01 03:00",
+                "2023-05-31 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-01 00:00",
+        "signal_time_ny": "2023-05-31 20:00",
+        "limit_price_history": [
+            27184.493203874998
+        ],
+        "limit_stop": 28038.6,
+        "limit_take_profit": 26826.0,
+        "limit_rr": 0.41972878040714134,
+        "limit_position_assets": 0.11708137723957966,
+        "limit_position_usd": 3182.797903869678,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.41972878040714134,
+        "entry_time": "2023-06-01 00:15",
+        "entry_time_ny": "2023-05-31 20:15",
+        "entry_price": 27184.493203874998,
+        "entry_order_type": "LIMIT",
+        "stop": 28038.6,
+        "take_profit": 26826.0,
+        "entry_rr": 0.41972878040714134,
+        "entry_position_assets": 0.11708137723957966,
+        "entry_position_usd": 3182.797903869678,
+        "entry_position_fee": 0.572903622696542,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week3 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tmo",
+                28757.8,
+                5.33
+            ],
+            [
+                "tyo",
+                28532.0,
+                4.51
+            ],
+            [
+                "two",
+                27653.5,
+                1.29
+            ],
+            [
+                "BTCUSDT",
+                27302.0,
+                0
+            ],
+            [
+                "t90mo",
+                27184.5,
+                -0.43
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-30 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-05-23 03:00",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-05-30 22:00",
+        "best_pnl": 13.229399928397324,
+        "best_pnl_time": "2023-06-01 02:30",
+        "best_pnl_time_ny": "2023-05-31 22:30",
+        "best_pnl_price": 27071.5,
+        "best_pnl_tos": [
+            [
+                "tmo",
+                28757.8,
+                6.23
+            ],
+            [
+                "tyo",
+                28532.0,
+                5.39
+            ],
+            [
+                "two",
+                27653.5,
+                2.15
+            ],
+            [
+                "t90mo",
+                27184.5,
+                0.42
+            ],
+            [
+                "BTCUSDT",
+                27071.5,
+                0
+            ]
+        ],
+        "best_entry_time": "2023-06-01 00:15",
+        "best_entry_time_ny": "2023-05-31 20:15",
+        "best_entry_price": 27347.9,
+        "best_entry_rr": 0.7556102504705424,
+        "best_entry_tos": [
+            [
+                "tmo",
+                28757.8,
+                5.16
+            ],
+            [
+                "tyo",
+                28532.0,
+                4.33
+            ],
+            [
+                "two",
+                27653.5,
+                1.12
+            ],
+            [
+                "BTCUSDT",
+                27347.9,
+                0
+            ],
+            [
+                "t90mo",
+                27184.5,
+                -0.6
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.08,
+            2.36,
+            2.79
+        ],
+        "targets": [
+            -1.38,
+            -1.49,
+            -2.35
+        ],
+        "_in_trade_range": [
+            27201.1,
+            27347.9,
+            27008.1,
+            27024.3,
+            58046.789,
+            "2023-06-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                26826.0,
+                "2023-06-01 03:00",
+                "2023-05-31 23:00",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 41.97287804071413,
+        "close_position_fee": 1.4133712616230338
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-01 00:00",
+        "signal_time_ny": "2023-05-31 20:00",
+        "limit_price_history": [
+            1882.246589716684
+        ],
+        "limit_stop": 1917.0,
+        "limit_take_profit": 1845.0,
+        "limit_rr": 1.0717391304347774,
+        "limit_position_assets": 2.8774154589371816,
+        "limit_position_usd": 5416.005434782577,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.0717391304347774,
+        "entry_time": "2023-06-01 00:15",
+        "entry_time_ny": "2023-05-31 20:15",
+        "entry_price": 1882.246589716684,
+        "entry_order_type": "LIMIT",
+        "stop": 1917.0,
+        "take_profit": 1845.0,
+        "entry_rr": 1.0717391304347774,
+        "entry_position_assets": 2.8774154589371816,
+        "entry_position_usd": 5416.005434782577,
+        "entry_position_fee": 0.9748809782608637,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week3 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tmo",
+                1906.59,
+                1.19
+            ],
+            [
+                "two",
+                1889.49,
+                0.28
+            ],
+            [
+                "ETHUSDT",
+                1884.23,
+                0
+            ],
+            [
+                "t90mo",
+                1871.1,
+                -0.7
+            ],
+            [
+                "tyo",
+                1825.6,
+                -3.11
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-30 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-05-23 03:00",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-05-30 22:00",
+        "best_pnl": 27.670923913042436,
+        "best_pnl_time": "2023-06-01 02:30",
+        "best_pnl_time_ny": "2023-05-31 22:30",
+        "best_pnl_price": 1872.63,
+        "best_pnl_tos": [
+            [
+                "tmo",
+                1906.59,
+                1.81
+            ],
+            [
+                "two",
+                1889.49,
+                0.9
+            ],
+            [
+                "ETHUSDT",
+                1872.63,
+                0
+            ],
+            [
+                "t90mo",
+                1871.1,
+                -0.08
+            ],
+            [
+                "tyo",
+                1825.6,
+                -2.51
+            ]
+        ],
+        "best_entry_time": "2023-06-01 00:15",
+        "best_entry_time_ny": "2023-05-31 20:15",
+        "best_entry_price": 1889.61,
+        "best_entry_rr": 1.6286966046002094,
+        "best_entry_tos": [
+            [
+                "tmo",
+                1906.59,
+                0.9
+            ],
+            [
+                "ETHUSDT",
+                1889.61,
+                0
+            ],
+            [
+                "two",
+                1889.49,
+                -0.01
+            ],
+            [
+                "t90mo",
+                1871.1,
+                -0.98
+            ],
+            [
+                "tyo",
+                1825.6,
+                -3.39
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.08,
+            2.36,
+            2.79
+        ],
+        "targets": [
+            -1.38,
+            -1.49,
+            -2.35
+        ],
+        "_in_trade_range": [
+            1872.85,
+            1889.61,
+            1867.2,
+            1869.84,
+            443688.303,
+            "2023-06-01 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                1845.0,
+                "2023-06-01 03:00",
+                "2023-05-31 23:00",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 107.17391304347707,
+        "close_position_fee": 2.3889741847825947
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-01 00:00",
+        "signal_time_ny": "2023-05-31 20:00",
+        "limit_price_history": [
+            20.949817319266444
+        ],
+        "limit_stop": 21.39,
+        "limit_take_profit": 20.32,
+        "limit_rr": 1.430808950086062,
+        "limit_position_assets": 227.17840655009815,
+        "limit_position_usd": 4759.3461161066,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.430808950086062,
+        "entry_time": "2023-06-01 00:30",
+        "entry_time_ny": "2023-05-31 20:30",
+        "entry_price": 20.949817319266444,
+        "entry_order_type": "LIMIT",
+        "stop": 21.39,
+        "take_profit": 20.32,
+        "entry_rr": 1.430808950086062,
+        "entry_position_assets": 227.17840655009815,
+        "entry_position_usd": 4759.3461161066,
+        "entry_position_fee": 0.856682300899188,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week3 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tmo",
+                22.341,
+                6.64
+            ],
+            [
+                "tyo",
+                21.017,
+                0.32
+            ],
+            [
+                "SOLUSDT",
+                20.95,
+                0
+            ],
+            [
+                "t90mo",
+                20.78,
+                -0.81
+            ],
+            [
+                "two",
+                20.559,
+                -1.87
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-05-30 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-05-23 03:00",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-05-30 22:00",
+        "best_pnl": 102.64313864268743,
+        "best_pnl_time": "2023-06-02 00:30",
+        "best_pnl_time_ny": "2023-06-01 20:30",
+        "best_pnl_price": 20.498,
+        "best_pnl_tos": [
+            [
+                "tmo",
+                22.341,
+                8.99
+            ],
+            [
+                "tyo",
+                21.017,
+                2.53
+            ],
+            [
+                "two",
+                20.559,
+                0.3
+            ],
+            [
+                "SOLUSDT",
+                20.498,
+                0
+            ],
+            [
+                "t90mo",
+                20.47,
+                -0.14
+            ]
+        ],
+        "best_entry_time": "2023-06-01 00:45",
+        "best_entry_time_ny": "2023-05-31 20:45",
+        "best_entry_price": 20.971,
+        "best_entry_rr": 1.5536992840095443,
+        "best_entry_tos": [
+            [
+                "tmo",
+                22.341,
+                6.53
+            ],
+            [
+                "tyo",
+                21.017,
+                0.22
+            ],
+            [
+                "SOLUSDT",
+                20.971,
+                0
+            ],
+            [
+                "t90mo",
+                20.78,
+                -0.91
+            ],
+            [
+                "two",
+                20.559,
+                -1.96
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.08,
+            2.36,
+            2.79
+        ],
+        "targets": [
+            -1.38,
+            -1.49,
+            -2.35
+        ],
+        "_in_trade_range": [
+            20.89,
+            20.971,
+            20.378,
+            20.438,
+            12694262.0,
+            "2023-06-01 00:15"
+        ],
+        "closes": [
+            [
+                50.0,
+                20.483,
+                "2023-06-01 03:00",
+                "2023-05-31 23:00",
+                "someone_reached_target"
+            ],
+            [
+                50.0,
+                20.32,
+                "2023-06-02 00:45",
+                "2023-06-01 20:45",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 124.56585487477204,
+        "close_position_fee": 2.085651117554322
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-15 00:00",
+        "signal_time_ny": "2023-06-14 20:00",
+        "limit_price_history": [
+            25274.021235063836
+        ],
+        "limit_stop": 26430.5,
+        "limit_take_profit": 24796.8,
+        "limit_rr": 0.4126502358131784,
+        "limit_position_assets": 0.08646937845462285,
+        "limit_position_usd": 2185.428907244909,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.4126502358131784,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_high week1 SMT -> low wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-06-13 00:00",
+        "smt_type": "half_high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-06-13 12:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-06-13 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            5.23,
+            7.05,
+            10.53
+        ],
+        "targets": [
+            -1.27,
+            -1.5,
+            -3.5
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                25019.0,
+                "2023-06-15 06:00",
+                "2023-06-15 02:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-15 00:00",
+        "signal_time_ny": "2023-06-14 20:00",
+        "limit_price_history": [
+            1662.8773241696463
+        ],
+        "limit_stop": 1766.53,
+        "limit_take_profit": 1625.5,
+        "limit_rr": 0.3606016330038689,
+        "limit_position_assets": 0.9647604289894844,
+        "limit_position_usd": 1604.2782406227939,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.3606016330038689,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_high week1 SMT -> low wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-06-13 00:00",
+        "smt_type": "half_high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-06-13 12:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-06-13 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            5.23,
+            7.05,
+            10.53
+        ],
+        "targets": [
+            -1.27,
+            -1.5,
+            -3.5
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1646.68,
+                "2023-06-15 06:00",
+                "2023-06-15 02:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-15 00:00",
+        "signal_time_ny": "2023-06-14 20:00",
+        "limit_price_history": [
+            25063.793734049996
+        ],
+        "limit_stop": 26430.5,
+        "limit_take_profit": 24796.8,
+        "limit_rr": 0.19535560837164068,
+        "limit_position_assets": 0.07316861164054846,
+        "limit_position_usd": 1833.882989965516,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.19535560837164068,
+        "entry_time": "2023-06-15 01:45",
+        "entry_time_ny": "2023-06-14 21:45",
+        "entry_price": 25063.793734049996,
+        "entry_order_type": "LIMIT",
+        "stop": 26430.5,
+        "take_profit": 24796.8,
+        "entry_rr": 0.19535560837164068,
+        "entry_position_assets": 0.07316861164054846,
+        "entry_position_usd": 1833.882989965516,
+        "entry_position_fee": 0.3300989381937929,
+        "entry_reason": "chase_t90mo limit for 1d psp for half_high week1 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tyo",
+                28532.0,
+                13.88
+            ],
+            [
+                "tmo",
+                26034.0,
+                3.91
+            ],
+            [
+                "two",
+                25918.7,
+                3.45
+            ],
+            [
+                "t90mo",
+                25063.8,
+                0.03
+            ],
+            [
+                "BTCUSDT",
+                25055.2,
+                0
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-06-13 00:00",
+        "smt_type": "half_high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-06-13 12:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-06-13 22:00",
+        "best_pnl": 10.674841967493489,
+        "best_pnl_time": "2023-06-15 11:15",
+        "best_pnl_time_ny": "2023-06-15 07:15",
+        "best_pnl_price": 24917.9,
+        "best_pnl_tos": [
+            [
+                "tyo",
+                28532.0,
+                14.5
+            ],
+            [
+                "tmo",
+                26034.0,
+                4.48
+            ],
+            [
+                "two",
+                25918.7,
+                4.02
+            ],
+            [
+                "tdo",
+                25054.8,
+                0.55
+            ],
+            [
+                "BTCUSDT",
+                24917.9,
+                0
+            ]
+        ],
+        "best_entry_time": "2023-06-15 02:30",
+        "best_entry_time_ny": "2023-06-14 22:30",
+        "best_entry_price": 25124.7,
+        "best_entry_rr": 0.2511104303875032,
+        "best_entry_tos": [
+            [
+                "tyo",
+                28532.0,
+                13.56
+            ],
+            [
+                "tmo",
+                26034.0,
+                3.62
+            ],
+            [
+                "two",
+                25918.7,
+                3.16
+            ],
+            [
+                "BTCUSDT",
+                25124.7,
+                0
+            ],
+            [
+                "t90mo",
+                25063.8,
+                -0.24
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            5.23,
+            7.05,
+            10.53
+        ],
+        "targets": [
+            -1.27,
+            -1.5,
+            -3.5
+        ],
+        "_in_trade_range": [
+            25106.1,
+            25124.7,
+            24856.0,
+            24882.4,
+            129688.878,
+            "2023-06-15 01:30"
+        ],
+        "closes": [
+            [
+                100,
+                24796.8,
+                "2023-06-15 11:30",
+                "2023-06-15 07:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 19.535560837164066,
+        "close_position_fee": 0.8164563431077583
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-15 00:00",
+        "signal_time_ny": "2023-06-14 20:00",
+        "limit_price_history": [
+            1648.059587985
+        ],
+        "limit_stop": 1766.53,
+        "limit_take_profit": 1625.5,
+        "limit_rr": 0.19042381638837938,
+        "limit_position_assets": 0.8440926160309009,
+        "limit_position_usd": 1391.1149289970674,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.19042381638837938,
+        "entry_time": "2023-06-15 00:15",
+        "entry_time_ny": "2023-06-14 20:15",
+        "entry_price": 1648.059587985,
+        "entry_order_type": "LIMIT",
+        "stop": 1766.53,
+        "take_profit": 1625.5,
+        "entry_rr": 0.19042381638837938,
+        "entry_position_assets": 0.8440926160309009,
+        "entry_position_usd": 1391.1149289970674,
+        "entry_position_fee": 0.2504006872194721,
+        "entry_reason": "chase_t90mo limit for 1d psp for half_high week1 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tyo",
+                1825.6,
+                10.57
+            ],
+            [
+                "tmo",
+                1762.97,
+                6.78
+            ],
+            [
+                "two",
+                1742.61,
+                5.54
+            ],
+            [
+                "ETHUSDT",
+                1651.07,
+                0
+            ],
+            [
+                "t90mo",
+                1648.06,
+                -0.18
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-06-13 00:00",
+        "smt_type": "half_high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-06-13 12:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-06-13 22:00",
+        "best_pnl": 10.348227693719696,
+        "best_pnl_time": "2023-06-15 09:45",
+        "best_pnl_time_ny": "2023-06-15 05:45",
+        "best_pnl_price": 1635.8,
+        "best_pnl_tos": [
+            [
+                "tyo",
+                1825.6,
+                11.6
+            ],
+            [
+                "tmo",
+                1762.97,
+                7.77
+            ],
+            [
+                "two",
+                1742.61,
+                6.53
+            ],
+            [
+                "tdo",
+                1651.01,
+                0.93
+            ],
+            [
+                "t90mo",
+                1646.99,
+                0.68
+            ],
+            [
+                "ETHUSDT",
+                1635.8,
+                0
+            ]
+        ],
+        "best_entry_time": "2023-06-16 18:15",
+        "best_entry_time_ny": "2023-06-16 14:15",
+        "best_entry_price": 1730.0,
+        "best_entry_rr": 2.8606624692033966,
+        "best_entry_tos": [
+            [
+                "tyo",
+                1825.6,
+                5.53
+            ],
+            [
+                "tmo",
+                1762.97,
+                1.91
+            ],
+            [
+                "two",
+                1742.61,
+                0.73
+            ],
+            [
+                "ETHUSDT",
+                1730.0,
+                0
+            ],
+            [
+                "t90mo",
+                1696.7,
+                -1.92
+            ],
+            [
+                "tdo",
+                1665.85,
+                -3.71
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            5.23,
+            7.05,
+            10.53
+        ],
+        "targets": [
+            -1.27,
+            -1.5,
+            -3.5
+        ],
+        "_in_trade_range": [
+            1650.19,
+            1730.0,
+            1625.56,
+            1725.78,
+            6712049.215,
+            "2023-06-15 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                1633.49,
+                "2023-06-15 11:30",
+                "2023-06-15 07:30",
+                "someone_reached_target"
+            ],
+            [
+                25.0,
+                1723.66,
+                "2023-06-16 18:15",
+                "2023-06-16 14:15",
+                "someone_psp_swept"
+            ],
+            [
+                25.0,
+                1766.53,
+                "2023-06-17 05:45",
+                "2023-06-17 01:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -34.804396569313326,
+        "close_position_fee": 0.6416636965048712
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-15 00:00",
+        "signal_time_ny": "2023-06-14 20:00",
+        "limit_price_history": [
+            14.4419963895
+        ],
+        "limit_stop": 16.0,
+        "limit_take_profit": 13.97,
+        "limit_rr": 0.30294948376180236,
+        "limit_position_assets": 64.18470363358634,
+        "limit_position_usd": 926.9552581373814,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.30294948376180236,
+        "entry_time": "2023-06-15 00:15",
+        "entry_time_ny": "2023-06-14 20:15",
+        "entry_price": 14.4419963895,
+        "entry_order_type": "LIMIT",
+        "stop": 16.0,
+        "take_profit": 13.97,
+        "entry_rr": 0.30294948376180236,
+        "entry_position_assets": 64.18470363358634,
+        "entry_position_usd": 926.9552581373814,
+        "entry_position_fee": 0.16685194646472865,
+        "entry_reason": "chase_t90mo limit for 1d psp for half_high week1 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tyo",
+                21.017,
+                45.35
+            ],
+            [
+                "tmo",
+                15.742,
+                8.87
+            ],
+            [
+                "two",
+                15.251,
+                5.47
+            ],
+            [
+                "SOLUSDT",
+                14.46,
+                0
+            ],
+            [
+                "t90mo",
+                14.442,
+                -0.12
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-06-13 00:00",
+        "smt_type": "half_high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-06-13 12:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-06-13 22:00",
+        "best_pnl": 9.242365584363952,
+        "best_pnl_time": "2023-06-15 17:45",
+        "best_pnl_time_ny": "2023-06-15 13:45",
+        "best_pnl_price": 14.298,
+        "best_pnl_tos": [
+            [
+                "tyo",
+                21.017,
+                46.99
+            ],
+            [
+                "tmo",
+                15.742,
+                10.1
+            ],
+            [
+                "two",
+                15.251,
+                6.67
+            ],
+            [
+                "tdo",
+                14.915,
+                4.32
+            ],
+            [
+                "SOLUSDT",
+                14.298,
+                0
+            ],
+            [
+                "t90mo",
+                14.225,
+                -0.51
+            ]
+        ],
+        "best_entry_time": "2023-06-17 04:30",
+        "best_entry_time_ny": "2023-06-17 00:30",
+        "best_entry_price": 15.55,
+        "best_entry_rr": 3.511111111111117,
+        "best_entry_tos": [
+            [
+                "tyo",
+                21.017,
+                35.16
+            ],
+            [
+                "tmo",
+                15.742,
+                1.23
+            ],
+            [
+                "SOLUSDT",
+                15.55,
+                0
+            ],
+            [
+                "tdo",
+                15.417,
+                -0.86
+            ],
+            [
+                "two",
+                15.251,
+                -1.92
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            5.23,
+            7.05,
+            10.53
+        ],
+        "targets": [
+            -1.27,
+            -1.5,
+            -3.5
+        ],
+        "_in_trade_range": [
+            14.476,
+            15.55,
+            14.161,
+            15.517,
+            78909904.0,
+            "2023-06-15 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                14.503,
+                "2023-06-15 11:30",
+                "2023-06-15 07:30",
+                "someone_reached_target"
+            ],
+            [
+                25.0,
+                15.392,
+                "2023-06-16 18:15",
+                "2023-06-16 14:15",
+                "someone_psp_swept"
+            ],
+            [
+                25.0,
+                16.0,
+                "2023-06-17 05:45",
+                "2023-06-17 01:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -42.201674377955484,
+        "close_position_fee": 0.4361206196319016
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-06-15 00:00",
+        "signal_time_ny": "2023-06-14 20:00",
+        "limit_price_history": [
+            14.702407516147973
+        ],
+        "limit_stop": 16.0,
+        "limit_take_profit": 13.97,
+        "limit_rr": 0.5644356955380583,
+        "limit_position_assets": 77.06579780975649,
+        "limit_position_usd": 1133.0527649561038,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.5644356955380583,
+        "entry_time": "2023-06-15 02:45",
+        "entry_time_ny": "2023-06-14 22:45",
+        "entry_price": 14.702407516147973,
+        "entry_order_type": "LIMIT",
+        "stop": 16.0,
+        "take_profit": 13.97,
+        "entry_rr": 0.5644356955380583,
+        "entry_position_assets": 77.06579780975649,
+        "entry_position_usd": 1133.0527649561038,
+        "entry_position_fee": 0.20394949769209866,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_high week1 SMT -> low wed",
+        "entry_tos": [
+            [
+                "tyo",
+                21.017,
+                42.08
+            ],
+            [
+                "tmo",
+                15.742,
+                6.42
+            ],
+            [
+                "two",
+                15.251,
+                3.1
+            ],
+            [
+                "SOLUSDT",
+                14.792,
+                0
+            ],
+            [
+                "t90mo",
+                14.442,
+                -2.37
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-06-13 00:00",
+        "smt_type": "half_high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-06-13 12:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "wed",
+        "target_ql_start": "2023-06-13 22:00",
+        "best_pnl": 31.165987872205537,
+        "best_pnl_time": "2023-06-15 17:45",
+        "best_pnl_time_ny": "2023-06-15 13:45",
+        "best_pnl_price": 14.298,
+        "best_pnl_tos": [
+            [
+                "tyo",
+                21.017,
+                46.99
+            ],
+            [
+                "tmo",
+                15.742,
+                10.1
+            ],
+            [
+                "two",
+                15.251,
+                6.67
+            ],
+            [
+                "tdo",
+                14.915,
+                4.32
+            ],
+            [
+                "SOLUSDT",
+                14.298,
+                0
+            ],
+            [
+                "t90mo",
+                14.225,
+                -0.51
+            ]
+        ],
+        "best_entry_time": "2023-06-17 04:30",
+        "best_entry_time_ny": "2023-06-17 00:30",
+        "best_entry_price": 15.55,
+        "best_entry_rr": 3.511111111111117,
+        "best_entry_tos": [
+            [
+                "tyo",
+                21.017,
+                35.16
+            ],
+            [
+                "tmo",
+                15.742,
+                1.23
+            ],
+            [
+                "SOLUSDT",
+                15.55,
+                0
+            ],
+            [
+                "tdo",
+                15.417,
+                -0.86
+            ],
+            [
+                "two",
+                15.251,
+                -1.92
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            5.23,
+            7.05,
+            10.53
+        ],
+        "targets": [
+            -1.27,
+            -1.5,
+            -3.5
+        ],
+        "_in_trade_range": [
+            14.675,
+            15.55,
+            14.161,
+            15.517,
+            76303284.0,
+            "2023-06-15 02:30"
+        ],
+        "closes": [
+            [
+                50.0,
+                14.503,
+                "2023-06-15 11:30",
+                "2023-06-15 07:30",
+                "someone_reached_target"
+            ],
+            [
+                25.0,
+                15.392,
+                "2023-06-16 18:15",
+                "2023-06-16 14:15",
+                "someone_psp_swept"
+            ],
+            [
+                25.0,
+                16.0,
+                "2023-06-17 05:45",
+                "2023-06-17 01:45",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -30.60224907231428,
+        "close_position_fee": 0.5236447563127882
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-07-27 00:00",
+        "signal_time_ny": "2023-07-26 20:00",
+        "limit_price_history": [
+            29254.60557563242
+        ],
+        "limit_stop": 29033.0,
+        "limit_take_profit": 29670.5,
+        "limit_rr": 1.8767326732673268,
+        "limit_position_assets": 0.45125218404193546,
+        "limit_position_usd": 13201.204659289511,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.8767326732673268,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-07-25 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-07-17 18:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-07-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -1.03,
+            -1.42,
+            -9.79
+        ],
+        "targets": [
+            1.14,
+            0.9,
+            2.22
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                29460.7,
+                "2023-07-27 04:45",
+                "2023-07-27 00:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-07-27 00:00",
+        "signal_time_ny": "2023-07-26 20:00",
+        "limit_price_history": [
+            29357.1141
+        ],
+        "limit_stop": 29033.0,
+        "limit_take_profit": 29670.5,
+        "limit_rr": 0.9668999281425962,
+        "limit_position_assets": 0.3085333220615837,
+        "limit_position_usd": 9057.647939413959,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.9668999281425962,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-07-25 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-07-17 18:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-07-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -1.03,
+            -1.42,
+            -9.79
+        ],
+        "targets": [
+            1.14,
+            0.9,
+            2.22
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                29460.7,
+                "2023-07-27 04:45",
+                "2023-07-27 00:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-07-27 00:00",
+        "signal_time_ny": "2023-07-26 20:00",
+        "limit_price_history": [
+            1865.3205895708086
+        ],
+        "limit_stop": 1844.5,
+        "limit_take_profit": 1887.79,
+        "limit_rr": 1.0791918429002978,
+        "limit_position_assets": 4.8029379600376245,
+        "limit_position_usd": 8959.019067289399,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.0791918429002978,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-07-25 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-07-17 18:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-07-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -1.03,
+            -1.42,
+            -9.79
+        ],
+        "targets": [
+            1.14,
+            0.9,
+            2.22
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1879.19,
+                "2023-07-27 04:45",
+                "2023-07-27 00:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-07-27 00:00",
+        "signal_time_ny": "2023-07-26 20:00",
+        "limit_price_history": [
+            1870.0645
+        ],
+        "limit_stop": 1844.5,
+        "limit_take_profit": 1887.79,
+        "limit_rr": 0.6933638443935944,
+        "limit_position_assets": 3.9116743922235986,
+        "limit_position_usd": 7315.083416456428,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.6933638443935944,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-07-25 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-07-17 18:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-07-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -1.03,
+            -1.42,
+            -9.79
+        ],
+        "targets": [
+            1.14,
+            0.9,
+            2.22
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1879.19,
+                "2023-07-27 04:45",
+                "2023-07-27 00:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-07-27 00:00",
+        "signal_time_ny": "2023-07-26 20:00",
+        "limit_price_history": [
+            24.880642193771425
+        ],
+        "limit_stop": 22.7,
+        "limit_take_profit": 25.722,
+        "limit_rr": 0.3858302882663424,
+        "limit_position_assets": 45.85805057135474,
+        "limit_position_usd": 1140.9777479697525,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.3858302882663424,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-07-25 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-07-17 18:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-07-25 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -1.03,
+            -1.42,
+            -9.79
+        ],
+        "targets": [
+            1.14,
+            0.9,
+            2.22
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                25.175,
+                "2023-07-27 04:45",
+                "2023-07-27 00:45",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-07-27 00:00",
+        "signal_time_ny": "2023-07-26 20:00",
+        "limit_price_history": [
+            25.237375
+        ],
+        "limit_stop": 22.7,
+        "limit_take_profit": 25.722,
+        "limit_rr": 0.19099463027735397,
+        "limit_position_assets": 39.41080841420759,
+        "limit_position_usd": 994.6253510025122,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.19099463027735397,
+        "entry_time": "2023-07-27 00:30",
+        "entry_time_ny": "2023-07-26 20:30",
+        "entry_price": 25.237375,
+        "entry_order_type": "LIMIT",
+        "stop": 22.7,
+        "take_profit": 25.722,
+        "entry_rr": 0.19099463027735397,
+        "entry_position_assets": 39.41080841420759,
+        "entry_position_usd": 994.6253510025122,
+        "entry_position_fee": 0.17903256318045216,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week2 SMT -> high wed",
+        "entry_tos": [
+            [
+                "SOLUSDT",
+                25.377,
+                0
+            ],
+            [
+                "t90mo",
+                25.25,
+                -0.5
+            ],
+            [
+                "two",
+                23.515,
+                -7.34
+            ],
+            [
+                "tmo",
+                21.147,
+                -16.67
+            ],
+            [
+                "tyo",
+                21.017,
+                -17.18
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-07-25 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week2 SMT",
+        "smt_first_appeared": "2023-07-17 18:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "wed",
+        "target_ql_start": "2023-07-25 22:00",
+        "best_pnl": 16.419528055569227,
+        "best_pnl_time": "2023-07-27 14:45",
+        "best_pnl_time_ny": "2023-07-27 10:45",
+        "best_pnl_price": 25.654,
+        "best_pnl_tos": [
+            [
+                "SOLUSDT",
+                25.654,
+                0
+            ],
+            [
+                "t90mo",
+                25.316,
+                -1.32
+            ],
+            [
+                "tdo",
+                24.913,
+                -2.89
+            ],
+            [
+                "two",
+                23.515,
+                -8.34
+            ],
+            [
+                "tmo",
+                21.147,
+                -17.57
+            ],
+            [
+                "tyo",
+                21.017,
+                -18.08
+            ]
+        ],
+        "best_entry_time": "2023-08-01 02:00",
+        "best_entry_time_ny": "2023-07-31 22:00",
+        "best_entry_price": 23.375,
+        "best_entry_rr": 3.4770370370370354,
+        "best_entry_tos": [
+            [
+                "two",
+                23.772,
+                1.7
+            ],
+            [
+                "t90mo",
+                23.69,
+                1.35
+            ],
+            [
+                "SOLUSDT",
+                23.375,
+                0
+            ],
+            [
+                "tmo",
+                21.147,
+                -9.53
+            ],
+            [
+                "tyo",
+                21.017,
+                -10.09
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -1.03,
+            -1.42,
+            -9.79
+        ],
+        "targets": [
+            1.14,
+            0.9,
+            2.22
+        ],
+        "_in_trade_range": [
+            25.055,
+            25.654,
+            23.375,
+            23.557,
+            134305922.0,
+            "2023-07-27 00:15"
+        ],
+        "closes": [
+            [
+                50.0,
+                23.959,
+                "2023-07-30 20:15",
+                "2023-07-30 16:15",
+                "someone_psp_swept"
+            ],
+            [
+                50.0,
+                22.7,
+                "2023-08-01 02:15",
+                "2023-07-31 22:15",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -75.19089610325634,
+        "close_position_fee": 0.4137455047046651
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-08-09 00:00",
+        "signal_time_ny": "2023-08-08 20:00",
+        "limit_price_history": [
+            29565.392283143246
+        ],
+        "limit_stop": 28682.3,
+        "limit_take_profit": 30250.0,
+        "limit_rr": 0.7752391566824551,
+        "limit_position_assets": 0.11323844847116495,
+        "limit_position_usd": 3347.939150584494,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.7752391566824551,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week5 SMT -> high tue",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-07 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-07 16:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-08-07 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -3.62,
+            -2.98,
+            -8.08
+        ],
+        "targets": [
+            1.65,
+            1.22,
+            2.4
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                29736.0,
+                "2023-08-09 05:15",
+                "2023-08-09 01:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-08-09 00:00",
+        "signal_time_ny": "2023-08-08 20:00",
+        "limit_price_history": [
+            1846.0114227261104
+        ],
+        "limit_stop": 1800.0,
+        "limit_take_profit": 1878.0,
+        "limit_rr": 0.6952312138728367,
+        "limit_position_assets": 2.1733733511190128,
+        "limit_position_usd": 4012.072032014223,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.6952312138728367,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week5 SMT -> high tue",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-07 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-07 16:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-08-07 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -3.62,
+            -2.98,
+            -8.08
+        ],
+        "targets": [
+            1.65,
+            1.22,
+            2.4
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1856.2,
+                "2023-08-09 05:15",
+                "2023-08-09 01:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-08-09 00:00",
+        "signal_time_ny": "2023-08-08 20:00",
+        "limit_price_history": [
+            23.934497690531174
+        ],
+        "limit_stop": 22.25,
+        "limit_take_profit": 24.787,
+        "limit_rr": 0.5060869565217402,
+        "limit_position_assets": 59.3648780655003,
+        "limit_position_usd": 1420.8685369573816,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.5060869565217402,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for low week5 SMT -> high tue",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-07 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-07 16:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-08-07 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -3.62,
+            -2.98,
+            -8.08
+        ],
+        "targets": [
+            1.65,
+            1.22,
+            2.4
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                24.463,
+                "2023-08-09 05:15",
+                "2023-08-09 01:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-08-09 00:00",
+        "signal_time_ny": "2023-08-08 20:00",
+        "limit_price_history": [
+            24.209889
+        ],
+        "limit_stop": 22.25,
+        "limit_take_profit": 24.787,
+        "limit_rr": 0.2944610638663712,
+        "limit_position_assets": 51.0232977479847,
+        "limit_position_usd": 1235.2683748926595,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.2944610638663712,
+        "entry_time": "2023-08-09 00:15",
+        "entry_time_ny": "2023-08-08 20:15",
+        "entry_price": 24.209889,
+        "entry_order_type": "LIMIT",
+        "stop": 22.25,
+        "take_profit": 24.787,
+        "entry_rr": 0.2944610638663712,
+        "entry_position_assets": 51.0232977479847,
+        "entry_position_usd": 1235.2683748926595,
+        "entry_position_fee": 0.2223483074806787,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week5 SMT -> high tue",
+        "entry_tos": [
+            [
+                "SOLUSDT",
+                24.332,
+                0
+            ],
+            [
+                "t90mo",
+                24.222,
+                -0.45
+            ],
+            [
+                "two",
+                23.019,
+                -5.4
+            ],
+            [
+                "tyo",
+                21.017,
+                -13.62
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-07 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-07 16:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-08-07 22:00",
+        "best_pnl": 26.792894903741942,
+        "best_pnl_time": "2023-08-09 09:15",
+        "best_pnl_time_ny": "2023-08-09 05:15",
+        "best_pnl_price": 24.735,
+        "best_pnl_tos": [
+            [
+                "SOLUSDT",
+                24.735,
+                0
+            ],
+            [
+                "t90mo",
+                24.516,
+                -0.89
+            ],
+            [
+                "tdo",
+                24.296,
+                -1.77
+            ],
+            [
+                "two",
+                23.019,
+                -6.94
+            ],
+            [
+                "tyo",
+                21.017,
+                -15.03
+            ]
+        ],
+        "best_entry_time": "2023-08-09 02:45",
+        "best_entry_time_ny": "2023-08-08 22:45",
+        "best_entry_price": 24.136,
+        "best_entry_rr": 0.34517497348886533,
+        "best_entry_tos": [
+            [
+                "t90mo",
+                24.222,
+                0.36
+            ],
+            [
+                "SOLUSDT",
+                24.136,
+                0
+            ],
+            [
+                "two",
+                23.019,
+                -4.63
+            ],
+            [
+                "tyo",
+                21.017,
+                -12.92
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -3.62,
+            -2.98,
+            -8.08
+        ],
+        "targets": [
+            1.65,
+            1.22,
+            2.4
+        ],
+        "_in_trade_range": [
+            24.205,
+            24.735,
+            24.136,
+            24.633,
+            10898384.0,
+            "2023-08-09 00:00"
+        ],
+        "closes": [
+            [
+                100,
+                24.787,
+                "2023-08-09 11:00",
+                "2023-08-09 07:00",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 29.446106386637126,
+        "close_position_fee": 0.5691215165756836
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-08-11 00:00",
+        "signal_time_ny": "2023-08-10 20:00",
+        "limit_price_history": [
+            29631.80619982203
+        ],
+        "limit_stop": 30149.7,
+        "limit_take_profit": 28682.3,
+        "limit_rr": 1.8333994334277655,
+        "limit_position_assets": 0.19308978011637812,
+        "limit_position_usd": 5721.598943574765,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.8333994334277655,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week5 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-09 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-08 19:00",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-08-06 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.4,
+            1.07,
+            1.53
+        ],
+        "targets": [
+            -2.59,
+            -2.78,
+            -9.6
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                29362.7,
+                "2023-08-11 03:00",
+                "2023-08-10 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-08-11 00:00",
+        "signal_time_ny": "2023-08-10 20:00",
+        "limit_price_history": [
+            29450.692637325
+        ],
+        "limit_stop": 30149.7,
+        "limit_take_profit": 28682.3,
+        "limit_rr": 1.0992625805606258,
+        "limit_position_assets": 0.14306000957888945,
+        "limit_position_usd": 4213.216370800644,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 1.0992625805606258,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week5 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-09 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-08 19:00",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-08-06 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.4,
+            1.07,
+            1.53
+        ],
+        "targets": [
+            -2.59,
+            -2.78,
+            -9.6
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                29362.7,
+                "2023-08-11 03:00",
+                "2023-08-10 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-08-11 00:00",
+        "signal_time_ny": "2023-08-10 20:00",
+        "limit_price_history": [
+            1856.6844664398395
+        ],
+        "limit_stop": 1871.28,
+        "limit_take_profit": 1800.0,
+        "limit_rr": 3.8836858006042547,
+        "limit_position_assets": 6.851411055842258,
+        "limit_position_usd": 12720.9084805765,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 3.8836858006042547,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week5 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-09 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-08 19:00",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-08-06 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.4,
+            1.07,
+            1.53
+        ],
+        "targets": [
+            -2.59,
+            -2.78,
+            -9.6
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1843.42,
+                "2023-08-11 03:00",
+                "2023-08-10 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-08-11 00:00",
+        "signal_time_ny": "2023-08-10 20:00",
+        "limit_price_history": [
+            1851.979537005
+        ],
+        "limit_stop": 1871.28,
+        "limit_take_profit": 1800.0,
+        "limit_rr": 2.6931756517170786,
+        "limit_position_assets": 5.181222855944276,
+        "limit_position_usd": 9595.518705871405,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 2.6931756517170786,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week5 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-09 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-08 19:00",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-08-06 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.4,
+            1.07,
+            1.53
+        ],
+        "targets": [
+            -2.59,
+            -2.78,
+            -9.6
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1843.42,
+                "2023-08-11 03:00",
+                "2023-08-10 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-08-11 00:00",
+        "signal_time_ny": "2023-08-10 20:00",
+        "limit_price_history": [
+            24.691310448799722
+        ],
+        "limit_stop": 24.99,
+        "limit_take_profit": 22.25,
+        "limit_rr": 8.173404255319204,
+        "limit_position_assets": 334.7957757415773,
+        "limit_position_usd": 8266.546435782016,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 8.173404255319204,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week5 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-09 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-08 19:00",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-08-06 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.4,
+            1.07,
+            1.53
+        ],
+        "targets": [
+            -2.59,
+            -2.78,
+            -9.6
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                24.742,
+                "2023-08-11 03:00",
+                "2023-08-10 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-08-11 00:00",
+        "signal_time_ny": "2023-08-10 20:00",
+        "limit_price_history": [
+            24.627993843
+        ],
+        "limit_stop": 24.99,
+        "limit_take_profit": 22.25,
+        "limit_rr": 6.568932038910047,
+        "limit_position_assets": 276.2383955806588,
+        "limit_position_usd": 6803.197505560663,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 6.568932038910047,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week5 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-09 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-08 19:00",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-08-06 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.4,
+            1.07,
+            1.53
+        ],
+        "targets": [
+            -2.59,
+            -2.78,
+            -9.6
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                24.742,
+                "2023-08-11 03:00",
+                "2023-08-10 23:00",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-08-09 00:00",
+        "signal_time_ny": "2023-08-08 20:00",
+        "limit_price_history": [
+            1857.620725
+        ],
+        "limit_stop": 1800.0,
+        "limit_take_profit": 1878.0,
+        "limit_rr": 0.3536796005256791,
+        "limit_position_assets": 1.7354866673406142,
+        "limit_position_usd": 3223.8760012131056,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.3536796005256791,
+        "entry_time": "2023-08-09 00:15",
+        "entry_time_ny": "2023-08-08 20:15",
+        "entry_price": 1857.620725,
+        "entry_order_type": "LIMIT",
+        "stop": 1800.0,
+        "take_profit": 1878.0,
+        "entry_rr": 0.3536796005256791,
+        "entry_position_assets": 1.7354866673406142,
+        "entry_position_usd": 3223.8760012131056,
+        "entry_position_fee": 0.580297680218359,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week5 SMT -> high tue",
+        "entry_tos": [
+            [
+                "t90mo",
+                1858.55,
+                0.04
+            ],
+            [
+                "ETHUSDT",
+                1857.82,
+                0
+            ],
+            [
+                "tyo",
+                1825.6,
+                -1.73
+            ],
+            [
+                "two",
+                1824.78,
+                -1.78
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-07 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-07 16:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-08-07 22:00",
+        "best_pnl": 23.70548964803893,
+        "best_pnl_time": "2023-08-09 13:15",
+        "best_pnl_time_ny": "2023-08-09 09:15",
+        "best_pnl_price": 1871.28,
+        "best_pnl_tos": [
+            [
+                "ETHUSDT",
+                1871.28,
+                0
+            ],
+            [
+                "t90mo",
+                1859.51,
+                -0.63
+            ],
+            [
+                "tdo",
+                1854.11,
+                -0.92
+            ],
+            [
+                "tyo",
+                1825.6,
+                -2.44
+            ],
+            [
+                "two",
+                1824.78,
+                -2.48
+            ]
+        ],
+        "best_entry_time": "2023-08-15 19:15",
+        "best_entry_time_ny": "2023-08-15 15:15",
+        "best_entry_price": 1810.92,
+        "best_entry_rr": 6.142857142857095,
+        "best_entry_tos": [
+            [
+                "tmo",
+                1847.64,
+                2.03
+            ],
+            [
+                "two",
+                1845.11,
+                1.89
+            ],
+            [
+                "tdo",
+                1844.07,
+                1.83
+            ],
+            [
+                "t90mo",
+                1840.31,
+                1.62
+            ],
+            [
+                "tyo",
+                1825.6,
+                0.81
+            ],
+            [
+                "ETHUSDT",
+                1810.92,
+                0
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -3.62,
+            -2.98,
+            -8.08
+        ],
+        "targets": [
+            1.65,
+            1.22,
+            2.4
+        ],
+        "_in_trade_range": [
+            1855.36,
+            1871.28,
+            1810.92,
+            1822.17,
+            8550736.416,
+            "2023-08-09 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                1863.6,
+                "2023-08-09 11:00",
+                "2023-08-09 07:00",
+                "someone_reached_target"
+            ],
+            [
+                50.0,
+                1800.0,
+                "2023-08-16 20:30",
+                "2023-08-16 16:30",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -44.811523978568545,
+        "close_position_fee": 1.4305790147555415
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-08-09 00:00",
+        "signal_time_ny": "2023-08-08 20:00",
+        "limit_price_history": [
+            29793.79565
+        ],
+        "limit_stop": 28682.3,
+        "limit_take_profit": 30250.0,
+        "limit_rr": 0.41044186722638065,
+        "limit_position_assets": 0.08996886312600498,
+        "limit_position_usd": 2680.5139228390126,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.41044186722638065,
+        "entry_time": "2023-08-09 00:15",
+        "entry_time_ny": "2023-08-08 20:15",
+        "entry_price": 29793.79565,
+        "entry_order_type": "LIMIT",
+        "stop": 28682.3,
+        "take_profit": 30250.0,
+        "entry_rr": 0.41044186722638065,
+        "entry_position_assets": 0.08996886312600498,
+        "entry_position_usd": 2680.5139228390126,
+        "entry_position_fee": 0.4824925061110223,
+        "entry_reason": "chase_t90mo limit for 1d psp for low week5 SMT -> high tue",
+        "entry_tos": [
+            [
+                "t90mo",
+                29808.7,
+                0.01
+            ],
+            [
+                "BTCUSDT",
+                29806.5,
+                0
+            ],
+            [
+                "two",
+                29184.2,
+                -2.09
+            ],
+            [
+                "tyo",
+                28532.0,
+                -4.28
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-08-07 00:00",
+        "smt_type": "low",
+        "smt_level": 3,
+        "smt_label": "week5 SMT",
+        "smt_first_appeared": "2023-08-07 16:00",
+        "smt_flags": "bEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "tue",
+        "target_ql_start": "2023-08-07 22:00",
+        "best_pnl": 32.02030975109983,
+        "best_pnl_time": "2023-08-09 13:15",
+        "best_pnl_time_ny": "2023-08-09 09:15",
+        "best_pnl_price": 30149.7,
+        "best_pnl_tos": [
+            [
+                "BTCUSDT",
+                30149.7,
+                0
+            ],
+            [
+                "t90mo",
+                29804.5,
+                -1.14
+            ],
+            [
+                "tdo",
+                29710.0,
+                -1.46
+            ],
+            [
+                "two",
+                29184.2,
+                -3.2
+            ],
+            [
+                "tyo",
+                28532.0,
+                -5.37
+            ]
+        ],
+        "best_entry_time": "2023-08-17 00:00",
+        "best_entry_time_ny": "2023-08-16 20:00",
+        "best_entry_price": 28705.1,
+        "best_entry_rr": 67.75877192982679,
+        "best_entry_tos": [
+            [
+                "two",
+                29390.3,
+                2.39
+            ],
+            [
+                "tmo",
+                29360.0,
+                2.28
+            ],
+            [
+                "t90mo",
+                28840.3,
+                0.47
+            ],
+            [
+                "BTCUSDT",
+                28705.1,
+                0
+            ],
+            [
+                "tyo",
+                28532.0,
+                -0.6
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            -3.62,
+            -2.98,
+            -8.08
+        ],
+        "targets": [
+            1.65,
+            1.22,
+            2.4
+        ],
+        "_in_trade_range": [
+            29758.9,
+            30149.7,
+            28705.1,
+            28714.4,
+            1682896.581,
+            "2023-08-09 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                29827.6,
+                "2023-08-09 11:00",
+                "2023-08-09 07:00",
+                "someone_reached_target"
+            ],
+            [
+                50.0,
+                28682.3,
+                "2023-08-17 00:15",
+                "2023-08-16 20:15",
+                "stop"
+            ]
+        ],
+        "pnl_usd": -48.479330530893286,
+        "close_position_fee": 1.1844155665386538
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-09-22 00:00",
+        "signal_time_ny": "2023-09-21 20:00",
+        "limit_price_history": [
+            26649.192307359495
+        ],
+        "limit_stop": 27381.0,
+        "limit_take_profit": 26360.1,
+        "limit_rr": 0.3950386286817955,
+        "limit_position_assets": 0.13664792131274342,
+        "limit_position_usd": 3641.5567334642274,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.3950386286817955,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week1 SMT -> low thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-09-20 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-09-12 16:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "thu",
+        "target_ql_start": "2023-09-20 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.12,
+            4.15,
+            5.68
+        ],
+        "targets": [
+            -0.72,
+            -1.11,
+            -0.87
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                26524.7,
+                "2023-09-22 00:30",
+                "2023-09-21 20:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-09-22 00:00",
+        "signal_time_ny": "2023-09-21 20:00",
+        "limit_price_history": [
+            1591.4311013308184
+        ],
+        "limit_stop": 1648.68,
+        "limit_take_profit": 1565.5,
+        "limit_rr": 0.45295371498172915,
+        "limit_position_assets": 1.746758493606308,
+        "limit_position_usd": 2779.8457932388483,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.45295371498172915,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week1 SMT -> low thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-09-20 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-09-12 16:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "thu",
+        "target_ql_start": "2023-09-20 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.12,
+            4.15,
+            5.68
+        ],
+        "targets": [
+            -0.72,
+            -1.11,
+            -0.87
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                1581.7,
+                "2023-09-22 00:30",
+                "2023-09-21 20:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-09-22 00:00",
+        "signal_time_ny": "2023-09-21 20:00",
+        "limit_price_history": [
+            19.535888888888888
+        ],
+        "limit_stop": 20.547,
+        "limit_take_profit": 19.273,
+        "limit_rr": 0.2600000000000006,
+        "limit_position_assets": 98.90109890109873,
+        "limit_position_usd": 1932.1208791208758,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 0.2600000000000006,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week1 SMT -> low thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-09-20 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-09-12 16:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "thu",
+        "target_ql_start": "2023-09-20 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.12,
+            4.15,
+            5.68
+        ],
+        "targets": [
+            -0.72,
+            -1.11,
+            -0.87
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                19.273,
+                "2023-09-22 00:30",
+                "2023-09-21 20:30",
+                "limit_take_profit"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-09-22 00:00",
+        "signal_time_ny": "2023-09-21 20:00",
+        "limit_price_history": [
+            19.509995122500005
+        ],
+        "limit_stop": 20.547,
+        "limit_take_profit": 19.273,
+        "limit_rr": 0.2285380981730301,
+        "limit_position_assets": 96.43156186601485,
+        "limit_position_usd": 1881.379301661007,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.2285380981730301,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week1 SMT -> low thu",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-09-20 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-09-12 16:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "thu",
+        "target_ql_start": "2023-09-20 22:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.12,
+            4.15,
+            5.68
+        ],
+        "targets": [
+            -0.72,
+            -1.11,
+            -0.87
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                19.273,
+                "2023-09-22 00:30",
+                "2023-09-21 20:30",
+                "limit_take_profit"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-09-22 00:00",
+        "signal_time_ny": "2023-09-21 20:00",
+        "limit_price_history": [
+            26568.893357775003
+        ],
+        "limit_stop": 27381.0,
+        "limit_take_profit": 26360.1,
+        "limit_rr": 0.25710091128297613,
+        "limit_position_assets": 0.12313653749465905,
+        "limit_position_usd": 3271.6015331412596,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.25710091128297613,
+        "entry_time": "2023-09-22 00:15",
+        "entry_time_ny": "2023-09-21 20:15",
+        "entry_price": 26568.893357775003,
+        "entry_order_type": "LIMIT",
+        "stop": 27381.0,
+        "take_profit": 26360.1,
+        "entry_rr": 0.25710091128297613,
+        "entry_position_assets": 0.12313653749465905,
+        "entry_position_usd": 3271.6015331412596,
+        "entry_position_fee": 0.5888882759654267,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week1 SMT -> low thu",
+        "entry_tos": [
+            [
+                "tyo",
+                28532.0,
+                7.5
+            ],
+            [
+                "two",
+                26825.0,
+                1.07
+            ],
+            [
+                "t90mo",
+                26568.9,
+                0.11
+            ],
+            [
+                "BTCUSDT",
+                26541.0,
+                0
+            ],
+            [
+                "tmo",
+                25893.0,
+                -2.44
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-09-20 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-09-12 16:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "thu",
+        "target_ql_start": "2023-09-20 22:00",
+        "best_pnl": 5.343307826680824,
+        "best_pnl_time": "2023-09-23 04:15",
+        "best_pnl_time_ny": "2023-09-23 00:15",
+        "best_pnl_price": 26525.5,
+        "best_pnl_tos": [
+            [
+                "tyo",
+                28532.0,
+                7.56
+            ],
+            [
+                "two",
+                26825.0,
+                1.13
+            ],
+            [
+                "BTCUSDT",
+                26525.5,
+                0
+            ],
+            [
+                "tdo",
+                26519.0,
+                -0.02
+            ],
+            [
+                "tmo",
+                25893.0,
+                -2.38
+            ]
+        ],
+        "best_entry_time": "2023-09-24 18:15",
+        "best_entry_time_ny": "2023-09-24 14:15",
+        "best_entry_price": 26739.9,
+        "best_entry_rr": 0.5924192793635997,
+        "best_entry_tos": [
+            [
+                "tyo",
+                28532.0,
+                6.7
+            ],
+            [
+                "two",
+                26825.0,
+                0.32
+            ],
+            [
+                "BTCUSDT",
+                26739.9,
+                0
+            ],
+            [
+                "t90mo",
+                26568.4,
+                -0.64
+            ],
+            [
+                "tdo",
+                26559.9,
+                -0.67
+            ],
+            [
+                "tmo",
+                25893.0,
+                -3.17
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.12,
+            4.15,
+            5.68
+        ],
+        "targets": [
+            -0.72,
+            -1.11,
+            -0.87
+        ],
+        "_in_trade_range": [
+            26552.6,
+            26739.9,
+            26392.5,
+            26517.0,
+            312628.345,
+            "2023-09-22 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                26524.7,
+                "2023-09-22 00:30",
+                "2023-09-21 20:30",
+                "someone_reached_target"
+            ],
+            [
+                50.0,
+                26360.1,
+                "2023-09-24 19:30",
+                "2023-09-24 15:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 15.575954092487034,
+        "close_position_fee": 1.4652115105719474
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-09-22 00:00",
+        "signal_time_ny": "2023-09-21 20:00",
+        "limit_price_history": [
+            1584.5396038650001
+        ],
+        "limit_stop": 1648.68,
+        "limit_take_profit": 1565.5,
+        "limit_rr": 0.2968426297980196,
+        "limit_position_assets": 1.5590798627049995,
+        "limit_position_usd": 2470.423788044479,
+        "limit_status": "FILLED",
+        "limit_chase_to_label": "t90mo",
+        "limit_chase_rr": 0.2968426297980196,
+        "entry_time": "2023-09-22 00:15",
+        "entry_time_ny": "2023-09-21 20:15",
+        "entry_price": 1584.5396038650001,
+        "entry_order_type": "LIMIT",
+        "stop": 1648.68,
+        "take_profit": 1565.5,
+        "entry_rr": 0.2968426297980196,
+        "entry_position_assets": 1.5590798627049995,
+        "entry_position_usd": 2470.423788044479,
+        "entry_position_fee": 0.44467628184800617,
+        "entry_reason": "chase_t90mo limit for 1d psp for high week1 SMT -> low thu",
+        "entry_tos": [
+            [
+                "tyo",
+                1825.6,
+                15.34
+            ],
+            [
+                "two",
+                1639.55,
+                3.58
+            ],
+            [
+                "tmo",
+                1623.29,
+                2.56
+            ],
+            [
+                "t90mo",
+                1584.54,
+                0.11
+            ],
+            [
+                "ETHUSDT",
+                1582.84,
+                0
+            ]
+        ],
+        "psp_key_used": "1d",
+        "psp_date": "2023-09-20 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-09-12 16:30",
+        "smt_flags": "Bes",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "thu",
+        "target_ql_start": "2023-09-20 22:00",
+        "best_pnl": 6.001839865312934,
+        "best_pnl_time": "2023-09-25 00:15",
+        "best_pnl_time_ny": "2023-09-24 20:15",
+        "best_pnl_price": 1580.69,
+        "best_pnl_tos": [
+            [
+                "tyo",
+                1825.6,
+                15.49
+            ],
+            [
+                "tmo",
+                1623.29,
+                2.7
+            ],
+            [
+                "ETHUSDT",
+                1580.69,
+                0
+            ],
+            [
+                "t90mo",
+                1577.45,
+                -0.2
+            ]
+        ],
+        "best_entry_time": "2023-09-22 08:30",
+        "best_entry_time_ny": "2023-09-22 04:30",
+        "best_entry_price": 1602.28,
+        "best_entry_rr": 0.7926724137931013,
+        "best_entry_tos": [
+            [
+                "tyo",
+                1825.6,
+                13.94
+            ],
+            [
+                "two",
+                1639.55,
+                2.33
+            ],
+            [
+                "tmo",
+                1623.29,
+                1.31
+            ],
+            [
+                "ETHUSDT",
+                1602.28,
+                0
+            ],
+            [
+                "tdo",
+                1593.92,
+                -0.52
+            ],
+            [
+                "t90mo",
+                1591.0,
+                -0.7
+            ]
+        ],
+        "deadline_close": "",
+        "psp_extremums": [
+            3.12,
+            4.15,
+            5.68
+        ],
+        "targets": [
+            -0.72,
+            -1.11,
+            -0.87
+        ],
+        "_in_trade_range": [
+            1583.0,
+            1602.28,
+            1568.28,
+            1578.1,
+            2559571.607,
+            "2023-09-22 00:00"
+        ],
+        "closes": [
+            [
+                50.0,
+                1581.7,
+                "2023-09-22 00:30",
+                "2023-09-21 20:30",
+                "someone_reached_target"
+            ],
+            [
+                50.0,
+                1565.5,
+                "2023-09-25 00:30",
+                "2023-09-24 20:30",
+                "take_profit"
+            ]
+        ],
+        "pnl_usd": 17.05571609189143,
+        "close_position_fee": 1.1040156323786643
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-12-01 00:00",
+        "signal_time_ny": "2023-11-30 19:00",
+        "limit_price_history": [
+            37938.73618498583
+        ],
+        "limit_stop": 38500.0,
+        "limit_take_profit": 36700.0,
+        "limit_rr": 2.207048008171618,
+        "limit_position_assets": 0.17816933378731173,
+        "limit_position_usd": 6759.519350811502,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 2.207048008171618,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week1 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-11-29 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-11-15 19:15",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-11-26 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.08,
+            1.23,
+            4.2
+        ],
+        "targets": [
+            -2.7,
+            -3.25,
+            -9.94
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                37619.9,
+                "2023-12-01 00:30",
+                "2023-11-30 19:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-12-01 00:00",
+        "signal_time_ny": "2023-11-30 19:00",
+        "limit_price_history": [
+            2058.479661828043
+        ],
+        "limit_stop": 2077.0,
+        "limit_take_profit": 1985.0,
+        "limit_rr": 3.9675118858954512,
+        "limit_position_assets": 5.3994694411907105,
+        "limit_position_usd": 11114.698029353105,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 3.9675118858954512,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week1 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-11-29 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-11-15 19:15",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-11-26 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.08,
+            1.23,
+            4.2
+        ],
+        "targets": [
+            -2.7,
+            -3.25,
+            -9.94
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                2046.8,
+                "2023-12-01 00:30",
+                "2023-11-30 19:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "DOWN",
+        "signal_time": "2023-12-01 00:00",
+        "signal_time_ny": "2023-11-30 19:00",
+        "limit_price_history": [
+            59.956678973137485
+        ],
+        "limit_stop": 61.799,
+        "limit_take_profit": 53.412,
+        "limit_rr": 3.552409638554213,
+        "limit_position_assets": 54.2793566061072,
+        "limit_position_usd": 3254.4099589008188,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 3.552409638554213,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for high week1 SMT -> low mon",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-11-29 00:00",
+        "smt_type": "high",
+        "smt_level": 3,
+        "smt_label": "week1 SMT",
+        "smt_first_appeared": "2023-11-15 19:15",
+        "smt_flags": "BeS",
+        "target_level": 4,
+        "target_direction": "low",
+        "target_label": "mon",
+        "target_ql_start": "2023-11-26 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            2.08,
+            1.23,
+            4.2
+        ],
+        "targets": [
+            -2.7,
+            -3.25,
+            -9.94
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                58.836,
+                "2023-12-01 00:30",
+                "2023-11-30 19:30",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "BTCUSDT",
+        "direction": "UP",
+        "signal_time": "2023-12-31 00:00",
+        "signal_time_ny": "2023-12-30 19:00",
+        "limit_price_history": [
+            41933.67280921807
+        ],
+        "limit_stop": 41283.2,
+        "limit_take_profit": 43171.9,
+        "limit_rr": 1.9035802469135885,
+        "limit_position_assets": 0.15373432768113532,
+        "limit_position_usd": 6446.644996525845,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 1.9035802469135885,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_low week3 SMT -> high fri",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-12-29 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-12-26 05:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "fri",
+        "target_ql_start": "2023-12-28 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.11,
+            -1.68,
+            -2.41
+        ],
+        "targets": [
+            2.37,
+            4.16,
+            8.07
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                42355.8,
+                "2023-12-31 07:15",
+                "2023-12-31 02:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "ETHUSDT",
+        "direction": "UP",
+        "signal_time": "2023-12-31 00:00",
+        "signal_time_ny": "2023-12-30 19:00",
+        "limit_price_history": [
+            2283.137312940141
+        ],
+        "limit_stop": 2254.72,
+        "limit_take_profit": 2388.74,
+        "limit_rr": 3.716139076284323,
+        "limit_position_assets": 3.518981552219327,
+        "limit_position_usd": 8034.31808541996,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 3.716139076284323,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_low week3 SMT -> high fri",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-12-29 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-12-26 05:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "fri",
+        "target_ql_start": "2023-12-28 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.11,
+            -1.68,
+            -2.41
+        ],
+        "targets": [
+            2.37,
+            4.16,
+            8.07
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                2291.35,
+                "2023-12-31 07:15",
+                "2023-12-31 02:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    },
+    {
+        "asset": "SOLUSDT",
+        "direction": "UP",
+        "signal_time": "2023-12-31 00:00",
+        "signal_time_ny": "2023-12-30 19:00",
+        "limit_price_history": [
+            101.28798803852003
+        ],
+        "limit_stop": 99.514,
+        "limit_take_profit": 110.198,
+        "limit_rr": 5.0225885225885,
+        "limit_position_assets": 56.37016587971253,
+        "limit_position_usd": 5709.620687353712,
+        "limit_status": "CANCELLED",
+        "limit_chase_to_label": null,
+        "limit_chase_rr": 5.0225885225885,
+        "entry_time": "",
+        "entry_time_ny": "",
+        "entry_price": 0,
+        "entry_order_type": "",
+        "stop": 0,
+        "take_profit": 0,
+        "entry_rr": 0,
+        "entry_position_assets": 0,
+        "entry_position_usd": 0,
+        "entry_position_fee": 0,
+        "entry_reason": "chase_median_rr limit for 1d psp for half_low week3 SMT -> high fri",
+        "entry_tos": [],
+        "psp_key_used": "1d",
+        "psp_date": "2023-12-29 00:00",
+        "smt_type": "half_low",
+        "smt_level": 3,
+        "smt_label": "week3 SMT",
+        "smt_first_appeared": "2023-12-26 05:30",
+        "smt_flags": "BEs",
+        "target_level": 4,
+        "target_direction": "high",
+        "target_label": "fri",
+        "target_ql_start": "2023-12-28 23:00",
+        "best_pnl": 0,
+        "best_pnl_time": "",
+        "best_pnl_time_ny": "",
+        "best_pnl_price": 0,
+        "best_pnl_tos": [],
+        "best_entry_time": "",
+        "best_entry_time_ny": "",
+        "best_entry_price": 0,
+        "best_entry_rr": 0,
+        "best_entry_tos": [],
+        "deadline_close": "",
+        "psp_extremums": [
+            -2.11,
+            -1.68,
+            -2.41
+        ],
+        "targets": [
+            2.37,
+            4.16,
+            8.07
+        ],
+        "_in_trade_range": null,
+        "closes": [
+            [
+                100,
+                103.028,
+                "2023-12-31 07:15",
+                "2023-12-31 02:15",
+                "limit_antagonist_smt"
+            ]
+        ],
+        "pnl_usd": 0,
+        "close_position_fee": 0
+    }
+]

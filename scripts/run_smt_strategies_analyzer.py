@@ -8,6 +8,39 @@ from stock_market_research_kit.candle_with_stat import perc_all_and_sma20, show_
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, smt_psp_trades_from_json
 from utils.date_utils import to_utc_datetime, quarters_by_time
 
+strategy01_2023_snapshot = "scripts/test_snapshots/strategy_01_2023_btc_eth_sol.json"
+strategy02_2023_snapshot = "scripts/test_snapshots/strategy_02_2023_btc_eth_sol.json"
+strategy03_2023_snapshot = "scripts/test_snapshots/strategy_03_2023_btc_eth_sol.json"
+strategy04_2023_snapshot = "scripts/test_snapshots/strategy_04_2023_btc_eth_sol.json"
+strategy05_2023_snapshot = "scripts/test_snapshots/strategy_05_2023_btc_eth_sol.json"
+strategy06_2023_snapshot = "scripts/test_snapshots/strategy_06_2023_btc_eth_sol.json"
+strategy07_2023_snapshot = "scripts/test_snapshots/strategy_07_2023_btc_eth_sol.json"
+strategy08_2023_snapshot = "scripts/test_snapshots/strategy_08_2023_btc_eth_sol.json"
+strategy09_2023_snapshot = "scripts/test_snapshots/strategy_09_2023_btc_eth_sol.json"
+strategy10_2023_snapshot = "scripts/test_snapshots/strategy_10_2023_btc_eth_sol.json"
+strategy11_2023_snapshot = "scripts/test_snapshots/strategy_11_2023_btc_eth_sol.json"
+strategy12_2023_snapshot = "scripts/test_snapshots/strategy_12_2023_btc_eth_sol.json"
+strategy13_2023_snapshot = "scripts/test_snapshots/strategy_13_2023_btc_eth_sol.json"
+strategy14_2023_snapshot = "scripts/test_snapshots/strategy_14_2023_btc_eth_sol.json"
+strategy15_2023_snapshot = "scripts/test_snapshots/strategy_15_2023_btc_eth_sol.json"
+strategy16_2023_snapshot = "scripts/test_snapshots/strategy_16_2023_btc_eth_sol.json"
+strategy17_2023_snapshot = "scripts/test_snapshots/strategy_17_2023_btc_eth_sol.json"
+strategy18_2023_snapshot = "scripts/test_snapshots/strategy_18_2023_btc_eth_sol.json"
+strategy19_2023_snapshot = "scripts/test_snapshots/strategy_19_2023_btc_eth_sol.json"
+strategy20_2023_snapshot = "scripts/test_snapshots/strategy_20_2023_btc_eth_sol.json"
+strategy21_2023_snapshot = "scripts/test_snapshots/strategy_21_2023_btc_eth_sol.json"
+strategy22_2023_snapshot = "scripts/test_snapshots/strategy_22_2023_btc_eth_sol.json"
+strategy23_2023_snapshot = "scripts/test_snapshots/strategy_23_2023_btc_eth_sol.json"
+strategy24_2023_snapshot = "scripts/test_snapshots/strategy_24_2023_btc_eth_sol.json"
+strategy25_2023_snapshot = "scripts/test_snapshots/strategy_25_2023_btc_eth_sol.json"
+strategy26_2023_snapshot = "scripts/test_snapshots/strategy_26_2023_btc_eth_sol.json"
+strategy27_2023_snapshot = "scripts/test_snapshots/strategy_27_2023_btc_eth_sol.json"
+strategy28_2023_snapshot = "scripts/test_snapshots/strategy_28_2023_btc_eth_sol.json"
+strategy29_2023_snapshot = "scripts/test_snapshots/strategy_29_2023_btc_eth_sol.json"
+strategy30_2023_snapshot = "scripts/test_snapshots/strategy_30_2023_btc_eth_sol.json"
+strategy31_2023_snapshot = "scripts/test_snapshots/strategy_31_2023_btc_eth_sol.json"
+strategy32_2023_snapshot = "scripts/test_snapshots/strategy_32_2023_btc_eth_sol.json"
+
 strategy01_2024_snapshot = "scripts/test_snapshots/strategy_01_2024_btc_eth_sol.json"
 strategy02_2024_snapshot = "scripts/test_snapshots/strategy_02_2024_btc_eth_sol.json"
 strategy03_2024_snapshot = "scripts/test_snapshots/strategy_03_2024_btc_eth_sol.json"
@@ -76,7 +109,9 @@ strategy32_2025_snapshot = "scripts/test_snapshots/strategy_32_2025_btc_eth_sol.
 
 
 def snap_dfs(snap_file: str) -> Tuple[
-    str, List[Tuple[str, pd.DataFrame]], List[Tuple[str, pd.DataFrame]]
+    str,
+    List[Tuple[str, pd.DataFrame]],
+    List[Tuple[str, pd.DataFrame]]
 ]:  # filename, tdfs, lodfs
     with open(snap_file, "r", encoding="utf-8") as f:
         # with open(strategy31_2024_snapshot, "r", encoding="utf-8") as f:
@@ -169,11 +204,12 @@ def merge_year_dfs(df_lists: List[List[Tuple[str, pd.DataFrame]]], query: str, o
     return result
 
 
-def basic_trade_stat(name, df) -> Tuple[str, int, float, float, float, float, float, float]:
+def basic_trade_stat(name, df) -> Tuple[str, int, float, float, float, float, float, float, float, float, float, float]:
     if len(df) == 0:
-        return name, 0, 0, 0, 0, 0, 0, 0
+        return name, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
     len_trades = (df["entry_time"] != "").sum()
+
     return (
         name,
         len_trades,
@@ -181,7 +217,11 @@ def basic_trade_stat(name, df) -> Tuple[str, int, float, float, float, float, fl
         round(df['cum_pnl_minus_fees'].iloc[-1], 2),
         round(df['cum_pnl_minus_fees'].iloc[-1] / len_trades, 2),
         round(df['cum_final_close_pnl'].iloc[-1], 2),
+        round(df['cum_pnl_if_full_tp_sl'].iloc[-1], 2),
+        round(df['cum_pnl_minus_fees_if_full_tp_sl'].iloc[-1], 2),
         round(df['cum_pre_final_closes_pnl'].iloc[-1], 2),
+        round(df['cum_pnl_if_full_preclose'].iloc[-1], 2),
+        round(df['cum_pnl_minus_fees_if_full_preclose'].iloc[-1], 2),
         round(len(df.query('won')) / len_trades, 3)
     )
 
@@ -198,12 +238,16 @@ def basic_stats(trade_dfs, lo_dfs):
     df_trade_stat = pd.DataFrame([basic_trade_stat(label, df) for label, df in trade_dfs], columns=[
         'name',
         'trades',
-        'cum_pnl',
-        'minus_fees',
-        'minus_fees_per_trade',
-        'cum_final_close_pnl',
-        'cum_pre_final_closes_pnl',
-        'win_rate',
+        'pnl',
+        'mf pnl',
+        'mf pnl/trade',
+        'tpsl close',
+        'full tpsl',
+        'mf full tpsl',
+        'pre',
+        'if full pre',
+        'mf full pre',
+        'win rate',
     ])
 
     df_lo_stat = pd.DataFrame([basic_lo_stat(label, df) for label, df in lo_dfs], columns=[
@@ -217,12 +261,30 @@ def basic_stats(trade_dfs, lo_dfs):
     return df_trade_stat, df_lo_stat
 
 
+def pnls(stat_df):
+    market_dict = stat_df.loc[stat_df["name"] == "market all"].iloc[0].to_dict()
+    limit_dict = stat_df.loc[stat_df["name"] == "limit all"].iloc[0].to_dict()
+    return {
+        'trades': market_dict["trades"] + limit_dict["trades"],
+        'pnl': round(market_dict["pnl"] + limit_dict["pnl"], 2),
+        'mf pnl': round(market_dict["mf pnl"] + limit_dict["mf pnl"], 2),
+        'mf pnl/trade': round(market_dict["mf pnl/trade"] + limit_dict["mf pnl/trade"], 2),
+        'tpsl close': round(market_dict["tpsl close"] + limit_dict["tpsl close"], 2),
+        'full tpsl': round(market_dict["full tpsl"] + limit_dict["full tpsl"], 2),
+        'mf full tpsl': round(market_dict["mf full tpsl"] + limit_dict["mf full tpsl"], 2),
+        'pre': round(market_dict["pre"] + limit_dict["pre"], 2),
+        'if full pre': round(market_dict["if full pre"] + limit_dict["if full pre"], 2),
+        'mf full pre': round(market_dict["mf full pre"] + limit_dict["mf full pre"], 2),
+        'win rate': round(market_dict["win rate"] + limit_dict["win rate"], 2),
+    }
+
+
 def group_display(trade_dfs, fields: List[str], display_good: bool, show_perc: str):
     def to_agg_df(label, df):
         if df.empty:
             return pd.DataFrame()
 
-        agg_pnl = df.groupby(fields)["pnl_usd"].agg(["mean", "median", "count"])
+        agg_pnl = df.groupby(fields)["pnl_minus_fees"].agg(["mean", "median", "count"])
         agg_wr = df.groupby(fields)["won"].agg(["mean", "median", "count"])
 
         if display_good:
@@ -285,6 +347,10 @@ def with_cum_and_stagnation(df: pd.DataFrame) -> pd.DataFrame:
     df["cum_pnl_minus_fees"] = df["pnl_minus_fees"].cumsum()
     df["cum_final_close_pnl"] = df["final_close_pnl"].cumsum()
     df["cum_pre_final_closes_pnl"] = df["pre_final_closes_sum_pnl"].cumsum()
+    df["cum_pnl_if_full_preclose"] = df["pnl_if_full_preclose"].cumsum()
+    df["cum_pnl_minus_fees_if_full_preclose"] = df["pnl_minus_fees_if_full_preclose"].cumsum()
+    df["cum_pnl_if_full_tp_sl"] = df["pnl_if_full_tp_sl"].cumsum()
+    df["cum_pnl_minus_fees_if_full_tp_sl"] = df["pnl_minus_fees_if_full_tp_sl"].cumsum()
     # === шаг 1. считаем 3-дневные окна ===
     df["entry_date"] = pd.to_datetime(df["entry_time"], errors="coerce")
     min_date = df["entry_date"].min().normalize()
@@ -383,8 +449,22 @@ def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
         'entry_position_fee',
         'close_position_fee'
     ])
+    if len(trades) == 0:
+        return df
     df["won"] = df["pnl_usd"] > 0
+
     df['pnl_minus_fees'] = df['pnl_usd'] - df['entry_position_fee'] - df['close_position_fee']
+    df['final_close_percent'] = df.index.map(lambda i: trades[i].closes[-1][0])
+    df['final_close_pnl'] = df.index.map(lambda i: trades[i].pnls_per_closes()[-1])
+    df['pre_final_closes_sum_pnl'] = df.index.map(lambda i: sum(trades[i].pnls_per_closes()[0:-1]))
+    df['pnl_if_full_preclose'] = df.index.map(lambda i: trades[i].pnl_if_full_preclose()[0])
+    df['pnl_minus_fees_if_full_preclose'] = df.index.map(
+        lambda i: trades[i].pnl_if_full_preclose()[0] - trades[i].pnl_if_full_preclose()[1] - trades[
+            i].entry_position_fee)
+    df['pnl_if_full_tp_sl'] = df.index.map(lambda i: trades[i].pnl_if_full_tp_sl()[0])
+    df['pnl_minus_fees_if_full_tp_sl'] = df.index.map(
+        lambda i: trades[i].pnl_if_full_tp_sl()[0] - trades[i].pnl_if_full_tp_sl()[1] - trades[i].entry_position_fee)
+
     df["final_close_time"] = df.index.map(lambda i: trades[i].closes[-1][2])
     df['minutes_in_market'] = df.apply(
         lambda row: (to_utc_datetime(row['final_close_time']) - to_utc_datetime(
@@ -396,9 +476,6 @@ def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
             row['signal_time'])).total_seconds() / 60,
         axis=1
     )
-    df['final_close_percent'] = df.index.map(lambda i: trades[i].closes[-1][0])
-    df['final_close_pnl'] = df.index.map(lambda i: trades[i].pnls_per_closes()[-1])
-    df['pre_final_closes_sum_pnl'] = df.index.map(lambda i: sum(trades[i].pnls_per_closes()[0:-1]))
     df['best_entry_minutes_in_market'] = df.apply(
         lambda row: (to_utc_datetime(row['final_close_time']) - to_utc_datetime(
             row['best_entry_time'])).total_seconds() / 60,
@@ -549,8 +626,8 @@ def to_trade_dfs(trades: List[SmtPspTrade]) -> Tuple[pd.DataFrame, pd.DataFrame,
 
 
 def analyze():
-    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(strategy31_2024_snapshot)
-    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(strategy31_2025_snapshot)
+    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(strategy32_2024_snapshot)
+    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(strategy32_2025_snapshot)
 
     trade_stat_2024, lo_stat_2024 = basic_stats(trade_dfs_2024, lo_dfs_2024)
     trade_stat_2025, lo_stat_2025 = basic_stats(trade_dfs_2025, lo_dfs_2025)

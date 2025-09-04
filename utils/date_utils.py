@@ -39,7 +39,7 @@ def end_of_day(date: datetime) -> datetime:
 
 
 # it returns start_date, end_date and all days with 0:00 in between
-def get_all_days_between(start_date: datetime, end_date: datetime):
+def get_all_days_between(start_date: datetime, end_date: datetime) -> List[datetime]:
     if start_date >= end_date:
         return []
     days = [start_date]
