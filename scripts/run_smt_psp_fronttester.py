@@ -44,8 +44,8 @@ def fronttest(
         triad.a2.plus_15m(a2_candle)
         triad.a3.plus_15m(a3_candle)
         _plus_15m_time_took = time.perf_counter() - _plus_15m_time
-        if _plus_15m_time_took > 0.02:
-            log_warn_ny(f"plus_15m took {_plus_15m_time_took:.6f} seconds")
+        # if _plus_15m_time_took > 0.02:
+        #     log_warn_ny(f"plus_15m took {_plus_15m_time_took:.6f} seconds")
 
         # _smt_psp_targets_time = time.perf_counter()
 
@@ -97,9 +97,14 @@ def fronttest(
             )
             for t in s_closed_trades:
                 if t.limit_status == "CANCELLED":
-                    _tc_pnl[i] = (_tc_pnl[i][0], _tc_pnl[i][1] + 1, _tc_pnl[i][2], _tc_pnl[i][3] + t.pnl_usd)
+                    _tc_pnl[i] = (_tc_pnl[i][0], _tc_pnl[i][1] + 1, _tc_pnl[i][2], _tc_pnl[i][3])
                 else:
-                    _tc_pnl[i] = (_tc_pnl[i][0], _tc_pnl[i][1], _tc_pnl[i][2] + 1, _tc_pnl[i][3] + t.pnl_usd)
+                    _tc_pnl[i] = (
+                        _tc_pnl[i][0],
+                        _tc_pnl[i][1],
+                        _tc_pnl[i][2] + 1,
+                        _tc_pnl[i][3] + t.pnl_usd - t.entry_position_fee - t.close_position_fee
+                    )
             closed_trades[s.name].extend(s_closed_trades)
 
             if to_utc_datetime(triad.a1.snapshot_date_readable) >= to_utc_datetime(stop_after):

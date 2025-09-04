@@ -1,6 +1,6 @@
 import time
 from datetime import timedelta
-from typing import Tuple
+from typing import Tuple, Dict, List
 
 from scripts.run_smt_psp_fronttester import fronttest
 from stock_market_research_kit.asset import Candles15mGenerator, TriadCandles15mGenerator
@@ -10,8 +10,9 @@ from stock_market_research_kit.smt_psp_strategy import strategy01, \
     strategy04, strategy06, \
     strategy05, \
     strategy07, strategy17, strategy19, strategy21, strategy23, strategy25, strategy27, strategy29, strategy31, \
-    strategy09, strategy11, strategy13, strategy15, strategy30, strategy32, strategy10
-from stock_market_research_kit.smt_psp_trade import json_from_smt_psp_trades
+    strategy09, strategy11, strategy13, strategy15, strategy30, strategy32, strategy10, strategy12, strategy14, \
+    strategy16, strategy18
+from stock_market_research_kit.smt_psp_trade import json_from_smt_psp_trades, SmtPspTrade
 from stock_market_research_kit.triad import new_triad
 from utils.date_utils import log_warn_ny, to_utc_datetime, now_utc_datetime
 
@@ -152,9 +153,13 @@ def backtest_strategy_full_2024():
             strategy09,
             strategy10,
             strategy11,
+            strategy12,
             strategy13,
+            strategy14,
             strategy15,
+            strategy16,
             strategy17,
+            strategy18,
             strategy19,
             strategy21,
             strategy23,
@@ -179,9 +184,13 @@ def backtest_strategy_full_2024():
     strategy09_trades = closed_trades[strategy09.name]
     strategy10_trades = closed_trades[strategy10.name]
     strategy11_trades = closed_trades[strategy11.name]
+    strategy12_trades = closed_trades[strategy12.name]
     strategy13_trades = closed_trades[strategy13.name]
+    strategy14_trades = closed_trades[strategy14.name]
     strategy15_trades = closed_trades[strategy15.name]
+    strategy16_trades = closed_trades[strategy16.name]
     strategy17_trades = closed_trades[strategy17.name]
+    strategy18_trades = closed_trades[strategy18.name]
     strategy19_trades = closed_trades[strategy19.name]
     strategy21_trades = closed_trades[strategy21.name]
     strategy23_trades = closed_trades[strategy23.name]
@@ -212,12 +221,20 @@ def backtest_strategy_full_2024():
         f.write(json_from_smt_psp_trades(strategy10_trades))
     with open(strategy11_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy11_trades))
+    with open(strategy12_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy12_trades))
     with open(strategy13_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy13_trades))
+    with open(strategy14_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy14_trades))
     with open(strategy15_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy15_trades))
+    with open(strategy16_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy16_trades))
     with open(strategy17_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy17_trades))
+    with open(strategy18_2024_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy18_trades))
     with open(strategy19_2024_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy19_trades))
     with open(strategy21_2024_snapshot, "w", encoding="utf-8") as f:
@@ -262,9 +279,13 @@ def backtest_strategy_full_2025():
             strategy09,
             strategy10,
             strategy11,
+            strategy12,
             strategy13,
+            strategy14,
             strategy15,
+            strategy16,
             strategy17,
+            strategy18,
             strategy19,
             strategy21,
             strategy23,
@@ -289,9 +310,13 @@ def backtest_strategy_full_2025():
     strategy09_trades = closed_trades[strategy09.name]
     strategy10_trades = closed_trades[strategy10.name]
     strategy11_trades = closed_trades[strategy11.name]
+    strategy12_trades = closed_trades[strategy12.name]
     strategy13_trades = closed_trades[strategy13.name]
+    strategy14_trades = closed_trades[strategy14.name]
     strategy15_trades = closed_trades[strategy15.name]
+    strategy16_trades = closed_trades[strategy16.name]
     strategy17_trades = closed_trades[strategy17.name]
+    strategy18_trades = closed_trades[strategy18.name]
     strategy19_trades = closed_trades[strategy19.name]
     strategy21_trades = closed_trades[strategy21.name]
     strategy23_trades = closed_trades[strategy23.name]
@@ -322,12 +347,20 @@ def backtest_strategy_full_2025():
         f.write(json_from_smt_psp_trades(strategy10_trades))
     with open(strategy11_2025_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy11_trades))
+    with open(strategy12_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy12_trades))
     with open(strategy13_2025_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy13_trades))
+    with open(strategy14_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy14_trades))
     with open(strategy15_2025_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy15_trades))
+    with open(strategy16_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy16_trades))
     with open(strategy17_2025_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy17_trades))
+    with open(strategy18_2025_snapshot, "w", encoding="utf-8") as f:
+        f.write(json_from_smt_psp_trades(strategy18_trades))
     with open(strategy19_2025_snapshot, "w", encoding="utf-8") as f:
         f.write(json_from_smt_psp_trades(strategy19_trades))
     with open(strategy21_2025_snapshot, "w", encoding="utf-8") as f:
@@ -348,10 +381,58 @@ def backtest_strategy_full_2025():
         f.write(json_from_smt_psp_trades(strategy32_trades))
 
 
+def light_test_2025(start_date: str, end_date: str) -> Dict[str, List[SmtPspTrade]]:
+    symbols = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
+    triad = new_triad(
+        symbols,
+        (
+            candles_generator_reverse(symbols[0], 2024, 2025, start_date),
+            candles_generator_reverse(symbols[1], 2024, 2025, start_date),
+            candles_generator_reverse(symbols[2], 2024, 2025, start_date),
+        )
+    )
+
+    return fronttest(
+        triad,
+        [
+            # strategy01,
+            # strategy02,
+            # strategy03,
+            # strategy04,
+            # strategy05,
+            # strategy06,
+            # strategy07,
+            # strategy09,
+            strategy10,
+            # strategy11,
+            strategy12,
+            # strategy13,
+            strategy14,
+            # strategy15,
+            strategy16,
+            # strategy17,
+            strategy18,
+            # strategy19,
+            # strategy21,
+            # strategy23,
+            # strategy25,
+            # strategy27,
+            # strategy29,
+            strategy30,
+            # strategy31,
+            strategy32,
+        ],
+        candles_generator(symbols, 2025, start_date, end_date),
+        end_date
+    )
+
+
 if __name__ == "__main__":
     try:
         # backtest_strategy_full_2024()
-        backtest_strategy_full_2025()
+        # backtest_strategy_full_2025()
+        results = light_test_2025('2025-09-02 00:00', '2025-09-04 17:30')
+        print('results!')
 
     except KeyboardInterrupt:
         print(f"KeyboardInterrupt, exiting ...")
