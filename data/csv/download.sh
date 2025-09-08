@@ -5,7 +5,12 @@ YEAR="2022"
 #SYMBOLS=("1INCHUSDT" "AAVEUSDT" "AVAXUSDT" "BTCUSDT" "COMPUSDT" "CRVUSDT" "ETHUSDT" "LINKUSDT" "LTCUSDT" "SOLUSDT" "SUSHIUSDT" "UNIUSDT" "XLMUSDT" "XMRUSDT")
 SYMBOLS=("ETHUSDT" "SOLUSDT")
 
+#https://data.binance.vision/?prefix=data/futures/um/monthly/klines/
+#https://data.binance.vision/?prefix=data/spot/daily/klines
 #https://data.binance.vision/data/futures/um/monthly/klines/BTCUSDT/15m/BTCUSDT-15m-2025-02.zip
+#https://data.binance.vision/?prefix=data/spot/daily/klines/ETHBTC/15m/
+#https://data.binance.vision/?prefix=data/futures/um/monthly/klines/BTCDOMUSDT/15m/
+
 
 for SYMBOL in "${SYMBOLS[@]}"; do
   BASE_URL="https://data.binance.vision/data/futures/um/monthly/klines/${SYMBOL}/${PERIOD}"

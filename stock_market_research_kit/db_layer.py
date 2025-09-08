@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import timedelta
 from typing import List, Optional
 
 from scripts.setup_db import connect_to_db
@@ -6,7 +7,7 @@ from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.day import Day, json_from_day, day_from_json
 from stock_market_research_kit.session_trade import SessionTrade, json_from_session_trade, json_from_session_trades, \
     session_trades_from_json
-from utils.date_utils import log_warn_ny
+from utils.date_utils import log_warn_ny, years_between, to_utc_datetime, to_date_str
 
 
 def upsert_profiles_to_db(strategy_name: str, smb: str, profiles: List[dict]):
@@ -109,10 +110,18 @@ def select_full_days_candles_15m(year, symbol) -> List[InnerCandle]:
     return [(x[0], x[1], x[2], x[3], x[4], x[5]) for x in rows_15m]
 
 
+def select_multiyear_candles_15m(symbol: str, from_date: str, to_date: str) -> List[InnerCandle]:
+    res = []
+    ranges_tuple = years_between(from_date, to_date)
+    for year, from_, to_ in ranges_tuple:
+        res.extend(select_candles_15m(year, symbol, from_, to_))
+
+    return res
+
+
 def select_candles_15m(year: int, symbol: str, from_date: str, to_date: str) -> List[InnerCandle]:
     conn = connect_to_db(year)
     c = conn.cursor()
-    # TODO will only work with 15m candles because of 85500!!
     c.execute("""
     SELECT open, high, low, close, volume, date_ts FROM raw_candles
     WHERE symbol = ? AND period = ?
@@ -134,7 +143,30 @@ def raw_candle_to_db_format(symbol, period, inner_candle):
             inner_candle[0], inner_candle[1], inner_candle[2], inner_candle[3], inner_candle[4])
 
 
-def update_stock_data(year: int, inner_candles, symbol, period):
+def update_multiyear_stock_data(inner_candles: List[InnerCandle], symbol: str, period: str):
+    year_groups: List[List[InnerCandle]] = []
+    ranges_tuple = years_between(
+        inner_candles[0][5],
+        to_date_str(to_utc_datetime(inner_candles[-1][5]) + timedelta(minutes=14))
+    )
+    last_i = 0
+    for year, from_, to_ in ranges_tuple:
+        year_groups.append([])
+        while True:
+            if last_i == len(inner_candles):
+                break
+            c = inner_candles[last_i]
+            if to_utc_datetime(from_) <= to_utc_datetime(c[5]) < to_utc_datetime(to_):
+                year_groups[-1].append(c)
+                last_i += 1
+            else:
+                break
+
+    for i, yg in enumerate(year_groups):
+        update_stock_data(ranges_tuple[i][0], yg, symbol, period)
+
+
+def update_stock_data(year: int, inner_candles: List[InnerCandle], symbol: str, period: str):
     conn = connect_to_db(year)
     rows = [raw_candle_to_db_format(symbol, period, candle) for candle in inner_candles]
 

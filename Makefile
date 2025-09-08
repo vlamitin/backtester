@@ -26,3 +26,9 @@ recalculate_db:
 .SILENT: show_cycles
 show_cycles:
 	pydeps ./scripts/run_sessions_backtester.py --show-cycles
+
+
+.PHONY: show_cycles
+.SILENT: show_cycles
+update_total:
+	mv ~/Downloads/CRYPTOCAP_TOTAL3* ./data/csv/ && python -c "from scripts.run_series_raw_loader import load_total3_csv; load_total3_csv()"
