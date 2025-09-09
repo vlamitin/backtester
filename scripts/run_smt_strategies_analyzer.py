@@ -4,119 +4,25 @@ import numpy as np
 import pandas as pd
 from IPython.core.display_functions import display
 
-from stock_market_research_kit.candle_with_stat import perc_all_and_sma20, show_corr_charts
+from stock_market_research_kit.candle_with_stat import perc_all_and_sma20
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, smt_psp_trades_from_json
 from utils.date_utils import to_utc_datetime, quarters_by_time
 
-strategy01_2023_snapshot = "scripts/test_snapshots/strategy_01_2023_btc_eth_sol.json"
-strategy02_2023_snapshot = "scripts/test_snapshots/strategy_02_2023_btc_eth_sol.json"
-strategy03_2023_snapshot = "scripts/test_snapshots/strategy_03_2023_btc_eth_sol.json"
-strategy04_2023_snapshot = "scripts/test_snapshots/strategy_04_2023_btc_eth_sol.json"
-strategy05_2023_snapshot = "scripts/test_snapshots/strategy_05_2023_btc_eth_sol.json"
-strategy06_2023_snapshot = "scripts/test_snapshots/strategy_06_2023_btc_eth_sol.json"
-strategy07_2023_snapshot = "scripts/test_snapshots/strategy_07_2023_btc_eth_sol.json"
-strategy08_2023_snapshot = "scripts/test_snapshots/strategy_08_2023_btc_eth_sol.json"
-strategy09_2023_snapshot = "scripts/test_snapshots/strategy_09_2023_btc_eth_sol.json"
-strategy10_2023_snapshot = "scripts/test_snapshots/strategy_10_2023_btc_eth_sol.json"
-strategy11_2023_snapshot = "scripts/test_snapshots/strategy_11_2023_btc_eth_sol.json"
-strategy12_2023_snapshot = "scripts/test_snapshots/strategy_12_2023_btc_eth_sol.json"
-strategy13_2023_snapshot = "scripts/test_snapshots/strategy_13_2023_btc_eth_sol.json"
-strategy14_2023_snapshot = "scripts/test_snapshots/strategy_14_2023_btc_eth_sol.json"
-strategy15_2023_snapshot = "scripts/test_snapshots/strategy_15_2023_btc_eth_sol.json"
-strategy16_2023_snapshot = "scripts/test_snapshots/strategy_16_2023_btc_eth_sol.json"
-strategy17_2023_snapshot = "scripts/test_snapshots/strategy_17_2023_btc_eth_sol.json"
-strategy18_2023_snapshot = "scripts/test_snapshots/strategy_18_2023_btc_eth_sol.json"
-strategy19_2023_snapshot = "scripts/test_snapshots/strategy_19_2023_btc_eth_sol.json"
-strategy20_2023_snapshot = "scripts/test_snapshots/strategy_20_2023_btc_eth_sol.json"
-strategy21_2023_snapshot = "scripts/test_snapshots/strategy_21_2023_btc_eth_sol.json"
-strategy22_2023_snapshot = "scripts/test_snapshots/strategy_22_2023_btc_eth_sol.json"
-strategy23_2023_snapshot = "scripts/test_snapshots/strategy_23_2023_btc_eth_sol.json"
-strategy24_2023_snapshot = "scripts/test_snapshots/strategy_24_2023_btc_eth_sol.json"
-strategy25_2023_snapshot = "scripts/test_snapshots/strategy_25_2023_btc_eth_sol.json"
-strategy26_2023_snapshot = "scripts/test_snapshots/strategy_26_2023_btc_eth_sol.json"
-strategy27_2023_snapshot = "scripts/test_snapshots/strategy_27_2023_btc_eth_sol.json"
-strategy28_2023_snapshot = "scripts/test_snapshots/strategy_28_2023_btc_eth_sol.json"
-strategy29_2023_snapshot = "scripts/test_snapshots/strategy_29_2023_btc_eth_sol.json"
-strategy30_2023_snapshot = "scripts/test_snapshots/strategy_30_2023_btc_eth_sol.json"
-strategy31_2023_snapshot = "scripts/test_snapshots/strategy_31_2023_btc_eth_sol.json"
-strategy32_2023_snapshot = "scripts/test_snapshots/strategy_32_2023_btc_eth_sol.json"
 
-strategy01_2024_snapshot = "scripts/test_snapshots/strategy_01_2024_btc_eth_sol.json"
-strategy02_2024_snapshot = "scripts/test_snapshots/strategy_02_2024_btc_eth_sol.json"
-strategy03_2024_snapshot = "scripts/test_snapshots/strategy_03_2024_btc_eth_sol.json"
-strategy04_2024_snapshot = "scripts/test_snapshots/strategy_04_2024_btc_eth_sol.json"
-strategy05_2024_snapshot = "scripts/test_snapshots/strategy_05_2024_btc_eth_sol.json"
-strategy06_2024_snapshot = "scripts/test_snapshots/strategy_06_2024_btc_eth_sol.json"
-strategy07_2024_snapshot = "scripts/test_snapshots/strategy_07_2024_btc_eth_sol.json"
-strategy08_2024_snapshot = "scripts/test_snapshots/strategy_08_2024_btc_eth_sol.json"
-strategy09_2024_snapshot = "scripts/test_snapshots/strategy_09_2024_btc_eth_sol.json"
-strategy10_2024_snapshot = "scripts/test_snapshots/strategy_10_2024_btc_eth_sol.json"
-strategy11_2024_snapshot = "scripts/test_snapshots/strategy_11_2024_btc_eth_sol.json"
-strategy12_2024_snapshot = "scripts/test_snapshots/strategy_12_2024_btc_eth_sol.json"
-strategy13_2024_snapshot = "scripts/test_snapshots/strategy_13_2024_btc_eth_sol.json"
-strategy14_2024_snapshot = "scripts/test_snapshots/strategy_14_2024_btc_eth_sol.json"
-strategy15_2024_snapshot = "scripts/test_snapshots/strategy_15_2024_btc_eth_sol.json"
-strategy16_2024_snapshot = "scripts/test_snapshots/strategy_16_2024_btc_eth_sol.json"
-strategy17_2024_snapshot = "scripts/test_snapshots/strategy_17_2024_btc_eth_sol.json"
-strategy18_2024_snapshot = "scripts/test_snapshots/strategy_18_2024_btc_eth_sol.json"
-strategy19_2024_snapshot = "scripts/test_snapshots/strategy_19_2024_btc_eth_sol.json"
-strategy20_2024_snapshot = "scripts/test_snapshots/strategy_20_2024_btc_eth_sol.json"
-strategy21_2024_snapshot = "scripts/test_snapshots/strategy_21_2024_btc_eth_sol.json"
-strategy22_2024_snapshot = "scripts/test_snapshots/strategy_22_2024_btc_eth_sol.json"
-strategy23_2024_snapshot = "scripts/test_snapshots/strategy_23_2024_btc_eth_sol.json"
-strategy24_2024_snapshot = "scripts/test_snapshots/strategy_24_2024_btc_eth_sol.json"
-strategy25_2024_snapshot = "scripts/test_snapshots/strategy_25_2024_btc_eth_sol.json"
-strategy26_2024_snapshot = "scripts/test_snapshots/strategy_26_2024_btc_eth_sol.json"
-strategy27_2024_snapshot = "scripts/test_snapshots/strategy_27_2024_btc_eth_sol.json"
-strategy28_2024_snapshot = "scripts/test_snapshots/strategy_28_2024_btc_eth_sol.json"
-strategy29_2024_snapshot = "scripts/test_snapshots/strategy_29_2024_btc_eth_sol.json"
-strategy30_2024_snapshot = "scripts/test_snapshots/strategy_30_2024_btc_eth_sol.json"
-strategy31_2024_snapshot = "scripts/test_snapshots/strategy_31_2024_btc_eth_sol.json"
-strategy32_2024_snapshot = "scripts/test_snapshots/strategy_32_2024_btc_eth_sol.json"
-
-strategy01_2025_snapshot = "scripts/test_snapshots/strategy_01_2025_btc_eth_sol.json"
-strategy02_2025_snapshot = "scripts/test_snapshots/strategy_02_2025_btc_eth_sol.json"
-strategy03_2025_snapshot = "scripts/test_snapshots/strategy_03_2025_btc_eth_sol.json"
-strategy04_2025_snapshot = "scripts/test_snapshots/strategy_04_2025_btc_eth_sol.json"
-strategy05_2025_snapshot = "scripts/test_snapshots/strategy_05_2025_btc_eth_sol.json"
-strategy06_2025_snapshot = "scripts/test_snapshots/strategy_06_2025_btc_eth_sol.json"
-strategy07_2025_snapshot = "scripts/test_snapshots/strategy_07_2025_btc_eth_sol.json"
-strategy08_2025_snapshot = "scripts/test_snapshots/strategy_08_2025_btc_eth_sol.json"
-strategy09_2025_snapshot = "scripts/test_snapshots/strategy_09_2025_btc_eth_sol.json"
-strategy10_2025_snapshot = "scripts/test_snapshots/strategy_10_2025_btc_eth_sol.json"
-strategy11_2025_snapshot = "scripts/test_snapshots/strategy_11_2025_btc_eth_sol.json"
-strategy12_2025_snapshot = "scripts/test_snapshots/strategy_12_2025_btc_eth_sol.json"
-strategy13_2025_snapshot = "scripts/test_snapshots/strategy_13_2025_btc_eth_sol.json"
-strategy14_2025_snapshot = "scripts/test_snapshots/strategy_14_2025_btc_eth_sol.json"
-strategy15_2025_snapshot = "scripts/test_snapshots/strategy_15_2025_btc_eth_sol.json"
-strategy16_2025_snapshot = "scripts/test_snapshots/strategy_16_2025_btc_eth_sol.json"
-strategy17_2025_snapshot = "scripts/test_snapshots/strategy_17_2025_btc_eth_sol.json"
-strategy18_2025_snapshot = "scripts/test_snapshots/strategy_18_2025_btc_eth_sol.json"
-strategy19_2025_snapshot = "scripts/test_snapshots/strategy_19_2025_btc_eth_sol.json"
-strategy20_2025_snapshot = "scripts/test_snapshots/strategy_20_2025_btc_eth_sol.json"
-strategy21_2025_snapshot = "scripts/test_snapshots/strategy_21_2025_btc_eth_sol.json"
-strategy22_2025_snapshot = "scripts/test_snapshots/strategy_22_2025_btc_eth_sol.json"
-strategy23_2025_snapshot = "scripts/test_snapshots/strategy_23_2025_btc_eth_sol.json"
-strategy24_2025_snapshot = "scripts/test_snapshots/strategy_24_2025_btc_eth_sol.json"
-strategy25_2025_snapshot = "scripts/test_snapshots/strategy_25_2025_btc_eth_sol.json"
-strategy26_2025_snapshot = "scripts/test_snapshots/strategy_26_2025_btc_eth_sol.json"
-strategy27_2025_snapshot = "scripts/test_snapshots/strategy_27_2025_btc_eth_sol.json"
-strategy28_2025_snapshot = "scripts/test_snapshots/strategy_28_2025_btc_eth_sol.json"
-strategy29_2025_snapshot = "scripts/test_snapshots/strategy_29_2025_btc_eth_sol.json"
-strategy30_2025_snapshot = "scripts/test_snapshots/strategy_30_2025_btc_eth_sol.json"
-strategy31_2025_snapshot = "scripts/test_snapshots/strategy_31_2025_btc_eth_sol.json"
-strategy32_2025_snapshot = "scripts/test_snapshots/strategy_32_2025_btc_eth_sol.json"
+def snapshot_file(strategy: str, year: int, symbols: List[str]) -> str:
+    smb = '_'.join([x.replace('USDT', '').lower() for x in symbols])
+    return f"scripts/test_snapshots/strategy_{strategy}_{year}_{smb}.json"
 
 
-def snap_dfs(snap_file: str) -> Tuple[
+def snap_dfs(snap_file: str, symbols: List[str]) -> Tuple[
     str,
     List[Tuple[str, pd.DataFrame]],
-    List[Tuple[str, pd.DataFrame]]
+    List[Tuple[str, pd.DataFrame]],
 ]:  # filename, tdfs, lodfs
     with open(snap_file, "r", encoding="utf-8") as f:
         # with open(strategy31_2024_snapshot, "r", encoding="utf-8") as f:
         json_str = f.read()
-    df_m, df_l, df_lo = to_trade_dfs(smt_psp_trades_from_json(json_str))
+    df_m, df_l, df_lo = to_trade_dfs(smt_psp_trades_from_json(json_str), symbols)
 
     df_l_chase_median_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_median_rr"'))
     df_l_chase_mean_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_mean_rr"'))
@@ -437,7 +343,7 @@ def item_shifted(smb: str, arr1: List[Tuple[str, float, float]], arr2: List[Tupl
     return neighbors1 != neighbors2
 
 
-def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
+def _to_trade_df(trades: List[SmtPspTrade], symbols: List[str]) -> pd.DataFrame:
     df = pd.DataFrame(trades, columns=[
         'signal_time', 'signal_time_ny', 'entry_time', 'entry_time_ny', 'asset', 'pnl_usd', 'direction', 'entry_rr',
         'entry_price', 'stop', 'take_profit', 'entry_position_usd',
@@ -481,11 +387,9 @@ def _to_trade_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
             row['best_entry_time'])).total_seconds() / 60,
         axis=1
     )
-    asset_to_index = {
-        'BTCUSDT': 0,
-        'ETHUSDT': 1,
-        'SOLUSDT': 2,
-    }
+    asset_to_index = {}
+    for i, s in enumerate(symbols):
+        asset_to_index[s] = i
     df['percents_till_stop'] = df.index.map(lambda i: abs(trades[i].psp_extremums[asset_to_index[trades[i].asset]]))
     df['percents_till_stop_perc'], _ = perc_all_and_sma20(df['percents_till_stop'])
     df['percents_till_take'] = df.index.map(lambda i: abs(trades[i].targets[asset_to_index[trades[i].asset]]))
@@ -598,13 +502,13 @@ def _to_lo_df(trades: List[SmtPspTrade]) -> pd.DataFrame:
 
 
 #  market_trades, limit_trades, limit_orders (filled and cancelled)
-def to_trade_dfs(trades: List[SmtPspTrade]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def to_trade_dfs(trades: List[SmtPspTrade], symbols: List[str]) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     m_trades = [x for x in trades if x.entry_order_type == 'MARKET']
     l_trades = [x for x in trades if x.entry_order_type == 'LIMIT']
     l_orders = [x for x in trades if x.limit_status]
-    df_m = _to_trade_df(m_trades)
+    df_m = _to_trade_df(m_trades, symbols)
 
-    df_l = _to_trade_df(l_trades)
+    df_l = _to_trade_df(l_trades, symbols)
     df_l['limit_reason'] = df_l.index.map(lambda i: l_trades[i].entry_reason.split()[0])
 
     def with_market_trade_columns(row):
@@ -626,8 +530,9 @@ def to_trade_dfs(trades: List[SmtPspTrade]) -> Tuple[pd.DataFrame, pd.DataFrame,
 
 
 def analyze():
-    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(strategy32_2024_snapshot)
-    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(strategy32_2025_snapshot)
+    symbols = ['BTCUSDT', 'ETHUSDT', 'TOTAL3']
+    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(snapshot_file('32', 2024, symbols), symbols)
+    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(snapshot_file('32', 2025, symbols), symbols)
 
     trade_stat_2024, lo_stat_2024 = basic_stats(trade_dfs_2024, lo_dfs_2024)
     trade_stat_2025, lo_stat_2025 = basic_stats(trade_dfs_2025, lo_dfs_2025)
