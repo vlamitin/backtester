@@ -661,11 +661,11 @@ def is_some_same_day(checked_time_string: str, current_day_string: str, from_ny:
 
 
 def to_utc_datetime(date_str: str) -> datetime:
-    return datetime.strptime(date_str, STR_DATE_FMT)
+    return datetime.strptime(date_str, STR_DATE_FMT).replace(tzinfo=utc_zone)
 
 
 def to_ny_datetime(date_str: str) -> datetime:
-    return datetime.strptime(date_str, STR_DATE_FMT)
+    return datetime.strptime(date_str, STR_DATE_FMT).replace(tzinfo=ny_zone)
 
 
 def to_date_str(date: datetime) -> str:
