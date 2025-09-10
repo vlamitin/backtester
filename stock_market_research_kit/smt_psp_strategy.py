@@ -149,10 +149,10 @@ TargetSorter: TypeAlias = Callable[[Target, Target], Target]
 def _closest_targets_sorter(is_long: bool) -> TargetSorter:
     def targets_sorter(prev_t: Target, t: Target) -> Target:
         if is_long:
-            if t[3][0] < prev_t[3][0]:  # we choose more conservative target
+            if t[4][0] < prev_t[4][0]:  # we choose more conservative target
                 return t
             return prev_t
-        if t[3][0] > prev_t[3][0]:  # we choose more conservative target
+        if t[4][0] > prev_t[4][0]:  # we choose more conservative target
             return t
         return prev_t
 
@@ -162,10 +162,10 @@ def _closest_targets_sorter(is_long: bool) -> TargetSorter:
 def _furthest_targets_sorter(is_long: bool) -> TargetSorter:
     def targets_sorter(prev_t: Target, t: Target) -> Target:
         if is_long:
-            if t[3][0] > prev_t[3][0]:  # we choose less conservative target
+            if t[4][0] > prev_t[4][0]:  # we choose less conservative target
                 return t
             return prev_t
-        if t[3][0] < prev_t[3][0]:  # we choose less conservative target
+        if t[4][0] < prev_t[4][0]:  # we choose less conservative target
             return t
         return prev_t
 
