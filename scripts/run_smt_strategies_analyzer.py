@@ -1,12 +1,14 @@
+from datetime import timedelta
 from typing import List, Tuple
 
 import numpy as np
+import pandas
 import pandas as pd
 from IPython.core.display_functions import display
 
 from stock_market_research_kit.candle_with_stat import perc_all_and_sma20
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, smt_psp_trades_from_json
-from utils.date_utils import to_utc_datetime, quarters_by_time
+from utils.date_utils import to_utc_datetime, quarters_by_time, to_timestamp, to_ny_date_str
 
 
 def snapshot_file(strategy: str, year: int, symbols: List[str]) -> str:
@@ -24,6 +26,8 @@ def snap_dfs(snap_file: str, symbols: List[str]) -> Tuple[
         json_str = f.read()
     df_m, df_l, df_lo = to_trade_dfs(smt_psp_trades_from_json(json_str), symbols)
 
+    df_m = with_cum_and_stagnation(df_m)
+    df_l = with_cum_and_stagnation(df_l)
     df_l_chase_median_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_median_rr"'))
     df_l_chase_mean_rr = with_cum_and_stagnation(df_l.query('limit_reason == "chase_mean_rr"'))
     df_l_chase_absent_tyo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_absent_tyo"'))
@@ -36,9 +40,6 @@ def snap_dfs(snap_file: str, symbols: List[str]) -> Tuple[
     df_l_chase_two = with_cum_and_stagnation(df_l.query('limit_reason == "chase_two"'))
     df_l_chase_tdo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_tdo"'))
     df_l_chase_t90mo = with_cum_and_stagnation(df_l.query('limit_reason == "chase_t90mo"'))
-
-    df_m = with_cum_and_stagnation(df_m)
-    df_l = with_cum_and_stagnation(df_l)
 
     df_lo_chase_median_rr = df_lo.query('limit_reason == "chase_median_rr"')
     df_lo_chase_mean_rr = df_lo.query('limit_reason == "chase_mean_rr"')
@@ -185,62 +186,59 @@ def pnls(stat_df):
     }
 
 
-def group_display(trade_dfs, fields: List[str], display_good: bool, show_perc: str):
+def wr_mean(pnls: pd.Series) -> float:
+    won = [x for x in pnls.to_list() if x > 0]
+    return round(len(won) / len(pnls), 2)
+
+
+def wr_count(pnls: pd.Series) -> float:
+    won = [x for x in pnls.to_list() if x > 0]
+    return len(won)
+
+
+def group_display(trade_dfs, fields: List[str], display_good: bool, show_percs: List[str], aggs_to_hide: List[str]):
     def to_agg_df(label, df):
         if df.empty:
             return pd.DataFrame()
 
-        agg_pnl = df.groupby(fields)["pnl_minus_fees"].agg(["mean", "median", "count"])
-        agg_wr = df.groupby(fields)["won"].agg(["mean", "median", "count"])
+        def aggs_hide_filter(x):
+            for agg in aggs_to_hide:
+                x_name = x
+                if callable(x):
+                    x_name = x.__name__
+                if x_name == agg:
+                    return False
+            return True
+
+        agg_pnl = df.groupby(fields)["pnl_minus_fees"].agg(list(filter(aggs_hide_filter, [
+            "mean", "sem", wr_mean, "median", "count", wr_count, "sum", "min", "max", "std", "var"
+        ])))
+        agg_pnl = agg_pnl.round({
+            "mean": 2, "sem": 2, "median": 2, "sum": 2, "min": 2, "max": 2, "std": 2, "var": 2,
+        })
 
         if display_good:
             agg_pnl_filtered = agg_pnl[(agg_pnl["count"] > 4) & (agg_pnl["mean"] > 15)]
             if not agg_pnl_filtered.empty:
                 display(label, agg_pnl_filtered)
 
-        # округляем
-        agg_pnl = agg_pnl.round({"mean": 2, "median": 2, "count": 0})
-        agg_wr = agg_wr.round({"mean": 2, "median": 2, "count": 0})
-
-        # объединяем ячейки по логике
-        def merge_cells(v1, v2, col_name):
-            if col_name == "count":
-                return int(v1) if not pd.isna(v1) else pd.NA
-            if pd.isna(v1) or pd.isna(v2):
-                return 0
-            if isinstance(v1, str) and isinstance(v2, str) and v1 == v2:
-                return v1
-            return f"{v1}/{v2}"
-
-        merged = pd.DataFrame(
-            [
-                [
-                    merge_cells(a, b, col_name)
-                    for (a, b, col_name) in zip(row_pnl, row_wr, agg_pnl.columns)
-                ]
-                for row_pnl, row_wr in zip(agg_pnl.values, agg_wr.values)
-            ],
-            index=agg_pnl.index,
-            columns=agg_pnl.columns,
-        )
-
-        merged.columns = pd.MultiIndex.from_product([[label], merged.columns])
-        for col in merged.columns:
+        agg_pnl.columns = pd.MultiIndex.from_product([[label], agg_pnl.columns])
+        for col in agg_pnl.columns:
             if col[1] == "count":  # второй уровень MultiIndex
-                merged[col] = merged[col].astype("Int64")  # nullable integer
-        return merged
+                agg_pnl[col] = agg_pnl[col].astype("Int64")  # nullable integer
+        return agg_pnl
 
     df_joined = pd.concat(
         [to_agg_df(label, df) for label, df in trade_dfs if not df.empty],
         axis=1
     )
 
-    if show_perc:
+    for show_perc in show_percs:
         for df_tuple in trade_dfs:
             if df_tuple[1].empty:
                 continue
             display(
-                f"{df_tuple[0]} {[round(float(x), 2) for x in np.percentile(df_tuple[1][show_perc], [10, 30, 70, 90])]}")
+                f"{show_perc} {df_tuple[0]} percentiles {[round(float(x), 2) for x in np.percentile(df_tuple[1][show_perc], [10, 30, 70, 90])]}")
 
     return df_joined
 
@@ -346,7 +344,7 @@ def item_shifted(smb: str, arr1: List[Tuple[str, float, float]], arr2: List[Tupl
 def _to_trade_df(trades: List[SmtPspTrade], symbols: List[str]) -> pd.DataFrame:
     df = pd.DataFrame(trades, columns=[
         'signal_time', 'signal_time_ny', 'entry_time', 'entry_time_ny', 'asset', 'pnl_usd', 'direction', 'entry_rr',
-        'entry_price', 'stop', 'take_profit', 'entry_position_usd',
+        'entry_price', 'stop', 'take_profit', 'entry_position_usd', 'entry_reason',
         'smt_level', 'smt_type', 'smt_label', 'smt_flags', 'smt_first_appeared',
         'target_level', 'target_direction', 'target_label', 'target_ql_start',
         'best_entry_time', 'best_entry_time_ny', 'best_entry_price', 'best_entry_rr',
@@ -358,6 +356,10 @@ def _to_trade_df(trades: List[SmtPspTrade], symbols: List[str]) -> pd.DataFrame:
     if len(trades) == 0:
         return df
     df["won"] = df["pnl_usd"] > 0
+
+    df["smt_is_half"] = df.index.map(lambda i: trades[i].smt_type in ['half_high', 'half_low'])
+    df["target_is_half"] = df.index.map(lambda i: trades[i].target_direction in ['half_high', 'half_low'])
+    df["asset_smt_swept"] = df.index.map(lambda i: trades[i].asset[0] in trades[i].smt_flags)
 
     df['pnl_minus_fees'] = df['pnl_usd'] - df['entry_position_fee'] - df['close_position_fee']
     df['final_close_percent'] = df.index.map(lambda i: trades[i].closes[-1][0])
@@ -372,6 +374,8 @@ def _to_trade_df(trades: List[SmtPspTrade], symbols: List[str]) -> pd.DataFrame:
         lambda i: trades[i].pnl_if_full_tp_sl()[0] - trades[i].pnl_if_full_tp_sl()[1] - trades[i].entry_position_fee)
 
     df["final_close_time"] = df.index.map(lambda i: trades[i].closes[-1][2])
+    df["final_close_time_ny"] = df.index.map(lambda i: trades[i].closes[-1][3])
+    df["final_close_price"] = df.index.map(lambda i: trades[i].closes[-1][1])
     df['minutes_in_market'] = df.apply(
         lambda row: (to_utc_datetime(row['final_close_time']) - to_utc_datetime(
             row['entry_time'])).total_seconds() / 60,
@@ -388,24 +392,36 @@ def _to_trade_df(trades: List[SmtPspTrade], symbols: List[str]) -> pd.DataFrame:
         axis=1
     )
     asset_to_index = {}
-    for i, s in enumerate(symbols):
-        asset_to_index[s] = i
+    for i_, s in enumerate(symbols):
+        asset_to_index[s] = i_
     df['percents_till_stop'] = df.index.map(lambda i: abs(trades[i].psp_extremums[asset_to_index[trades[i].asset]]))
     df['percents_till_stop_perc'], _ = perc_all_and_sma20(df['percents_till_stop'])
     df['percents_till_take'] = df.index.map(lambda i: abs(trades[i].targets[asset_to_index[trades[i].asset]]))
     df['percents_till_take_perc'], _ = perc_all_and_sma20(df['percents_till_take'])
     df['psp_key'] = df.index.map(lambda i: trades[i].psp_key_used)
+    df['psp_date'] = df.index.map(lambda i: trades[i].psp_date)
+    df['psp_date_ny'] = df.index.map(lambda i: to_ny_date_str(trades[i].psp_date))
     df['year'] = df['signal_time'].apply(lambda x: int(x[0:4]))
-    df['entry_yq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[0].name)
-    df['entry_mw'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[1].name)
-    df['entry_wd'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[2].name)
-    df['entry_dq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[3].name)
-    df['entry_q90m'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[4].name)
     df['signal_yq'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[0].name)
     df['signal_mw'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[1].name)
     df['signal_wd'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[2].name)
     df['signal_dq'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[3].name)
     df['signal_q90m'] = df['signal_time'].apply(lambda x: quarters_by_time(x)[4].name)
+    df['entry_yq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[0].name)
+    df['entry_mw'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[1].name)
+    df['entry_wd'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[2].name)
+    df['entry_dq'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[3].name)
+    df['entry_q90m'] = df['entry_time'].apply(lambda x: quarters_by_time(x)[4].name)
+    df['best_entry_yq'] = df.index.map(lambda i: quarters_by_time(trades[i].best_entry_time)[0].name)
+    df['best_entry_mw'] = df.index.map(lambda i: quarters_by_time(trades[i].best_entry_time)[1].name)
+    df['best_entry_wd'] = df.index.map(lambda i: quarters_by_time(trades[i].best_entry_time)[2].name)
+    df['best_entry_dq'] = df.index.map(lambda i: quarters_by_time(trades[i].best_entry_time)[3].name)
+    df['best_entry_q90m'] = df.index.map(lambda i: quarters_by_time(trades[i].best_entry_time)[4].name)
+    df['final_close_yq'] = df.index.map(lambda i: quarters_by_time(trades[i].closes[-1][2])[0].name)
+    df['final_close_mw'] = df.index.map(lambda i: quarters_by_time(trades[i].closes[-1][2])[1].name)
+    df['final_close_wd'] = df.index.map(lambda i: quarters_by_time(trades[i].closes[-1][2])[2].name)
+    df['final_close_dq'] = df.index.map(lambda i: quarters_by_time(trades[i].closes[-1][2])[3].name)
+    df['final_close_q90m'] = df.index.map(lambda i: quarters_by_time(trades[i].closes[-1][2])[4].name)
     df['entry_rr_perc'], _ = perc_all_and_sma20(df['entry_rr'])
     df['minutes_in_market_perc'], _ = perc_all_and_sma20(df['minutes_in_market'])
     df['entry_position_usd_perc'], _ = perc_all_and_sma20(df['entry_position_usd'])
@@ -529,34 +545,64 @@ def to_trade_dfs(trades: List[SmtPspTrade], symbols: List[str]) -> Tuple[pd.Data
     return df_m, df_l, df_lo
 
 
+def to_tw_arrs(symbol: str, df: pandas.DataFrame) -> str:
+    s_df = df.query(f"asset == '{symbol}'")
+    psp_times = [to_timestamp(to_utc_datetime(x)) for x in s_df["psp_date"].tolist()]
+    entry_times = [to_timestamp(to_utc_datetime(x)) for x in s_df["entry_time"].tolist()]
+    entry_prices = s_df["entry_price"].tolist()
+    stop_prices = s_df["stop"].tolist()
+    take_profit_prices = s_df["take_profit"].tolist()
+    best_entry_times = [to_timestamp(to_utc_datetime(x) - timedelta(minutes=15)) for x in s_df["best_entry_time"].tolist()]
+    best_entry_prices = s_df["best_entry_price"].tolist()
+    final_close_times = [to_timestamp(to_utc_datetime(x) - timedelta(minutes=15)) for x in s_df["final_close_time"].tolist()]
+    final_close_prices = s_df["final_close_price"].tolist()
+
+    directions = [1 if x == "UP" else -1 for x in s_df["direction"].tolist()]
+    res = f"""var int[] psp_times = array.from({', '.join(map(str, psp_times))})
+var int[] entry_times = array.from({', '.join(map(str, entry_times))})
+var float[] entry_prices = array.from({', '.join(map(str, entry_prices))})
+var float[] stop_prices = array.from({', '.join(map(str, stop_prices))})
+var float[] take_profit_prices = array.from({', '.join(map(str, take_profit_prices))})
+var int[] best_entry_times = array.from({', '.join(map(str, best_entry_times))})
+var float[] best_entry_prices = array.from({', '.join(map(str, best_entry_prices))})
+var int[] final_close_times = array.from({', '.join(map(str, final_close_times))})
+var float[] final_close_prices = array.from({', '.join(map(str, final_close_prices))})
+var int[] directions = array.from({', '.join(map(str, directions))})"""
+
+    return res
+
+
 def analyze():
     symbols = ['BTCUSDT', 'ETHUSDT', 'TOTAL3']
-    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(snapshot_file('32', 2024, symbols), symbols)
-    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(snapshot_file('32', 2025, symbols), symbols)
+    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(snapshot_file('30', 2024, symbols), symbols)
+    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(snapshot_file('30', 2025, symbols), symbols)
 
     trade_stat_2024, lo_stat_2024 = basic_stats(trade_dfs_2024, lo_dfs_2024)
     trade_stat_2025, lo_stat_2025 = basic_stats(trade_dfs_2025, lo_dfs_2025)
 
-    trade_dfs = merge_year_dfs([trade_dfs_2024, trade_dfs_2025], "", [])
+    trade_dfs = merge_year_dfs([trade_dfs_2024, trade_dfs_2025], "", ['market all'])
 
-    print(f"2024 {f_name_2024[23:34]}:")
-    print(f"2024 Trade stat:")
-    display(trade_stat_2024)
-    print(f"2025 {f_name_2025[23:34]}:")
-    print(f"2025 Trade stat:")
-    display(trade_stat_2025)
+    # print(trade_dfs[1][1]['smt_is_half'])
+    #
+    # print(f"2024 {f_name_2024[23:34]}:")
+    # print(f"2024 Trade stat:")
+    # display(trade_stat_2024)
+    # print(f"2025 {f_name_2025[23:34]}:")
+    # print(f"2025 Trade stat:")
+    # display(trade_stat_2025)
+    #
+    # print(f"2024 Limit orders stat:")
+    # display(lo_stat_2024)
+    # print(f"2025 Limit orders stat:")
+    # display(lo_stat_2025)
 
-    print(f"2024 Limit orders stat:")
-    display(lo_stat_2024)
-    print(f"2025 Limit orders stat:")
-    display(lo_stat_2025)
-
-    # group_by_display(["asset"])
+    df_group = group_display(trade_dfs, ["asset"], False, [], ["mean", "wr_mean"])
     # group_by_display(["smt_type"])
     # group_by_display(["smt_label"])
     # group_by_display(["smt_flags"])
 
-    print("done!")
+    # print(df_group)
+    print(to_tw_arrs("BTCUSDT", trade_dfs[0][1]))
 
 
 if __name__ == "__main__":

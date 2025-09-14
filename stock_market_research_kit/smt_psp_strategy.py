@@ -1445,18 +1445,18 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
                 else:
                     at.best_entry_tos.append((label, price, percent_from_current(asset.prev_15m_candle[2], price)))
     elif at.direction == 'DOWN':
-        candle_max_pnl = at.entry_position_usd / at.entry_price * (at.entry_price - asset.prev_15m_candle[1])
+        candle_max_pnl = at.entry_position_usd / at.entry_price * (at.entry_price - asset.prev_15m_candle[2])
         if candle_max_pnl > at.best_pnl:
             at.best_pnl = candle_max_pnl
             at.best_pnl_time = asset.snapshot_date_readable
             at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable)
-            at.best_pnl_price = asset.prev_15m_candle[1]
+            at.best_pnl_price = asset.prev_15m_candle[2]
             at.best_pnl_tos = []
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
-                    at.best_pnl_tos.append((label, asset.prev_15m_candle[1], 0))
+                    at.best_pnl_tos.append((label, asset.prev_15m_candle[2], 0))
                 else:
-                    at.best_pnl_tos.append((label, price, percent_from_current(asset.prev_15m_candle[1], price)))
+                    at.best_pnl_tos.append((label, price, percent_from_current(asset.prev_15m_candle[2], price)))
         if asset.prev_15m_candle[1] > at.best_entry_price:
             at.best_entry_time = asset.snapshot_date_readable
             at.best_entry_time_ny = to_ny_date_str(asset.snapshot_date_readable)
@@ -1630,6 +1630,12 @@ strategy09 = SmtPspStrategy(
     trades_handler=strategy01_th
 )
 
+# TODO new observations strategy09:
+# chase_tdo psp_key == '4h' and 4 < entry_rr and asset in ['BTCUSDT', 'ETHUSDT'] and signal_dq not in ['DQ4_NYPM']
+# btc london 4h (market has good wr, check limits for better rr)
+# btc 4h nyam (когда target - london)
+# market or chase_median: smt_type in ['half_high', 'half_low'] and target_direction in ['high', 'low'] and psp_key == '4h' and 2 < entry_rr and year not in [2023] and asset in ['BTCUSDT']
+
 # based on strategy09 2024 - sep 2025 what's good on backtest:
 # 1h candles abs_tdo rr 1.1-2.3
 # 1h candles t90 rr 0.5-2
@@ -1655,6 +1661,11 @@ strategy11 = SmtPspStrategy(
     ),
     trades_handler=strategy01_th
 )
+
+# TODO new obserations strategy11
+# market target_level == 4 and smt_type in ['high', 'low'] and target_direction in ['half_high', 'half_low'] and psp_key == '1h' and 2 < entry_rr and asset in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+# market or chase_tdo(!) target_level == 5 and smt_type in ['half_high', 'half_low'] and target_direction in ['high', 'low'] and psp_key == '4h' and 2 < entry_rr and asset in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'] and signal_wd in ['Tue', 'Wed', 'Thu']
+#
 
 # based on strategy11 2024 - sep 2025 what's good on backtest:
 # chase_tyo
@@ -1818,13 +1829,18 @@ strategy25 = SmtPspStrategy(
 
 # confirmed wd smt и wd closest цели
 strategy27 = SmtPspStrategy(
-    name="27. Trigger 4h cPSP in wd smt - furthest dq+wd target",
+    name="27. Trigger 4h cPSP in wd smt - closest dq+wd target",
     trade_opener=strategy07_to_constructor(
         "", 4, 'confirmed', ['1h', '2h', '4h'], [4], True,
         _closest_targets_sorter, lambda x: x
     ),
     trades_handler=strategy01_th
 )
+
+# TODO new obserations strategy27
+# chase_two, chase_absent_two, chase_tyo, chase_absent_tyo  signal_wd not in ['Sat', 'Sun'] and 0.5 < entry_rr and 2 < percents_till_take and asset in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+# chase_tdo chase_two 1 < percents_till_stop < 1.36 and target_is_half == False and signal_wd not in ['Sat', 'Sun'] and signal_dq in ['DQ2_London', 'DQ4_NYPM'] and psp_key in ['4h'] and 2.3 < entry_rr and 2 < percents_till_take and asset in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+# chase_absent_tdo signal_wd not in ['Sun', 'Mon', 'Tue'] and signal_dq in ['DQ1_Asia'] and psp_key in ['1h'] and asset in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
 
 # confirmed wd 1h 2h 4h свечки, furthest wd + dq цели
 strategy29 = SmtPspStrategy(
