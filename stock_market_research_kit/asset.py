@@ -2,10 +2,10 @@ import math
 from collections import deque
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import Enum
 from typing import TypeAlias, Tuple, Optional, List, Generator, Deque
 
-from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle, as_1d_candles
+from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle
+from stock_market_research_kit.db_layer import select_multiyear_candles_15m
 from stock_market_research_kit.quarter import Quarter90m, DayQuarter, WeekDay, MonthWeek, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
     get_prev_1h_from_to, get_current_1h_from_to, get_prev_2h_from_to, get_current_2h_from_to, get_prev_4h_from_to, \
@@ -22,26 +22,11 @@ Candles15mGenerator: TypeAlias = Generator[InnerCandle, None, None]
 TriadCandles15mGenerator: TypeAlias = Generator[Tuple[InnerCandle, InnerCandle, InnerCandle], None, None]
 
 
-class TriadAsset(Enum):
-    A1 = 'Asset 1'
-    A2 = 'Asset 2'
-    A3 = 'Asset 3'
-
-
-deprecated_SMT: TypeAlias = Optional[List[TriadAsset]]  # list of 1-2 assets from triad that swept
-deprecated_PSP: TypeAlias = Optional[Tuple[
-    Tuple[TriadAsset, InnerCandle],
-    Tuple[TriadAsset, InnerCandle],
-    Tuple[TriadAsset, InnerCandle]
-]]
-
-
 @dataclass
 class Asset:
     symbol: str
     snapshot_date_readable: str
     candles_15m: Deque[InnerCandle]
-    # candles_1d: List[InnerCandle]
 
     prev_year: Optional[QuarterLiq]
 
@@ -940,3 +925,24 @@ def new_empty_asset(symbol: str) -> Asset:
         current_1month_candle=None,
         current_year_candle=None,
     )
+
+
+def example_generator(symbol) -> Candles15mGenerator:
+    candles = select_multiyear_candles_15m(symbol, "2024-01-01 00:00", "2025-09-14 00:00")
+
+    index = len(candles) - 1
+
+    while True:
+        yield candles[index]
+        index = index - 1
+
+
+if __name__ == "__main__":
+    try:
+        a = new_empty_asset("BTCUSDT")
+        a.populate(example_generator("BTCUSDT"))
+        print(a)
+
+    except KeyboardInterrupt:
+        print(f"KeyboardInterrupt, exiting ...")
+        quit(0)

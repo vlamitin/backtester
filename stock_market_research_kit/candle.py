@@ -1,7 +1,7 @@
 from typing import TypeAlias, Tuple, List, Callable
 
 from utils.date_utils import to_utc_datetime, get_current_30m_from_to, get_current_1h_from_to, get_current_2h_from_to, \
-    get_current_4h_from_to, get_current_1d_from_to, get_current_1w_from_to, get_current_1month_from_to
+    get_current_4h_from_to, get_current_1d_from_to, get_current_1w_from_to
 
 InnerCandle: TypeAlias = Tuple[float, float, float, float, float, str]
 
