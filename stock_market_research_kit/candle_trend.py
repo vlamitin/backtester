@@ -8,7 +8,7 @@ import pandas
 import pandas as pd
 from scipy.signal import find_peaks
 
-from stock_market_research_kit.candle import as_1d_candles, InnerCandle
+from stock_market_research_kit.candle import as_1d_candles, InnerCandle, as_4h_candles
 from stock_market_research_kit.db_layer import select_multiyear_candles_15m
 
 
@@ -75,9 +75,15 @@ def find_trends(
     prev_hh, hl, hh = None, None, None
     prev_ll, lh, ll = None, None, None
     hl_candidate, lh_candidate = None, None
+    highest_till_first, lowest_till_first = None, None
     res = []
 
     for c in all_candles:
+        if len(res) == 0:
+            if not highest_till_first or c[1] >= highest_till_first[1]:
+                highest_till_first = c
+            if not lowest_till_first or c[2] <= lowest_till_first[2]:
+                lowest_till_first = c
         if prev_hh and hl and hh:
             if c[3] < hl[2]:
                 prev_ll, lh, ll = hl, hh, c
@@ -101,7 +107,7 @@ def find_trends(
                         prev_hh, hh = hh, high_
                         hl, hl_candidate = hl_candidate, None
                         if len(res) == 0:
-                            res.append(("uptrend", hl[5]))
+                            res.append(("uptrend", lowest_till_first[5]))
                             ll, prev_ll = None, None
             if low_:
                 if len(res) == 0 and (not hh or not ll):
@@ -113,7 +119,7 @@ def find_trends(
                         prev_ll, ll = ll, low_
                         lh, lh_candidate = lh_candidate, None
                         if len(res) == 0:
-                            res.append(("downtrend", lh[5]))
+                            res.append(("downtrend", highest_till_first[5]))
                             hh, prev_hh = None, None
 
         if ll and ll[5] != c[5] and (not lh_candidate or c[1] >= lh_candidate[1]):
@@ -127,15 +133,15 @@ def find_trends(
 
 if __name__ == "__main__":
     try:
-        candles_15m = select_multiyear_candles_15m("BTCUSDT", "2024-01-01 00:00", "2025-09-14 00:00")
-        candles_1d = as_1d_candles(list(candles_15m))[-120:]
-        highs = [x[1] for x in candles_1d]
-        lows = [x[2] for x in candles_1d]
+        candles_15m = select_multiyear_candles_15m("BTCUSDT", "2024-01-01 00:00", "2025-09-15 00:00")
+        candles_ = as_4h_candles(list(candles_15m))[-60:]
+        highs = [x[1] for x in candles_]
+        lows = [x[2] for x in candles_]
 
-        cdf = to_df(candles_1d)
+        cdf = to_df(candles_)
 
         highs_idxs, _ = find_peaks(highs, distance=2, prominence=0.3)
-        lows_idxs, _ = find_peaks([-x for x in lows], distance=2, prominence=0.3)
+        lows_idxs, _ = find_peaks([-x for x in lows], distance=2, prominence=0, plateau_size=1)
 
         peak_h_series = np.full(len(cdf), np.nan)
         for i in highs_idxs:
@@ -147,7 +153,7 @@ if __name__ == "__main__":
             peak_l_series[i] = cdf["Low"].iloc[i]
         peak_l_dates = [cdf.index[i] for i in lows_idxs]
 
-        trends1 = find_trends([candles_1d[i] for i in highs_idxs], [candles_1d[i] for i in lows_idxs], candles_1d)
+        trends1 = find_trends([candles_[i] for i in highs_idxs], [candles_[i] for i in lows_idxs], candles_)
         print("trends1", trends1)
 
         # trends = calc_trends(
@@ -158,8 +164,9 @@ if __name__ == "__main__":
         trend_down_series = np.full(len(cdf), np.nan)
         trend_low_bos_series = np.full(len(cdf), np.nan)
         trend_high_bos_series = np.full(len(cdf), np.nan)
-        trend_location_higher = float(np.nanmin(peak_l_series)) * 0.99
-        trend_location_lower = float(np.nanmin(peak_l_series)) * 0.97
+        bos_location = float(np.nanmin(peak_l_series)) * 0.995
+
+        amplitude = float(np.nanmax(peak_l_series)) - float(np.nanmin(peak_l_series))
 
         trends_d = {}
         for d in trends1:
@@ -173,18 +180,18 @@ if __name__ == "__main__":
                 trends = trends_d[str(d)[:-3]]
                 for trend in trends:
                     if trend == "uptrend":
-                        trend_up_series[i] = trend_location_higher
+                        trend_up_series[i] = cdf["Low"].iloc[i] - amplitude * 0.05
                     elif trend == "downtrend":
-                        trend_down_series[i] = trend_location_higher
+                        trend_down_series[i] = cdf["High"].iloc[i] + amplitude * 0.05
                     elif trend == "low_bos":
-                        trend_low_bos_series[i] = trend_location_lower
+                        trend_low_bos_series[i] = bos_location
                     elif trend == "high_bos":
-                        trend_high_bos_series[i] = trend_location_lower
+                        trend_high_bos_series[i] = bos_location
 
         apds = [
-            mpf.make_addplot(peak_h_series, type='scatter', markersize=100, marker='.',
+            mpf.make_addplot(peak_h_series, type='scatter', markersize=35, marker='.',
                              color='g', panel=0, scatter=True, secondary_y=False),
-            mpf.make_addplot(peak_l_series, type='scatter', markersize=100, marker='.',
+            mpf.make_addplot(peak_l_series, type='scatter', markersize=35, marker='.',
                              color='r', panel=0, scatter=True, secondary_y=False),
             mpf.make_addplot(trend_up_series, type='scatter', markersize=80, marker='^',
                              color='g', panel=0, scatter=True, secondary_y=False),
