@@ -1,5 +1,6 @@
 import math
 from datetime import datetime, timedelta
+import random
 from typing import Tuple, List, TypeAlias, Callable
 from zoneinfo import ZoneInfo
 
@@ -1008,6 +1009,13 @@ def years_between(start: str, end: str) -> List[Tuple[int, str, str]]:
         result.append((year, to_date_str(from_dt), to_date_str(to_dt)))
 
     return result
+
+
+def random_date(start: str, end: str) -> str:
+    delta = to_utc_datetime(end) - to_utc_datetime(start)
+    random_days = random.randint(0, delta.days)
+    random_seconds = random.randint(0, 24 * 60 * 60 - 1)
+    return to_date_str(to_utc_datetime(start) + timedelta(days=random_days, seconds=random_seconds))
 
 
 if __name__ == "__main__":

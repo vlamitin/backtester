@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import TypeAlias, Tuple, Optional, List, Generator, Deque
 
 from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle
+from stock_market_research_kit.candle_trend import Trend
 from stock_market_research_kit.db_layer import select_multiyear_candles_15m
 from stock_market_research_kit.quarter import Quarter90m, DayQuarter, WeekDay, MonthWeek, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
@@ -27,6 +28,22 @@ class Asset:
     symbol: str
     snapshot_date_readable: str
     candles_15m: Deque[InnerCandle]
+
+    trend_1d_120: Optional[Trend]
+    trend_1d_40: Optional[Trend]
+    trend_1d_15: Optional[Trend]
+
+    trend_4h_120: Optional[Trend]
+    trend_4h_40: Optional[Trend]
+    trend_4h_15: Optional[Trend]
+
+    trend_1h_120: Optional[Trend]
+    trend_1h_40: Optional[Trend]
+    trend_1h_15: Optional[Trend]
+
+    trend_15m_120: Optional[Trend]
+    trend_15m_40: Optional[Trend]
+    trend_15m_15: Optional[Trend]
 
     prev_year: Optional[QuarterLiq]
 
@@ -874,6 +891,15 @@ def new_empty_asset(symbol: str) -> Asset:
         symbol=symbol,
         snapshot_date_readable="",
         candles_15m=deque(),
+        trend_1d_120=None,
+        trend_1d_40=None,
+        trend_1d_15=None,
+        trend_4h_120=None,
+        trend_4h_40=None,
+        trend_4h_15=None,
+        trend_1h_120=None,
+        trend_1h_40=None,
+        trend_1h_15=None,
         prev_year=None,
         year_q4=None,
         year_q1=None,
