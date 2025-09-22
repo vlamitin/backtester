@@ -6,9 +6,10 @@ import pandas
 import pandas as pd
 from IPython.core.display_functions import display
 
+from stock_market_research_kit.candle_trend import Trend
 from stock_market_research_kit.candle_with_stat import perc_all_and_sma20
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, smt_psp_trades_from_json
-from utils.date_utils import to_utc_datetime, quarters_by_time, to_timestamp, to_ny_date_str
+from utils.date_utils import to_utc_datetime, quarters_by_time, to_timestamp, to_ny_date_str, perf_log
 
 
 def snapshot_file(strategy: str, year: int, symbols: List[str]) -> str:
@@ -429,6 +430,68 @@ def _to_trade_df(trades: List[SmtPspTrade], symbols: List[str]) -> pd.DataFrame:
     df['best_entry_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].best_entry_tos]))
     df['best_pnl_tos'] = df.index.map(lambda i: '-'.join([x[0] for x in trades[i].best_pnl_tos]))
 
+    with perf_log(0.02, "trend_time"):
+        for time_ in ['signal', 'entry', 'best_pnl', 'best_entry', 'pre_take', 'pre_stop', 'final_close']:
+            for tf in ['1d', '4h', '1h', '15m']:
+                for trend_len in [120, 40, 15]:
+                    def _trend_mapper(trade: SmtPspTrade) -> Trend:
+                        trends = trade.signal_trends
+                        match time_:
+                            case 'entry':
+                                trends = trade.entry_trends
+                            case 'best_pnl':
+                                trends = trade.best_pnl_trends
+                            case 'best_entry':
+                                trends = trade.best_entry_trends
+                            case 'pre_take':
+                                idx_pre_take = next(
+                                    (i for i, x in enumerate(trade.closes) if x[4] == "someone_reached_target"),
+                                    None
+                                )
+                                if idx_pre_take is None:
+                                    trends = None
+                                else:
+                                    trends = trade.closes[idx_pre_take][5]
+                            case 'pre_stop':
+                                idx_pre_stop = next(
+                                    (i for i, x in enumerate(trade.closes) if x[4] == "someone_psp_swept"),
+                                    None
+                                )
+                                if idx_pre_stop is None:
+                                    trends = None
+                                else:
+                                    trends = trade.closes[idx_pre_stop][5]
+                            case 'final_close':
+                                trends = trade.closes[-1][5]
+
+                        empty_trend = Trend(
+                            trend="",
+                            date_from="",
+                            length=-1,
+                            bos_type="",
+                            bos_date="",
+                            bos_ago=-1
+                        )
+
+                        if trends is None:
+                            return empty_trend
+
+                        trend = getattr(trends, f"trend_{tf}_{trend_len}")
+                        return trend or empty_trend
+
+                    _trends = [_trend_mapper(x) for x in trades]
+
+                    new_cols = pd.DataFrame({
+                        f"trend_{time_}_{tf}_{trend_len}_trend": [t.trend for t in _trends],
+                        f"trend_{time_}_{tf}_{trend_len}_len": [t.length for t in _trends],
+                        f"trend_{time_}_{tf}_{trend_len}_bos_type": [t.bos_type for t in _trends],
+                        f"trend_{time_}_{tf}_{trend_len}_bos_ago": [t.bos_ago for t in _trends],
+                    }, index=df.index)
+
+                    df = pd.concat([df, new_cols], axis=1)
+
+    df = df.copy()
+
     # # чем больше TO, которые с нужной от нас стороны, и чем они ближе к нашей цене, тем лучше
     # entry_tos_aside_coefs1 = []
     # # best_entry_tos_aside_coefs1 = []
@@ -522,9 +585,9 @@ def to_trade_dfs(trades: List[SmtPspTrade], symbols: List[str]) -> Tuple[pd.Data
     m_trades = [x for x in trades if x.entry_order_type == 'MARKET']
     l_trades = [x for x in trades if x.entry_order_type == 'LIMIT']
     l_orders = [x for x in trades if x.limit_status]
-    df_m = _to_trade_df(m_trades, symbols)
-
-    df_l = _to_trade_df(l_trades, symbols)
+    with perf_log(0.02, "_to_trade_df"):
+        df_m = _to_trade_df(m_trades, symbols)
+        df_l = _to_trade_df(l_trades, symbols)
     df_l['limit_reason'] = df_l.index.map(lambda i: l_trades[i].entry_reason.split()[0])
 
     def with_market_trade_columns(row):
@@ -540,7 +603,8 @@ def to_trade_dfs(trades: List[SmtPspTrade], symbols: List[str]) -> Tuple[pd.Data
 
     df_l[["market_pnl", "market_rr"]] = df_l.apply(with_market_trade_columns, axis=1)
 
-    df_lo = _to_lo_df(l_orders)
+    with perf_log(0.02, "_to_lo_df"):
+        df_lo = _to_lo_df(l_orders)
 
     return df_m, df_l, df_lo
 
@@ -552,9 +616,11 @@ def to_tw_arrs(symbol: str, df: pandas.DataFrame) -> str:
     entry_prices = s_df["entry_price"].tolist()
     stop_prices = s_df["stop"].tolist()
     take_profit_prices = s_df["take_profit"].tolist()
-    best_entry_times = [to_timestamp(to_utc_datetime(x) - timedelta(minutes=15)) for x in s_df["best_entry_time"].tolist()]
+    best_entry_times = [to_timestamp(to_utc_datetime(x) - timedelta(minutes=15)) for x in
+                        s_df["best_entry_time"].tolist()]
     best_entry_prices = s_df["best_entry_price"].tolist()
-    final_close_times = [to_timestamp(to_utc_datetime(x) - timedelta(minutes=15)) for x in s_df["final_close_time"].tolist()]
+    final_close_times = [to_timestamp(to_utc_datetime(x) - timedelta(minutes=15)) for x in
+                         s_df["final_close_time"].tolist()]
     final_close_prices = s_df["final_close_price"].tolist()
 
     directions = [1 if x == "UP" else -1 for x in s_df["direction"].tolist()]
@@ -573,9 +639,9 @@ var int[] directions = array.from({', '.join(map(str, directions))})"""
 
 
 def analyze():
-    symbols = ['BTCUSDT', 'ETHUSDT', 'TOTAL3']
-    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(snapshot_file('30', 2024, symbols), symbols)
-    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(snapshot_file('30', 2025, symbols), symbols)
+    symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+    f_name_2024, trade_dfs_2024, lo_dfs_2024 = snap_dfs(snapshot_file('27', 2024, symbols), symbols)
+    f_name_2025, trade_dfs_2025, lo_dfs_2025 = snap_dfs(snapshot_file('27', 2025, symbols), symbols)
 
     trade_stat_2024, lo_stat_2024 = basic_stats(trade_dfs_2024, lo_dfs_2024)
     trade_stat_2025, lo_stat_2025 = basic_stats(trade_dfs_2025, lo_dfs_2025)
@@ -602,7 +668,7 @@ def analyze():
     # group_by_display(["smt_flags"])
 
     # print(df_group)
-    print(to_tw_arrs("BTCUSDT", trade_dfs[0][1]))
+    # print(to_tw_arrs("BTCUSDT", trade_dfs[0][1]))
 
 
 if __name__ == "__main__":

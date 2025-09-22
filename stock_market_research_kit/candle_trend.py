@@ -25,6 +25,10 @@ class Trend:
     bos_date: Optional[str]
     bos_ago: Optional[int]  # in candles
 
+    @staticmethod
+    def from_dict(d):
+        return Trend(**d)
+
 
 def _to_df(candles: List[InnerCandle]) -> pandas.DataFrame:
     df = pd.DataFrame(candles, columns=["Open", "High", "Low", "Close", "Volume", "Date"])
@@ -226,10 +230,10 @@ def _show_trends_chart(candles: List[InnerCandle]):
 if __name__ == "__main__":
     try:
         random_end = random_date("2023-05-01 00:00", "2025-09-16 00:00")
-        random_start = to_date_str(to_utc_datetime(random_end) - timedelta(days=40))
+        random_start = to_date_str(to_utc_datetime(random_end) - timedelta(days=120))
         random_symbol = random.choice(["BTCUSDT", "ETHUSDT", "SOLUSDT"])
         candles_15m_ = select_multiyear_candles_15m(random_symbol, random_start, random_end)
-        candles_ = as_1d_candles(candles_15m_)[-15:]
+        candles_ = as_1d_candles(candles_15m_)[-120:]
         print(f"showing {random_symbol} from {random_start} to {random_end}")
         print(f"last trend is {find_last_trend(candles_)}")
         _show_trends_chart(candles_)

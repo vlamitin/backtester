@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import TypeAlias, Tuple, Optional, List, Generator, Deque
 
-from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle
-from stock_market_research_kit.candle_trend import Trend
+from stock_market_research_kit.candle import PriceDate, InnerCandle, as_1_candle, as_1d_candles, as_1h_candles, \
+    as_4h_candles
+from stock_market_research_kit.candle_trend import Trend, find_last_trend
 from stock_market_research_kit.db_layer import select_multiyear_candles_15m
 from stock_market_research_kit.quarter import Quarter90m, DayQuarter, WeekDay, MonthWeek, YearQuarter
 from utils.date_utils import to_utc_datetime, to_date_str, get_prev_30m_from_to, get_current_30m_from_to, \
@@ -24,11 +25,7 @@ TriadCandles15mGenerator: TypeAlias = Generator[Tuple[InnerCandle, InnerCandle, 
 
 
 @dataclass
-class Asset:
-    symbol: str
-    snapshot_date_readable: str
-    candles_15m: Deque[InnerCandle]
-
+class Trends:
     trend_1d_120: Optional[Trend]
     trend_1d_40: Optional[Trend]
     trend_1d_15: Optional[Trend]
@@ -44,6 +41,28 @@ class Asset:
     trend_15m_120: Optional[Trend]
     trend_15m_40: Optional[Trend]
     trend_15m_15: Optional[Trend]
+
+    @staticmethod
+    def from_dict(d):
+        trends_ = new_empty_trends()
+        for key in d:
+            if d[key] is None:
+                continue
+            setattr(trends_, key, Trend.from_dict(d[key]))
+
+        return trends_
+
+
+@dataclass
+class Asset:
+    symbol: str
+    snapshot_date_readable: str
+    candles_15m: Deque[InnerCandle]
+    candles_1h: List[InnerCandle]
+    candles_4h: List[InnerCandle]
+    candles_1d: List[InnerCandle]
+
+    trends: Trends
 
     prev_year: Optional[QuarterLiq]
 
@@ -249,15 +268,74 @@ class Asset:
             case Quarter90m.Q4_90m:
                 self.q4_90m = ql
 
+    def recalc_htf_candles(self, last_15m_candle: InnerCandle):
+        c = last_15m_candle
+        if c[5].endswith("00") or len(self.candles_1h) == 0:
+            self.candles_1h.append(c)
+        else:
+            self.candles_1h[-1] = as_1_candle([self.candles_1h[-1], c])
+
+        if c[5][-5:] in ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00"] or len(self.candles_4h) == 0:
+            self.candles_4h.append(c)
+        else:
+            self.candles_4h[-1] = as_1_candle([self.candles_4h[-1], c])
+
+        if c[5].endswith("00:00") or len(self.candles_1d) == 0:
+            self.candles_1d.append(c)
+        else:
+            self.candles_1d[-1] = as_1_candle([self.candles_1d[-1], c])
+
+
+    def recalc_trends(self):
+        last_closed_1h_i = len(self.candles_1h) - 1
+        last_closed_4h_i = len(self.candles_4h) - 1
+        last_closed_1d_i = len(self.candles_1d) - 1
+        last_closed_15m_i = len(self.candles_15m)
+        if self.snapshot_date_readable.endswith("00:00"):
+            last_closed_1h_i = len(self.candles_1h)
+            last_closed_4h_i = len(self.candles_4h)
+            last_closed_1d_i = len(self.candles_1d)
+        elif self.snapshot_date_readable[-5:] in ["04:00", "08:00", "12:00", "16:00", "20:00"]:
+            last_closed_4h_i = len(self.candles_4h)
+        elif self.snapshot_date_readable.endswith("00"):
+            last_closed_1d_i = len(self.candles_1d)
+
+        if last_closed_1d_i >= 120:
+            self.trends.trend_1d_120 = find_last_trend(self.candles_1d[last_closed_1d_i - 120:last_closed_1d_i])
+        if last_closed_1d_i >= 40:
+            self.trends.trend_1d_40 = find_last_trend(self.candles_1d[last_closed_1d_i - 40:last_closed_1d_i])
+        if last_closed_1d_i >= 15:
+            self.trends.trend_1d_15 = find_last_trend(self.candles_1d[last_closed_1d_i - 15:last_closed_1d_i])
+
+        if last_closed_4h_i >= 120:
+            self.trends.trend_4h_120 = find_last_trend(self.candles_4h[last_closed_4h_i - 120:last_closed_4h_i])
+        if last_closed_4h_i >= 40:
+            self.trends.trend_4h_40 = find_last_trend(self.candles_4h[last_closed_4h_i - 40:last_closed_4h_i])
+        if last_closed_4h_i >= 15:
+            self.trends.trend_4h_15 = find_last_trend(self.candles_4h[last_closed_4h_i - 15:last_closed_4h_i])
+
+        if last_closed_1h_i >= 120:
+            self.trends.trend_1h_120 = find_last_trend(self.candles_1h[last_closed_1h_i - 120:last_closed_1h_i])
+        if last_closed_1h_i >= 40:
+            self.trends.trend_1h_40 = find_last_trend(self.candles_1h[last_closed_1h_i - 40:last_closed_1h_i])
+        if last_closed_1h_i >= 15:
+            self.trends.trend_1h_15 = find_last_trend(self.candles_1h[last_closed_1h_i - 15:last_closed_1h_i])
+
+        if last_closed_15m_i >= 120:
+            self.trends.trend_15m_120 = find_last_trend(
+                list(self.candles_15m)[last_closed_15m_i - 120:last_closed_15m_i])
+        if last_closed_15m_i >= 40:
+            self.trends.trend_15m_40 = find_last_trend(list(self.candles_15m)[last_closed_15m_i - 40:last_closed_15m_i])
+        if last_closed_15m_i >= 15:
+            self.trends.trend_15m_15 = find_last_trend(list(self.candles_15m)[last_closed_15m_i - 15:last_closed_15m_i])
+
     def plus_15m(self, candle: InnerCandle):
         prev_yq, prev_mw, prev_wd, prev_dq, prev_q90m = quarters_by_time(self.snapshot_date_readable)
         self.candles_15m.append(candle)
-        # if candle[5].endswith("00:00"):
-        #     self.candles_1d.append(candle)
-        # else:
-        #     self.candles_1d[-1] = as_1_candle([self.candles_1d[-1], candle])
         self.prev_15m_candle = candle
         self.snapshot_date_readable = to_date_str(to_utc_datetime(self.prev_15m_candle[5]) + timedelta(minutes=15))
+        self.recalc_htf_candles(candle)
+        self.recalc_trends()
         new_yq, new_mw, new_wd, new_dq, new_q90m = quarters_by_time(self.snapshot_date_readable)
 
         ranges_yq, tyo = year_quarters_ranges(self.snapshot_date_readable)
@@ -882,15 +960,15 @@ class Asset:
 
             if pc_date <= prev_year_from:
                 break
-        # self.candles_1d = as_1d_candles(list(self.candles_15m))
+        self.candles_1h = as_1h_candles(list(self.candles_15m))
+        self.candles_4h = as_4h_candles(list(self.candles_15m))
+        self.candles_1d = as_1d_candles(list(self.candles_15m))
+        self.recalc_trends()
         log_info_ny(f"populated {len(self.candles_15m) // (4 * 24)} days for {self.symbol}")
 
 
-def new_empty_asset(symbol: str) -> Asset:
-    return Asset(
-        symbol=symbol,
-        snapshot_date_readable="",
-        candles_15m=deque(),
+def new_empty_trends() -> Trends:
+    return Trends(
         trend_1d_120=None,
         trend_1d_40=None,
         trend_1d_15=None,
@@ -900,6 +978,21 @@ def new_empty_asset(symbol: str) -> Asset:
         trend_1h_120=None,
         trend_1h_40=None,
         trend_1h_15=None,
+        trend_15m_120=None,
+        trend_15m_40=None,
+        trend_15m_15=None,
+    )
+
+
+def new_empty_asset(symbol: str) -> Asset:
+    return Asset(
+        symbol=symbol,
+        snapshot_date_readable="",
+        candles_15m=deque(),
+        candles_1h=[],
+        candles_4h=[],
+        candles_1d=[],
+        trends=new_empty_trends(),
         prev_year=None,
         year_q4=None,
         year_q1=None,

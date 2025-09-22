@@ -2,11 +2,12 @@ import json
 from dataclasses import dataclass, asdict, fields
 from typing import List, Tuple, Optional, Dict
 
+from stock_market_research_kit.asset import Trends
 from stock_market_research_kit.candle import InnerCandle
 from stock_market_research_kit.triad import TrueOpen
 
 ACCOUNT_MARGIN_USD = 10000  # TODO сделать SmtPspStrategy stateful, хранить в ней margin_used
-FREE_SAFETY_MARGIN_PERCENT = 20  # 20% маржи оставляем неиспользованной чтобы не поймать ликвидацию на slippage
+FREE_SAFETY_MARGIN_PERCENT = 20  # TODO 20% маржи оставляем неиспользованной чтобы не поймать ликвидацию на slippage
 MAX_LEVERAGE = 50  # TODO и не открывать сделки если кончилась маржа (и сами сделки ограничивать по RR таким образом)
 MAX_ENTRY = 0.25 * ACCOUNT_MARGIN_USD * MAX_LEVERAGE
 ONE_RR_IN_USD = 100
@@ -20,6 +21,7 @@ class SmtPspTrade:
     direction: str  # UP or DOWN
     signal_time: str
     signal_time_ny: str
+    signal_trends: Trends
 
     limit_price_history: Optional[List[float]]  # if chasing to_label - can be changed to new to, latest is active
     limit_stop: Optional[float]
@@ -57,29 +59,32 @@ class SmtPspTrade:
     target_direction: str
     target_label: str
     target_ql_start: str
+    entry_trends: Trends
 
     best_pnl: float
     best_pnl_time: str
     best_pnl_time_ny: str
     best_pnl_price: float
     best_pnl_tos: List[TrueOpen]
+    best_pnl_trends: Trends
 
     best_entry_time: str
     best_entry_time_ny: str
     best_entry_price: float
     best_entry_rr: float
     best_entry_tos: List[TrueOpen]
+    best_entry_trends: Trends
 
     deadline_close: str  # optional
 
     psp_extremums: Tuple[float, float, float]
     targets: Tuple[float, float, float]
 
-    _in_trade_range: Optional[InnerCandle]
+    in_trade_range: Optional[InnerCandle]
 
     closes: List[
-        Tuple[int, float, str, str, str]
-    ]  # list of closes in (position_percent, price, time, time_ny, reason) format
+        Tuple[int, float, str, str, str, Trends]
+    ]  # list of closes in (position_percent, price, time, time_ny, reason, trends) format
     pnl_usd: float
     close_position_fee: float
 
@@ -121,6 +126,16 @@ class SmtPspTrade:
 def smt_psp_trade_decoder(dct: dict):
     field_names = {f.name for f in fields(SmtPspTrade)}
     filtered = {k: v for k, v in dct.items() if k in field_names}
+    if "signal_trends" in filtered:
+        filtered["signal_trends"] = Trends.from_dict(filtered["signal_trends"])
+    if "entry_trends" in filtered:
+        filtered["entry_trends"] = Trends.from_dict(filtered["entry_trends"])
+    if "best_pnl_trends" in filtered:
+        filtered["best_pnl_trends"] = Trends.from_dict(filtered["best_pnl_trends"])
+    if "best_entry_trends" in filtered:
+        filtered["best_entry_trends"] = Trends.from_dict(filtered["best_entry_trends"])
+    if "closes" in filtered:
+        filtered["closes"] = [(x[0], x[1], x[2], x[3], x[4], Trends.from_dict(x[5])) for x in filtered["closes"]]
     return SmtPspTrade(**filtered)
 
 

@@ -121,9 +121,9 @@ def backtest_strategies(year: int, from_: str, to_: str, symbols: Tuple[str, str
 
 if __name__ == "__main__":
     try:
-        backtest_strategies(2023, '2023-01-01 00:00', '2024-01-01 00:00', ('BTCUSDT', 'ETHUSDT', 'SOLUSDT'))
+        # backtest_strategies(2023, '2023-01-01 00:00', '2024-01-01 00:00', ('BTCUSDT', 'ETHUSDT', 'SOLUSDT'))
         # backtest_strategies(2024, '2024-01-01 00:00', '2025-01-01 00:00', ('BTCUSDT', 'ETHUSDT', 'SOLUSDT'))
-        # backtest_strategies(2025, '2025-01-01 00:00', '2025-09-08 00:00', ('BTCUSDT', 'ETHUSDT', 'SOLUSDT'))
+        backtest_strategies(2025, '2025-01-01 00:00', '2025-09-21 00:00', ('BTCUSDT', 'ETHUSDT', 'SOLUSDT'))
         print('results!')
 
     except KeyboardInterrupt:

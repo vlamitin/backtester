@@ -1,8 +1,9 @@
+import copy
 from dataclasses import dataclass
 from types import MethodType
 from typing import TypeAlias, Callable, List, Tuple, Optional, Dict
 
-from stock_market_research_kit.asset import Asset
+from stock_market_research_kit.asset import Asset, new_empty_trends
 from stock_market_research_kit.candle import as_1_candle
 from stock_market_research_kit.quarter import DayQuarter
 from stock_market_research_kit.smt_psp_trade import SmtPspTrade, ONE_RR_IN_USD, MAX_ENTRY, MARKET_ORDER_FEE_PERCENT, \
@@ -99,10 +100,13 @@ def _price_and_pos_size(rr: float, target: float, stop: float) -> Tuple[float, f
     return price, pos_size_assets, pos_size_usd
 
 
-def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: str, close_half: bool) -> SmtPspTrade:
+def _close_trade(trade: SmtPspTrade, asset: Asset, close_price: float, reason: str, close_half: bool) -> SmtPspTrade:
     percent_to_close = 100 - trade.percent_closed() if not close_half else (100 - trade.percent_closed()) / 2
     part_to_close = percent_to_close / 100
-    trade.closes.append((percent_to_close, close_price, time_str, to_ny_date_str(time_str), reason))
+    trade.closes.append((
+        percent_to_close, close_price,
+        asset.snapshot_date_readable, to_ny_date_str(asset.snapshot_date_readable), reason, copy.deepcopy(asset.trends)
+    ))
     trade.close_position_fee += part_to_close * (close_price * trade.entry_position_assets *
                                                  MARKET_ORDER_FEE_PERCENT / 100)
 
@@ -115,9 +119,12 @@ def _close_trade(trade: SmtPspTrade, close_price: float, time_str: str, reason: 
     return trade
 
 
-def _cancel_order(alo: SmtPspTrade, close_price: float, time_str: str, reason: str) -> SmtPspTrade:
+def _cancel_order(alo: SmtPspTrade, asset: Asset, close_price: float, reason: str) -> SmtPspTrade:
     alo.limit_status = "CANCELLED"
-    alo.closes.append((100, close_price, time_str, to_ny_date_str(time_str), reason))
+    alo.closes.append((
+        100, close_price,
+        asset.snapshot_date_readable, to_ny_date_str(asset.snapshot_date_readable), reason, copy.deepcopy(asset.trends)
+    ))
 
     return alo
 
@@ -306,12 +313,15 @@ def _open_market_trade(
 ) -> SmtPspTrade:
     smt_level, smt_label, smt_type, smt_flags, smt_first_appeared, psp_key, psp_date, change = my_psp_change
 
+    trends = copy.deepcopy(trade_asset.trends)
+
     reason = f"{psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}"
     return SmtPspTrade(
         asset=trade_asset.symbol,
         direction="UP" if my_target[1] in ["high", "half_high"] else "DOWN",
         signal_time=trade_asset.snapshot_date_readable,
         signal_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
+        signal_trends=trends,
         limit_price_history=None,
         limit_stop=None,
         limit_take_profit=None,
@@ -344,20 +354,23 @@ def _open_market_trade(
         target_direction=my_target[1],
         target_label=my_target[2],
         target_ql_start=my_target[3],
+        entry_trends=trends,
         best_pnl=0,
         best_pnl_time=trade_asset.snapshot_date_readable,
         best_pnl_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
         best_pnl_price=trade_asset.prev_15m_candle[3],
         best_pnl_tos=tos,
+        best_pnl_trends=trends,
         best_entry_time=trade_asset.snapshot_date_readable,
         best_entry_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
         best_entry_price=trade_asset.prev_15m_candle[3],
         best_entry_rr=rr_pos[0],
         best_entry_tos=tos,
+        best_entry_trends=trends,
         psp_extremums=psp_extremums,
         deadline_close="",
         targets=(my_target[4][1], my_target[5][1], my_target[6][1]),
-        _in_trade_range=None,
+        in_trade_range=None,
         closes=[],
         pnl_usd=0,
         close_position_fee=0
@@ -367,6 +380,8 @@ def _open_market_trade(
 def _open_limit_trade(
         alo: SmtPspTrade, trade_asset: Asset, tos: List[TrueOpen]
 ) -> SmtPspTrade:
+    trends = copy.deepcopy(trade_asset.trends)
+
     alo.limit_status = "FILLED"
     alo.entry_order_type = "LIMIT"
     alo.entry_price = alo.limit_price_history[-1]
@@ -379,16 +394,19 @@ def _open_limit_trade(
     alo.entry_position_usd = alo.limit_position_usd
     alo.entry_position_fee = alo.limit_position_usd * LIMIT_ORDER_FEE_PERCENT / 100
     alo.entry_tos = tos
+    alo.entry_trends = trends
     alo.best_pnl = 0
     alo.best_pnl_time = trade_asset.snapshot_date_readable
     alo.best_pnl_time_ny = to_ny_date_str(trade_asset.snapshot_date_readable)
     alo.best_pnl_price = alo.limit_price_history[-1]
     alo.best_pnl_tos = tos
+    alo.best_pnl_trends = trends
     alo.best_entry_time = trade_asset.snapshot_date_readable
     alo.best_entry_time_ny = to_ny_date_str(trade_asset.snapshot_date_readable)
     alo.best_entry_price = alo.limit_price_history[-1]
     alo.best_entry_rr = alo.limit_rr
     alo.best_entry_tos = tos
+    alo.best_entry_trends = trends
 
     return alo
 
@@ -475,11 +493,14 @@ def _open_limit_orders(
             reason: str, price: Optional[float], pos_assets: Optional[float], pos_usd: Optional[float],
             chase_rr: Optional[float], chase_to_label: Optional[str]
     ) -> SmtPspTrade:
+        trends = copy.deepcopy(trade_asset.trends)
+        empty_trends = new_empty_trends()
         return SmtPspTrade(
             asset=trade_asset.symbol,
             direction=direction,
             signal_time=trade_asset.snapshot_date_readable,
             signal_time_ny=to_ny_date_str(trade_asset.snapshot_date_readable),
+            signal_trends=trends,
             limit_price_history=[price] if price is not None else [],
             limit_stop=stop,
             limit_take_profit=take_profit,
@@ -501,6 +522,7 @@ def _open_limit_orders(
             entry_position_fee=0,
             entry_reason=f"{reason} limit for {psp_key} psp for {smt_type} {smt_label} -> {my_target[1]} {my_target[2]}",
             entry_tos=[],
+            entry_trends=empty_trends,
             psp_key_used=psp_key,
             psp_date=psp_date,
             smt_type=smt_type,
@@ -517,15 +539,17 @@ def _open_limit_orders(
             best_pnl_time_ny="",
             best_pnl_price=0,
             best_pnl_tos=[],
+            best_pnl_trends=empty_trends,
             best_entry_time="",
             best_entry_time_ny="",
             best_entry_price=0,
             best_entry_rr=0,
             best_entry_tos=[],
+            best_entry_trends=empty_trends,
             psp_extremums=psp_extremums,
             deadline_close="",
             targets=(my_target[4][1], my_target[5][1], my_target[6][1]),
-            _in_trade_range=None,
+            in_trade_range=None,
             closes=[],
             pnl_usd=0,
             close_position_fee=0
@@ -1307,48 +1331,40 @@ def strategy_32_to_pf(trades: List[SmtPspTrade]) -> List[SmtPspTrade]:
 
 
 def _close_by_tp_sl_deadlines(at: SmtPspTrade, trade_asset: Asset, stop_after: str) -> Optional[SmtPspTrade]:
-    if to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(stop_after):
-        return _close_trade(
-            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "strategy_stop", False)
-    if (at.deadline_close and
-            to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(at.deadline_close)):
-        return _close_trade(
-            at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "deadline", False)
     if at.direction == 'UP':
         if trade_asset.prev_15m_candle[2] <= at.stop:
-            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop", False)
+            return _close_trade(at, trade_asset, at.stop, "stop", False)
         if trade_asset.prev_15m_candle[1] >= at.take_profit:
-            return _close_trade(
-                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit", False)
+            return _close_trade(at, trade_asset, at.take_profit, "take_profit", False)
     if at.direction == 'DOWN':
         if trade_asset.prev_15m_candle[1] >= at.stop:
-            return _close_trade(at, at.stop, trade_asset.snapshot_date_readable, "stop", False)
+            return _close_trade(at, trade_asset, at.stop, "stop", False)
         if trade_asset.prev_15m_candle[2] <= at.take_profit:
-            return _close_trade(
-                at, at.take_profit, trade_asset.snapshot_date_readable, "take_profit", False)
+            return _close_trade(at, trade_asset, at.take_profit, "take_profit", False)
+    if to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(stop_after):
+        return _close_trade(at, trade_asset, trade_asset.prev_15m_candle[3], "strategy_stop", False)
+    if (at.deadline_close and
+            to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(at.deadline_close)):
+        return _close_trade(at, trade_asset, trade_asset.prev_15m_candle[3], "deadline", False)
     return None
 
 
 def _cancel_by_tp_sl_deadlines(alo: SmtPspTrade, trade_asset: Asset, stop_after: str) -> Optional[SmtPspTrade]:
     if to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(stop_after):
-        return _cancel_order(
-            alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "strategy_stop")
+        return _cancel_order(alo, trade_asset, trade_asset.prev_15m_candle[3], "strategy_stop")
     if (alo.deadline_close and
             to_utc_datetime(trade_asset.snapshot_date_readable) >= to_utc_datetime(alo.deadline_close)):
-        return _cancel_order(
-            alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "deadline")
+        return _cancel_order(alo, trade_asset, trade_asset.prev_15m_candle[3], "deadline")
     if alo.direction == 'UP':
         if trade_asset.prev_15m_candle[2] <= alo.limit_stop:
-            return _cancel_order(alo, alo.limit_stop, trade_asset.snapshot_date_readable, "limit_stop")
+            return _cancel_order(alo, trade_asset, alo.limit_stop, "limit_stop")
         if trade_asset.prev_15m_candle[1] >= alo.limit_take_profit:
-            return _cancel_order(
-                alo, alo.limit_take_profit, trade_asset.snapshot_date_readable, "limit_take_profit")
+            return _cancel_order(alo, trade_asset, alo.limit_take_profit, "limit_take_profit")
     if alo.direction == 'DOWN':
         if trade_asset.prev_15m_candle[1] >= alo.limit_stop:
-            return _cancel_order(alo, alo.limit_stop, trade_asset.snapshot_date_readable, "limit_stop")
+            return _cancel_order(alo, trade_asset, alo.limit_stop, "limit_stop")
         if trade_asset.prev_15m_candle[2] <= alo.limit_take_profit:
-            return _cancel_order(
-                alo, alo.limit_take_profit, trade_asset.snapshot_date_readable, "limit_take_profit")
+            return _cancel_order(alo, trade_asset, alo.limit_take_profit, "limit_take_profit")
     return None
 
 
@@ -1356,9 +1372,7 @@ def _cancel_by_other_reached_target(alo: SmtPspTrade, trade_asset: Asset, tc: Ta
     for target_level, target_direction, target_label, ql_start, _, _ in tc[4] + tc[5]:
         if (target_level == alo.target_level and target_direction == alo.target_direction
                 and target_label == alo.target_label):
-            return _cancel_order(
-                alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_someone_reached_target"
-            )
+            return _cancel_order(alo, trade_asset, trade_asset.prev_15m_candle[3], "limit_someone_reached_target")
 
     return None
 
@@ -1372,21 +1386,15 @@ def _cancel_by_smt_psp_change(alo: SmtPspTrade, trade_asset: Asset, spc: SmtPspC
     }
     for new_smt_level, new_smt_label, new_smt in spc[2]:
         if new_smt_level >= alo.smt_level and new_smt.type in antagonist_smt_types[alo.smt_type]:
-            return _cancel_order(
-                alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_antagonist_smt"
-            )
+            return _cancel_order(alo, trade_asset, trade_asset.prev_15m_candle[3], "limit_antagonist_smt")
 
     for old_smt_level, old_smt_label, old_smt in spc[3]:
         if old_smt_label == alo.smt_label and old_smt.type == alo.smt_type:
-            return _cancel_order(
-                alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_smt_cancelled"
-            )
+            return _cancel_order(alo, trade_asset, trade_asset.prev_15m_candle[3], "limit_smt_cancelled")
 
     for _, _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
         if psp_change == 'swept' and psp_date == alo.psp_date and psp_key == alo.psp_key_used:
-            return _cancel_order(
-                alo, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "limit_psp_swept"
-            )
+            return _cancel_order(alo, trade_asset, trade_asset.prev_15m_candle[3], "limit_psp_swept")
     return None
 
 
@@ -1394,7 +1402,7 @@ def _close_by_other_swept_psp(at: SmtPspTrade, trade_asset: Asset, spc: SmtPspCh
     for _, _, _, _, _, psp_key, psp_date, psp_change in spc[4]:  # possible|closed|confirmed|swept
         if psp_change == 'swept' and psp_date == at.psp_date and psp_key == at.psp_key_used:
             return _close_trade(
-                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable, "someone_psp_swept", True
+                at, trade_asset, trade_asset.prev_15m_candle[3], "someone_psp_swept", True
             )
 
 
@@ -1403,8 +1411,7 @@ def _close_by_other_reached_target(at: SmtPspTrade, trade_asset: Asset, tc: Targ
         if (target_level == at.target_level and target_direction == at.target_direction
                 and target_label == at.target_label and ql_start == at.target_ql_start):
             return _close_trade(
-                at, trade_asset.prev_15m_candle[3], trade_asset.snapshot_date_readable,
-                "someone_reached_target", True
+                at, trade_asset, trade_asset.prev_15m_candle[3], "someone_reached_target", True
             )
 
 
@@ -1416,9 +1423,11 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
         if a.symbol == at.asset:
             trade_tos = tos[i]
     asset = smb_assets_map[at.asset]
-    at._in_trade_range = asset.prev_15m_candle if not at._in_trade_range else as_1_candle(
-        [at._in_trade_range, asset.prev_15m_candle]
+    at.in_trade_range = asset.prev_15m_candle if not at.in_trade_range else as_1_candle(
+        [at.in_trade_range, asset.prev_15m_candle]
     )
+
+    trends = copy.deepcopy(asset.trends)
 
     if at.direction == 'UP':
         candle_max_pnl = at.entry_position_usd / at.entry_price * (asset.prev_15m_candle[1] - at.entry_price)
@@ -1428,6 +1437,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
             at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable)
             at.best_pnl_price = asset.prev_15m_candle[1]
             at.best_pnl_tos = []
+            at.best_pnl_trends = trends
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
                     at.best_pnl_tos.append((label, asset.prev_15m_candle[1], 0))
@@ -1439,6 +1449,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
             at.best_entry_price = asset.prev_15m_candle[2]
             at.best_entry_rr = _rr_and_pos_size(asset.prev_15m_candle[2], at.take_profit, at.stop)[0]
             at.best_entry_tos = []
+            at.best_entry_trends = trends
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
                     at.best_entry_tos.append((label, asset.prev_15m_candle[2], 0))
@@ -1452,6 +1463,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
             at.best_pnl_time_ny = to_ny_date_str(asset.snapshot_date_readable)
             at.best_pnl_price = asset.prev_15m_candle[2]
             at.best_pnl_tos = []
+            at.best_pnl_trends = trends
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
                     at.best_pnl_tos.append((label, asset.prev_15m_candle[2], 0))
@@ -1463,6 +1475,7 @@ def _with_best(at: SmtPspTrade, tr: Triad, tos: TrueOpens) -> SmtPspTrade:
             at.best_entry_price = asset.prev_15m_candle[1]
             at.best_entry_rr = _rr_and_pos_size(asset.prev_15m_candle[1], at.take_profit, at.stop)[0]
             at.best_entry_tos = []
+            at.best_entry_trends = trends
             for label, price, perc in trade_tos:
                 if label == asset.symbol:
                     at.best_entry_tos.append((label, asset.prev_15m_candle[1], perc))

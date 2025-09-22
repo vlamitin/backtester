@@ -1,4 +1,6 @@
 import math
+import time
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 import random
 from typing import Tuple, List, TypeAlias, Callable
@@ -1018,13 +1020,23 @@ def random_date(start: str, end: str) -> str:
     return to_date_str(to_utc_datetime(start) + timedelta(days=random_days, seconds=random_seconds))
 
 
+@contextmanager
+def perf_log(threshold_sec: float, label: str):
+    start = time.perf_counter()
+    yield
+    elapsed = time.perf_counter() - start
+    if elapsed > threshold_sec:
+        log_warn_ny(f"{label} took {elapsed:.6f} seconds")
+
+
 if __name__ == "__main__":
     try:
         # res1 = get_all_days_between(to_utc_datetime('2024-03-01 15:01'), to_utc_datetime('2024-03-05 10:01'))
         # res2 = get_all_days_between(to_utc_datetime('2025-08-09 23:00'), to_utc_datetime('2025-08-09 22:45'))
         # res3 = get_all_days_between(to_utc_datetime('2025-08-09 22:45'), to_utc_datetime('2025-08-09 23:00'))
         # res4 = get_all_days_between(to_utc_datetime('2025-08-09 22:45'), to_utc_datetime('2025-08-09 22:59'))
-        res4 = years_between('2022-08-09 22:45', '2025-08-09 22:59')
+        with perf_log(0.000000000000000002, "years_between"):
+            res4 = years_between('2022-08-09 22:45', '2025-08-09 22:59')
         log_warn("test")
         # print(get_prev_1month_from_to('2025-02-03 11:01'))
         # print(get_prev_1month_from_to('2025-01-03 10:31'))
